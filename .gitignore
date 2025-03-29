@@ -1,0 +1,8 @@
+﻿/release/
+/node_modules/
+/js/
+/src/creep/*.js
+/src/creep/*.js.map
+/src/*.js
+/src/*.js.map
+/.sync
