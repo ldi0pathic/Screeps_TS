@@ -1,7 +1,6 @@
-﻿import {Worker} from './creep/Worker';
-import {RoomConfig, roomConfig} from "./config";
+﻿import {roomConfig} from "./config";
 import {jobs} from './jobs';
-import {Ant} from "./creep/Ant";
+import {Ant} from "./ants/Ant";
 
 export function loop(): void {
 

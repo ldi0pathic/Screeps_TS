@@ -7,11 +7,11 @@ export abstract class Ant {
 
     checkHarvest(creep: Creep): void {
 
-        if (creep.memory.state != eJobState.harvest && creep.store.getUsedCapacity() === 0) {
+        if (creep.memory.state !== eJobState.harvest && creep.store.getUsedCapacity() === 0) {
             creep.memory.state = eJobState.harvest;
         }
 
-        if (creep.memory.state == eJobState.harvest && creep.store.getFreeCapacity() === 0) {
+        if (creep.memory.state === eJobState.harvest && creep.store.getFreeCapacity() === 0) {
             creep.memory.state = eJobState.work;
         }
     }

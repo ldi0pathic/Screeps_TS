@@ -1,7 +1,7 @@
 ﻿import {Ant} from "./Ant";
 import {roomConfig} from "../config";
 
-export class Worker extends Ant {
+export class UpgraderAnt extends Ant {
     doJob(creep: Creep): void {
         this.checkHarvest(creep);
 
@@ -11,19 +11,22 @@ export class Worker extends Ant {
                 creep.moveTo(source[0]);
             }
         } else {
-            let spawn = Game.spawns[creep.memory.spawn];
-            if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(spawn);
+            const controller = creep.room.controller
+            if (controller) {
+
+                if (creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+                    creep.moveTo(controller);
+                }
             }
         }
     }
 
     protected getMaxCreeps(workroom: Room): number {
-        return roomConfig[workroom.name].workerCount;
+        return roomConfig[workroom.name].upgraderCount;
     }
 
     protected getJob(): eJobType {
-        return eJobType.worker;
+        return eJobType.upgrader
     }
 
     protected shouldSpawn(spawn: StructureSpawn): boolean {
@@ -33,5 +36,4 @@ export class Worker extends Ant {
     protected getProfil(): BodyPartConstant[] {
         return [WORK, CARRY, MOVE]
     }
-
 }

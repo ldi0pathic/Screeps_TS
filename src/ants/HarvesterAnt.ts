@@ -1,7 +1,7 @@
 ﻿import {Ant} from "./Ant";
 import {roomConfig} from "../config";
 
-export class Harvester extends Ant {
+export class HarvesterAnt extends Ant {
 
     protected getMaxCreeps(workroom: Room): number {
         return roomConfig[workroom.name].harvesterCount;

@@ -41,7 +41,7 @@ const fixJsCode = (dir) => {
             fileContent = fileContent.replace(/require\(['"](.+?)['"]\)/g, (match, p1) => {
 
                 let updatedPath = p1;
-                
+
                 if (updatedPath.startsWith('./') || updatedPath.startsWith('../')) {
                     updatedPath = updatedPath.replace('../', '');
                     updatedPath = updatedPath.replace('./', '');
@@ -49,7 +49,7 @@ const fixJsCode = (dir) => {
                     updatedPath = './' + segments.join('.');
 
                     if (updatedPath === './Ant') {
-                        updatedPath = './creep.Ant'
+                        updatedPath = './ants.Ant'
                     }
                 }
 
