@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@types/lodash": "^4.17.16",
+    "@types/node": "^22.13.14",
+    "@types/screeps": "^3.3.8"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  /*"compilerOptions": {
+    "module": "commonjs",
+    "lib": ["es6"],
+    "target": "es6",
+    "moduleResolution": "Node",
+    "sourceMap": true,
+    "strict": true,
+    "experimentalDecorators": true,
+    "noImplicitReturns": true,
+    "allowSyntheticDefaultImports": true,
+    "allowUnreachableCode": false,
+    "types": ["node", "screeps"],
+    "outDir": "./js",
+    "rootDir": "./src",
+  },*/
+  "compilerOptions": {
+    "allowJs": true,
+    "module": "commonjs",
+    "lib": ["esnext"],
+    "target": "es2017",
+    "moduleResolution": "Node",
+    "newLine": "CRLF",
+    "baseUrl": "src/",
+    "sourceMap": false,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "allowUnusedLabels": true,
+    "allowSyntheticDefaultImports": true,
+    "allowUnreachableCode": false,
+    "removeComments": false,
+    "outDir": "./js",
+    "rootDir": "./src"
+  },
+  "include": ["./**/*.ts", "./**/*.d.ts"],
+  "exclude": ["node_modules", "dist", ".git"]
+}
