@@ -6,11 +6,28 @@ export class WorkerAnt extends Ant {
         this.checkHarvest(creep);
 
         if (creep.memory.state == eJobState.harvest) {
-            let source = creep.room.find(FIND_SOURCES);
-            if (creep.harvest(source[0]) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(source[0]);
+            let sourceId = creep.memory.energySourceId;
+
+            if (!sourceId) {
+                let source = creep.room.find(FIND_SOURCES);
+                sourceId = source[0].id;
+                creep.memory.energySourceId = sourceId
             }
+
+            let source = Game.getObjectById(sourceId)
+
+            if (source) {
+                if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
+                    creep.moveTo(source);
+                }
+            } else {
+                creep.memory.energySourceId = undefined
+            }
+
         } else {
+
+            creep.memory.energySourceId = undefined
+            
             let spawn = Game.spawns[creep.memory.spawn];
             if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(spawn);
@@ -26,7 +43,7 @@ export class WorkerAnt extends Ant {
         return eJobType.worker;
     }
 
-    protected shouldSpawn(spawn: StructureSpawn): boolean {
+    protected shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean {
         return true;
     }
 

@@ -1,13 +1,13 @@
 ﻿export interface RoomConfig {
-    harvesterCount: number;
     upgraderCount: number;
     workerCount: number;
+    sendMiner: boolean;
 }
 
 export const roomConfig: { [roomName: string]: RoomConfig } = {
     "W5N8": {
-        harvesterCount: 0,
-        upgraderCount: 2,
+        upgraderCount: 1,
         workerCount: 1,
+        sendMiner: true
     },
 };

@@ -4,9 +4,19 @@ const path = require('path');
 const sourceDir = path.join(__dirname, 'js');
 const targetDir = path.join(__dirname, 'release');
 
-if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir);
-}
+const clearTargetDir = (dir) => {
+    if (fs.existsSync(dir)) {
+        fs.readdirSync(dir).forEach((file) => {
+            const filePath = path.join(dir, file);
+            if (fs.lstatSync(filePath).isDirectory()) {
+                fs.rmSync(filePath, {recursive: true, force: true});
+            } else {
+                fs.unlinkSync(filePath);
+            }
+        });
+    }
+};
+
 const moveFiles = (dir, name) => {
     const items = fs.readdirSync(dir);
 
@@ -63,6 +73,11 @@ const fixJsCode = (dir) => {
     });
 };
 
+if (fs.existsSync(targetDir)) {
+    clearTargetDir(targetDir);
+} else {
+    fs.mkdirSync(targetDir);
+}
 
 moveFiles(sourceDir, '');
 fixJsCode(targetDir);

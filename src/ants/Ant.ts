@@ -20,45 +20,34 @@ export abstract class Ant {
 
         const max = this.getMaxCreeps(workroom);
         const job = this.getJob();
-        const minLiveTicks = this.getMinLiveTicks();
+        const minLiveTicks = this.getMinLiveTicks(spawn, workroom);
 
         const existingCreeps = _.filter(Game.creeps, creep =>
             creep.memory.job == job &&
             creep.memory.workroom == workroom.name
         );
 
-        const antsInWorkroom = _.filter(existingCreeps, (creep) =>
+        const countOfAnts = _.filter(existingCreeps, (creep) =>
             ((creep.ticksToLive != undefined && creep.ticksToLive > minLiveTicks) || creep.spawning)
         ).length;
 
-        if (antsInWorkroom >= max) {
+        if (countOfAnts >= max) {
             return false;
         }
 
-        if (!this.shouldSpawn(spawn)) {
+        if (!this.shouldSpawn(spawn, workroom, existingCreeps)) {
             return false;
         }
 
         const profil = this.getProfil();
-        let count = 0;
-        let name = `${job}@${workroom.name}#${count}`;
-
-        while (Game.creeps[name]) {
-            count++;
-            name = `${job}@${workroom.name}#${count}`;
-        }
+        const name = this.getName(workroom);
+        const options = this.getSpawnOptions(spawn, workroom, existingCreeps);
 
         switch (spawn.spawnCreep(profil, name, {dryRun: true})) {
             case OK: {
-                spawn.spawnCreep(profil, name, {
-                    memory: {
-                        job: job,
-                        spawn: spawn.name,
-                        state: eJobState.harvest,
-                        workroom: workroom.name,
-                    }
-                });
-
+                if (spawn.spawnCreep(profil, name, options) === OK) {
+                    return true;
+                }
             }
                 break;
         }
@@ -71,11 +60,57 @@ export abstract class Ant {
 
     protected abstract getJob(): eJobType;
 
-    protected abstract shouldSpawn(spawn: StructureSpawn): boolean;
+    protected abstract shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean;
 
     protected abstract getProfil(): BodyPartConstant[];
 
-    protected getMinLiveTicks(): number {
+    protected getSpawnOptions(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): SpawnOptions {
+        const job = this.getJob();
+
+        return {
+            memory: {
+                job: job,
+                spawn: spawn.name,
+                state: eJobState.harvest,
+                workroom: workroom.name,
+                energySourceId: undefined,
+                onPosition: undefined,
+                finalLocation: undefined,
+                containerId: undefined,
+                buildId: undefined,
+            }
+        }
+    }
+
+    protected getMinLiveTicks(spawn: StructureSpawn, workroom: Room): number {
         return 150;
+    }
+
+    protected getName(workroom: Room) {
+        const job = this.getJob();
+        let count = 0;
+        let name = `${job}@${workroom.name}#${count}`;
+
+        while (Game.creeps[name]) {
+            count++;
+            name = `${job}@${workroom.name}#${count}`;
+        }
+
+        return name;
+    }
+
+    protected goToFinalPos(creep: Creep): void {
+        const finalPos = creep.memory.finalLocation
+        console.log("hier")
+        if (finalPos) {
+            if (creep.room.name == creep.memory.workroom && creep.pos.x == finalPos.x && creep.pos.y == finalPos.y) {
+                creep.memory.onPosition = true;
+                return;
+            }
+            if (creep.room.name == creep.memory.workroom) {
+                creep.moveTo(finalPos.x, finalPos.y)
+            }
+            creep.moveTo(new RoomPosition(25, 25, creep.memory.workroom))
+        }
     }
 }

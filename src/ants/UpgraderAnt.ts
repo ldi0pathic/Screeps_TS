@@ -6,11 +6,27 @@ export class UpgraderAnt extends Ant {
         this.checkHarvest(creep);
 
         if (creep.memory.state == eJobState.harvest) {
-            let source = creep.room.find(FIND_SOURCES);
-            if (creep.harvest(source[0]) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(source[0]);
+            let sourceId = creep.memory.energySourceId;
+
+            if (!sourceId) {
+                let source = creep.room.find(FIND_SOURCES);
+                sourceId = source[0].id;
+                creep.memory.energySourceId = sourceId
+            }
+
+            let source = Game.getObjectById(sourceId)
+
+            if (source) {
+                if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
+                    creep.moveTo(source);
+                }
+            } else {
+                creep.memory.energySourceId = undefined
             }
         } else {
+
+            creep.memory.energySourceId = undefined
+            
             const controller = creep.room.controller
             if (controller) {
 
@@ -29,7 +45,7 @@ export class UpgraderAnt extends Ant {
         return eJobType.upgrader
     }
 
-    protected shouldSpawn(spawn: StructureSpawn): boolean {
+    protected shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean {
         return true;
     }
 

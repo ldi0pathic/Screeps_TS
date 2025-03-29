@@ -8,6 +8,10 @@ export function loop(): void {
     for (const creepName in Game.creeps) {
         const creep = Game.creeps[creepName];
         let job: Ant = jobs[creep.memory.job];
+        if (!job) {
+            creep.suicide()
+            continue;
+        }
         job.doJob(creep)
     }
     for (const spawnName in Game.spawns) {
