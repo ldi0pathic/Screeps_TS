@@ -2,6 +2,7 @@
     miner = 'Miner',
     worker = 'Worker',
     upgrader = 'Upgrader',
+    builder = 'Builder',
 }
 
 const enum eJobState {

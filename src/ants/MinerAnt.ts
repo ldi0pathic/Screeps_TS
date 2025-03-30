@@ -156,7 +156,7 @@ export class MinerAnt extends Ant {
             const build = Game.getObjectById(creep.memory.buildId);
             if (build) {
                 if (creep.memory.state == eJobState.work && build.progressTotal > build.progress) {
-                    creep.say('🛠');
+                    creep.say('🪚');
                     creep.build(build)
                     return;
 

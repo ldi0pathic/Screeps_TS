@@ -101,16 +101,16 @@ export abstract class Ant {
 
     protected goToFinalPos(creep: Creep): void {
         const finalPos = creep.memory.finalLocation
-        console.log("hier")
+
         if (finalPos) {
             if (creep.room.name == creep.memory.workroom && creep.pos.x == finalPos.x && creep.pos.y == finalPos.y) {
                 creep.memory.onPosition = true;
                 return;
             }
-            if (creep.room.name == creep.memory.workroom) {
-                creep.moveTo(finalPos.x, finalPos.y)
-            }
-            creep.moveTo(new RoomPosition(25, 25, creep.memory.workroom))
+
+            creep.moveTo(new RoomPosition(finalPos.x, finalPos.y, creep.memory.workroom))
+            return;
+
         }
     }
 }
