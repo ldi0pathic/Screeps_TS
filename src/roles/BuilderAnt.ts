@@ -46,7 +46,7 @@ export class BuilderAnt extends Ant {
                     }
                 }
             }
-            
+
             creep.memory.buildId = undefined;
 
         }

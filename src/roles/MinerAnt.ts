@@ -109,6 +109,18 @@ export class MinerAnt extends Ant {
                                 break
                             }
                         }
+
+                        let build = sourceObj.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
+                            filter: {structureType: STRUCTURE_CONTAINER}
+                        })[0];
+
+                        if (build) {
+                            finalLocation = build.pos;
+                            if (build.id) {
+                                buildId = build.id;
+                            }
+                        }
+
                     }
                 }
             }
@@ -198,4 +210,3 @@ export class MinerAnt extends Ant {
         }
     }
 }
-

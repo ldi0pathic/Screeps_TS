@@ -1,33 +1,13 @@
-﻿import {roomConfig} from "./config";
-import {jobs} from './jobs';
-import {Ant} from "./ants/Ant";
-
-export function loop(): void {
+import {ErrorMapper} from "utils/ErrorMapper";
+import {Mem} from "./utils/Memory";
+import {Jobs} from "./utils/Jobs";
 
 
-    for (const creepName in Game.creeps) {
-        const creep = Game.creeps[creepName];
-        let job: Ant = jobs[creep.memory.job];
-        if (!job) {
-            creep.suicide()
-            continue;
-        }
-        job.doJob(creep)
-    }
-    for (const spawnName in Game.spawns) {
-        let spawn = Game.spawns[spawnName];
+export const loop = ErrorMapper.wrapLoop(() => {
 
-        if (spawn.spawning) {
-            continue;
-        }
+    Mem.clean();
 
-        for (const name in roomConfig) {
-            const room = Game.rooms[name];
+    Jobs.loop();
+    Jobs.spawn();
 
-            for (let jobName in jobs) {
-                let job: Ant = jobs[jobName];
-                job.spawn(spawn, room);
-            }
-        }
-    }
-}
+});

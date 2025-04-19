@@ -26,7 +26,7 @@ export class UpgraderAnt extends Ant {
         } else {
 
             creep.memory.energySourceId = undefined
-            
+
             const controller = creep.room.controller
             if (controller) {
 

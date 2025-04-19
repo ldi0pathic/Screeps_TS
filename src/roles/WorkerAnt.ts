@@ -27,7 +27,7 @@ export class WorkerAnt extends Ant {
         } else {
 
             creep.memory.energySourceId = undefined
-            
+
             let spawn = Game.spawns[creep.memory.spawn];
             if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(spawn);
