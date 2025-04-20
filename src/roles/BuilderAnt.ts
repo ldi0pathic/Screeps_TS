@@ -52,6 +52,10 @@ export class BuilderAnt extends Ant {
         }
     }
 
+    protected onSpawnAction(workroom: Room): void {
+        
+    }
+
     protected getMaxCreeps(workroom: Room): number {
         return roomConfig[workroom.name].builderCount;
     }

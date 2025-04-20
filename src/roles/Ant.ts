@@ -46,6 +46,7 @@ export abstract class Ant {
         switch (spawn.spawnCreep(profil, name, {dryRun: true})) {
             case OK: {
                 if (spawn.spawnCreep(profil, name, options) === OK) {
+                    this.onSpawnAction(workroom);
                     return true;
                 }
             }
@@ -55,6 +56,8 @@ export abstract class Ant {
 
         return false;
     }
+
+    protected abstract onSpawnAction(workroom: Room): void;
 
     protected abstract getMaxCreeps(workroom: Room): number;
 
@@ -78,6 +81,7 @@ export abstract class Ant {
                 finalLocation: undefined,
                 containerId: undefined,
                 buildId: undefined,
+                roundRobin: undefined,
             }
         }
     }

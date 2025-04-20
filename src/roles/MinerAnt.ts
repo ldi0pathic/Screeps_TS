@@ -3,20 +3,57 @@ import {roomConfig} from "../config";
 
 export class MinerAnt extends Ant {
 
-    private getOrFindSourceIds(workroom: Room): Id<Source>[] {
-        let ids = workroom.memory.energySourceIds;
-
-        if (ids && ids.length > 0) {
-            return ids;
+    doJob(creep: Creep): void {
+        if (!creep.memory.onPosition) {
+            this.goToFinalPos(creep)
+            return;
         }
 
-        const source = Game.rooms[workroom.name].find(FIND_SOURCES)
-        workroom.memory.energySourceIds = []
-        for (let s of source) {
-            workroom.memory.energySourceIds.push(s.id);
+        if (creep.memory.buildId) {
+            this.checkHarvest(creep)
+            const build = Game.getObjectById(creep.memory.buildId);
+            if (build) {
+                if (creep.memory.state == eJobState.work && build.progressTotal > build.progress) {
+                    creep.say('🪚');
+                    creep.build(build)
+                    return;
+
+                }
+            } else if (!build) {
+                creep.memory.buildId = undefined;
+            }
         }
 
-        return workroom.memory.energySourceIds;
+        if (creep.memory.containerId) {
+            const container = Game.getObjectById(creep.memory.containerId);
+
+            if (container) {
+                if (container.store.getFreeCapacity() == 0) {
+                    creep.say('🚯');
+                    return;
+                }
+            }
+        }
+
+        if (creep.memory.energySourceId) {
+            const source = Game.getObjectById(creep.memory.energySourceId);
+            if (source) {
+                switch (creep.harvest(source)) {
+                    case ERR_TIRED:
+                    case ERR_NOT_ENOUGH_ENERGY: {
+                        creep.say('😴');
+                        return;
+                    }
+                    case ERR_NO_BODYPART: {
+                        creep.suicide()
+                        return;
+                    }
+                    case OK: {
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     protected getMaxCreeps(workroom: Room): number {
@@ -31,6 +68,10 @@ export class MinerAnt extends Ant {
         }
 
         return 250
+    }
+
+    protected onSpawnAction(workroom: Room): void {
+
     }
 
     protected override getSpawnOptions(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): SpawnOptions {
@@ -138,6 +179,7 @@ export class MinerAnt extends Ant {
                 buildId: buildId,
                 onPosition: false,
                 finalLocation: finalLocation,
+                roundRobin: undefined,
             }
         }
     }
@@ -157,56 +199,19 @@ export class MinerAnt extends Ant {
         return eJobType.miner;
     }
 
-    doJob(creep: Creep): void {
-        if (!creep.memory.onPosition) {
-            this.goToFinalPos(creep)
-            return;
+    private getOrFindSourceIds(workroom: Room): Id<Source>[] {
+        let ids = workroom.memory.energySourceIds;
+
+        if (ids && ids.length > 0) {
+            return ids;
         }
 
-        if (creep.memory.buildId) {
-            this.checkHarvest(creep)
-            const build = Game.getObjectById(creep.memory.buildId);
-            if (build) {
-                if (creep.memory.state == eJobState.work && build.progressTotal > build.progress) {
-                    creep.say('🪚');
-                    creep.build(build)
-                    return;
-
-                }
-            } else if (!build) {
-                creep.memory.buildId = undefined;
-            }
+        const source = Game.rooms[workroom.name].find(FIND_SOURCES)
+        workroom.memory.energySourceIds = []
+        for (let s of source) {
+            workroom.memory.energySourceIds.push(s.id);
         }
 
-        if (creep.memory.containerId) {
-            const container = Game.getObjectById(creep.memory.containerId);
-
-            if (container) {
-                if (container.store.getFreeCapacity() == 0) {
-                    creep.say('🚯');
-                    return;
-                }
-            }
-        }
-
-        if (creep.memory.energySourceId) {
-            const source = Game.getObjectById(creep.memory.energySourceId);
-            if (source) {
-                switch (creep.harvest(source)) {
-                    case ERR_TIRED:
-                    case ERR_NOT_ENOUGH_ENERGY: {
-                        creep.say('😴');
-                        return;
-                    }
-                    case ERR_NO_BODYPART: {
-                        creep.suicide()
-                        return;
-                    }
-                    case OK: {
-                        return;
-                    }
-                }
-            }
-        }
+        return workroom.memory.energySourceIds;
     }
 }

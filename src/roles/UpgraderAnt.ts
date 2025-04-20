@@ -37,6 +37,10 @@ export class UpgraderAnt extends Ant {
         }
     }
 
+    protected onSpawnAction(workroom: Room): void {
+
+    }
+
     protected getMaxCreeps(workroom: Room): number {
         return roomConfig[workroom.name].upgraderCount;
     }

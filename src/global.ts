@@ -18,6 +18,7 @@ declare global {
         //  max 1 Spawn
         //  max 300 Energie
         //  max 0 Extensions
+
         phase2,
         //  max 1 Spawn
         //  max 550 Energie
@@ -30,6 +31,7 @@ declare global {
         //  max 800 Energie
         //  max 10 Extensions
         //  max 1 Tower
+
         phase4,
         //  max 1 Spawn
         //  max 1300 Energie
@@ -82,7 +84,7 @@ declare global {
         //  Nuker
         //  PowerSpawn
         // Terminal
-        
+
         otherPlayer
     }
 
@@ -91,8 +93,9 @@ declare global {
         work
     }
 
-    interface Ants {
-        [key: string]: Ant;
+    interface JobDef {
+        ant: Ant;
+        prio: number;
     }
 
     interface CreepMemory {
@@ -101,6 +104,8 @@ declare global {
 
         workroom: string;
         spawn: string;
+
+        roundRobin: number | undefined;
 
         energySourceId: Id<Source> | undefined;
         containerId: Id<StructureContainer> | undefined
@@ -111,5 +116,6 @@ declare global {
 
     interface RoomMemory {
         energySourceIds: Id<Source>[];
+        state: eRoomState;
     }
 }
