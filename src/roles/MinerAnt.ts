@@ -1,11 +1,12 @@
 ﻿import {Ant} from "./Ant";
 import {roomConfig} from "../config";
+import {Mem} from "../controller/Memory";
 
 export class MinerAnt extends Ant {
 
     doJob(creep: Creep): void {
         if (!creep.memory.onPosition) {
-            this.goToFinalPos(creep)
+            creep.goToFinalPos()
             return;
         }
 
@@ -21,10 +22,14 @@ export class MinerAnt extends Ant {
                 }
             } else if (!build) {
                 creep.memory.buildId = undefined;
+                let container = creep.pos.findInRange(FIND_STRUCTURES, 1, {
+                    filter: {structureType: STRUCTURE_CONTAINER}
+                })[0];
+                if (container && container.structureType == STRUCTURE_CONTAINER) {
+                    creep.memory.containerId = container.id;
+                }
             }
-        }
-
-        if (creep.memory.containerId) {
+        } else if (creep.memory.containerId) {
             const container = Game.getObjectById(creep.memory.containerId);
 
             if (container) {
@@ -46,6 +51,7 @@ export class MinerAnt extends Ant {
                     }
                     case ERR_NO_BODYPART: {
                         creep.suicide()
+                        Mem.clean()
                         return;
                     }
                     case OK: {
@@ -57,7 +63,7 @@ export class MinerAnt extends Ant {
     }
 
     protected getMaxCreeps(workroom: Room): number {
-        return this.getOrFindSourceIds(workroom).length;
+        return workroom.getOrFindSource().length;
     }
 
     protected override getMinLiveTicks(spawn: StructureSpawn, workroom: Room): number {
@@ -77,32 +83,39 @@ export class MinerAnt extends Ant {
     protected override getSpawnOptions(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): SpawnOptions {
 
         const job = this.getJob();
-        const sourceIds = this.getOrFindSourceIds(workroom);
+        const sources = workroom.getOrFindSource();
 
-        let source: Id<Source> | undefined = undefined;
-        for (let sourceId of sourceIds) {
+        let sourceId: Id<Source> | undefined = undefined;
+        let containerId: Id<StructureContainer> | undefined = undefined;
+        let linkId: Id<StructureLink> | undefined = undefined;
+
+        for (let s of sources) {
 
             let found = false;
 
             for (let creep of creeps) {
-                if (creep.memory.energySourceId === sourceId) {
+                if (creep.memory.energySourceId === s.sourceId) {
                     found = true;
                     break;
                 }
             }
 
             if (!found) {
-                source = sourceId;
+                sourceId = s.sourceId;
+                containerId = s.containerId;
+                linkId = s.linkId;
                 break;
             }
         }
 
         let finalLocation: RoomPosition | undefined = undefined;
-        let containerId: Id<StructureContainer> | undefined = undefined;
         let buildId: Id<ConstructionSite> | undefined = undefined;
 
-        if (source) {
-            let sourceObj = Game.getObjectById(source);
+        if (containerId) {
+            let container = Game.getObjectById(containerId);
+            finalLocation = container?.pos;
+        } else if (sourceId) {
+            let sourceObj = Game.getObjectById(sourceId);
 
             finalLocation = sourceObj?.pos;
 
@@ -115,6 +128,11 @@ export class MinerAnt extends Ant {
                     finalLocation = container.pos;
                     if (container.structureType == STRUCTURE_CONTAINER) {
                         containerId = container.id;
+                        for (let id in workroom.memory.energySources) {
+                            if (workroom.memory.energySources[id].sourceId == sourceId) {
+                                workroom.memory.energySources[id].containerId = containerId;
+                            }
+                        }
                     }
                 } else {
                     let build = sourceObj.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
@@ -174,8 +192,9 @@ export class MinerAnt extends Ant {
                 spawn: spawn.name,
                 state: eJobState.harvest,
                 workroom: workroom.name,
-                energySourceId: source,
+                energySourceId: sourceId,
                 containerId: containerId,
+                linkId: linkId,
                 buildId: buildId,
                 onPosition: false,
                 finalLocation: finalLocation,
@@ -186,7 +205,7 @@ export class MinerAnt extends Ant {
 
     protected shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean {
 
-        const ids = this.getOrFindSourceIds(workroom);
+        const ids = workroom.getOrFindSource();
 
         return roomConfig[workroom.name].sendMiner && ids.length > creeps.length;
     }
@@ -199,19 +218,4 @@ export class MinerAnt extends Ant {
         return eJobType.miner;
     }
 
-    private getOrFindSourceIds(workroom: Room): Id<Source>[] {
-        let ids = workroom.memory.energySourceIds;
-
-        if (ids && ids.length > 0) {
-            return ids;
-        }
-
-        const source = Game.rooms[workroom.name].find(FIND_SOURCES)
-        workroom.memory.energySourceIds = []
-        for (let s of source) {
-            workroom.memory.energySourceIds.push(s.id);
-        }
-
-        return workroom.memory.energySourceIds;
-    }
 }

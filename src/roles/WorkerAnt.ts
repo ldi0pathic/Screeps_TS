@@ -48,7 +48,9 @@ export class WorkerAnt extends Ant {
     }
 
     protected shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean {
-        return true;
+
+        return workroom.memory.state <= eRoomState.phase1;
+
     }
 
     protected getProfil(): BodyPartConstant[] {

@@ -1,4 +1,5 @@
 ﻿import {Ant} from "./roles/Ant";
+import {SourceData} from "./records/SourceData";
 
 export {};
 
@@ -8,6 +9,7 @@ declare global {
         worker = 'Worker',
         upgrader = 'Upgrader',
         builder = 'Builder',
+        transporter = 'Transporter'
     }
 
     const enum eRoomState {
@@ -85,7 +87,7 @@ declare global {
         //  PowerSpawn
         // Terminal
 
-        otherPlayer
+        otherPlayer,
     }
 
     const enum eJobState {
@@ -109,12 +111,25 @@ declare global {
 
         energySourceId: Id<Source> | undefined;
         containerId: Id<StructureContainer> | undefined
+        linkId: Id<StructureLink> | undefined
         buildId: Id<ConstructionSite> | undefined
         onPosition: boolean | undefined;
         finalLocation: RoomPosition | undefined;
     }
 
+    interface Room {
+        setRoomState(controller: StructureController): void;
+
+        getOrFindSource(): SourceData[];
+    }
+
+    interface Creep {
+        goToFinalPos(): void;
+    }
+
+
     interface RoomMemory {
+        energySources: SourceData[],
         energySourceIds: Id<Source>[];
         state: eRoomState;
     }

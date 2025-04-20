@@ -80,6 +80,7 @@ export abstract class Ant {
                 onPosition: undefined,
                 finalLocation: undefined,
                 containerId: undefined,
+                linkId: undefined,
                 buildId: undefined,
                 roundRobin: undefined,
             }
@@ -103,18 +104,5 @@ export abstract class Ant {
         return name;
     }
 
-    protected goToFinalPos(creep: Creep): void {
-        const finalPos = creep.memory.finalLocation
 
-        if (finalPos) {
-            if (creep.room.name == creep.memory.workroom && creep.pos.x == finalPos.x && creep.pos.y == finalPos.y) {
-                creep.memory.onPosition = true;
-                return;
-            }
-
-            creep.moveTo(new RoomPosition(finalPos.x, finalPos.y, creep.memory.workroom))
-            return;
-
-        }
-    }
 }

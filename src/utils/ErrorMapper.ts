@@ -1,6 +1,9 @@
 import {SourceMapConsumer} from "source-map";
 
 export class ErrorMapper {
+    // Cache previously mapped traces to improve performance
+    public static cache: { [key: string]: string } = {};
+
     // Cache consumer
     private static _consumer?: SourceMapConsumer;
 
@@ -11,9 +14,6 @@ export class ErrorMapper {
 
         return this._consumer;
     }
-
-    // Cache previously mapped traces to improve performance
-    public static cache: { [key: string]: string } = {};
 
     /**
      * Generates a stack trace using a source map generate original symbol names.
@@ -73,6 +73,7 @@ export class ErrorMapper {
             try {
                 loop();
             } catch (e) {
+                console.log(e)
                 if (e instanceof Error) {
                     if ("sim" in Game.rooms) {
                         const message = `Source maps don't work in the simulator - displaying original error`;

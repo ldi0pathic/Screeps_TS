@@ -1,8 +1,10 @@
 import {ErrorMapper} from "utils/ErrorMapper";
-import {Mem} from "./utils/Memory";
-import {Jobs} from "./utils/Jobs";
+import {Mem} from "./controller/Memory";
+import {Jobs} from "./controller/Jobs";
+import {loadExtensions} from "./extensions/loader";
 
 const maxCpu = Game.cpu.limit;
+loadExtensions();
 
 export const loop = ErrorMapper.wrapLoop
 (() => {

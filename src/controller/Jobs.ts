@@ -4,11 +4,13 @@ import {MinerAnt} from "../roles/MinerAnt";
 import {UpgraderAnt} from "../roles/UpgraderAnt";
 import {BuilderAnt} from "../roles/BuilderAnt";
 import {roomConfig} from "../config";
+import {TransporterAnt} from "../roles/TransporterAnt";
 
 
 export class Jobs {
 
     private static jobs: Record<string, JobDef> = {
+        Transporter: {ant: new TransporterAnt(), prio: 30},
         Miner: {ant: new MinerAnt(), prio: 11},
         Upgrader: {ant: new UpgraderAnt(), prio: 11},
         Worker: {ant: new WorkerAnt(), prio: 11},

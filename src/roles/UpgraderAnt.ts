@@ -29,10 +29,11 @@ export class UpgraderAnt extends Ant {
 
             const controller = creep.room.controller
             if (controller) {
-
+                controller.room.setRoomState(controller);
                 if (creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
                     creep.moveTo(controller);
                 }
+
             }
         }
     }
