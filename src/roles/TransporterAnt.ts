@@ -1,4 +1,5 @@
 ﻿import {Ant} from "./Ant";
+import _ from "lodash";
 
 
 export class TransporterAnt extends Ant {
@@ -28,9 +29,17 @@ export class TransporterAnt extends Ant {
         }
     }
 
-    protected override getSpawnOptions(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): SpawnOptions {
+    public getProfil(): BodyPartConstant[] {
+        return [CARRY, CARRY, MOVE]
+    }
+
+    public override getSpawnOptions(spawn: StructureSpawn, workroom: Room): SpawnOptions {
         const job = this.getJob();
         const sources = workroom.getOrFindSource();
+        const creeps = _.filter(Game.creeps, creep =>
+            creep.memory.job == job &&
+            creep.memory.workroom == workroom.name
+        );
 
         let containerId: Id<StructureContainer> | undefined = undefined;
         for (let s of sources) {
@@ -79,14 +88,10 @@ export class TransporterAnt extends Ant {
         return eJobType.transporter;
     }
 
-    protected shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean {
+    protected shouldSpawn(workroom: Room): boolean {
 
         return workroom.memory.state > eRoomState.phase1;
 
-    }
-
-    protected getProfil(): BodyPartConstant[] {
-        return [CARRY, CARRY, MOVE]
     }
 
 }

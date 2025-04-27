@@ -1,6 +1,6 @@
 ﻿import {Ant} from "./Ant";
 import {roomConfig} from "../config";
-import {Mem} from "../controller/Memory";
+import _ from "lodash";
 
 export class MinerAnt extends Ant {
 
@@ -50,8 +50,8 @@ export class MinerAnt extends Ant {
                         return;
                     }
                     case ERR_NO_BODYPART: {
-                        creep.suicide()
-                        Mem.clean()
+                       
+
                         return;
                     }
                     case OK: {
@@ -62,28 +62,18 @@ export class MinerAnt extends Ant {
         }
     }
 
-    protected getMaxCreeps(workroom: Room): number {
-        return workroom.getOrFindSource().length;
+    public getProfil(): BodyPartConstant[] {
+        return [WORK, CARRY, MOVE]
     }
 
-    protected override getMinLiveTicks(spawn: StructureSpawn, workroom: Room): number {
-        //todo Miner soll zeit zu Source sichern
-
-        if (workroom.name == spawn.room.name) {
-            return 150;
-        }
-
-        return 250
-    }
-
-    protected onSpawnAction(workroom: Room): void {
-
-    }
-
-    protected override getSpawnOptions(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): SpawnOptions {
+    public override getSpawnOptions(spawn: StructureSpawn, workroom: Room): SpawnOptions {
 
         const job = this.getJob();
         const sources = workroom.getOrFindSource();
+        const creeps = _.filter(Game.creeps, creep =>
+            creep.memory.job == job &&
+            creep.memory.workroom == workroom.name
+        );
 
         let sourceId: Id<Source> | undefined = undefined;
         let containerId: Id<StructureContainer> | undefined = undefined;
@@ -203,15 +193,20 @@ export class MinerAnt extends Ant {
         }
     }
 
-    protected shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean {
-
-        const ids = workroom.getOrFindSource();
-
-        return roomConfig[workroom.name].sendMiner && ids.length > creeps.length;
+    protected getMaxCreeps(workroom: Room): number {
+        return workroom.getOrFindSource().length;
     }
 
-    protected getProfil(): BodyPartConstant[] {
-        return [WORK, CARRY, MOVE]
+
+    protected shouldSpawn(workroom: Room): boolean {
+
+        const ids = workroom.getOrFindSource();
+        const creeps = _.filter(Game.creeps, creep =>
+            creep.memory.job == this.getJob() &&
+            creep.memory.workroom == workroom.name
+        );
+
+        return roomConfig[workroom.name].sendMiner && ids.length > creeps.length;
     }
 
     protected getJob(): eJobType {

@@ -52,10 +52,10 @@ export class BuilderAnt extends Ant {
         }
     }
 
-    protected onSpawnAction(workroom: Room): void {
-        
+    public getProfil(): BodyPartConstant[] {
+        return [WORK, CARRY, MOVE]
     }
-
+    
     protected getMaxCreeps(workroom: Room): number {
         return roomConfig[workroom.name].builderCount;
     }
@@ -64,12 +64,8 @@ export class BuilderAnt extends Ant {
         return eJobType.builder;
     }
 
-    protected shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean {
+    protected shouldSpawn(workroom: Room): boolean {
         const todos = workroom.find(FIND_CONSTRUCTION_SITES);
         return todos.length > 0;
-    }
-
-    protected getProfil(): BodyPartConstant[] {
-        return [WORK, CARRY, MOVE]
     }
 }

@@ -35,6 +35,10 @@ export class WorkerAnt extends Ant {
         }
     }
 
+    public getProfil(): BodyPartConstant[] {
+        return [WORK, CARRY, MOVE]
+    }
+
     protected onSpawnAction(workroom: Room): void {
 
     }
@@ -47,14 +51,10 @@ export class WorkerAnt extends Ant {
         return eJobType.worker;
     }
 
-    protected shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean {
+    protected shouldSpawn(workroom: Room): boolean {
 
         return workroom.memory.state <= eRoomState.phase1;
 
-    }
-
-    protected getProfil(): BodyPartConstant[] {
-        return [WORK, CARRY, MOVE]
     }
 
 }

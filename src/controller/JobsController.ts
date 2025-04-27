@@ -3,18 +3,18 @@ import {WorkerAnt} from "../roles/WorkerAnt";
 import {MinerAnt} from "../roles/MinerAnt";
 import {UpgraderAnt} from "../roles/UpgraderAnt";
 import {BuilderAnt} from "../roles/BuilderAnt";
-import {roomConfig} from "../config";
 import {TransporterAnt} from "../roles/TransporterAnt";
+import {CleanUpManager} from "./CleanUpManager";
 
 
-export class Jobs {
+export class JobsController {
 
-    private static jobs: Record<string, JobDef> = {
-        Transporter: {ant: new TransporterAnt(), prio: 30},
-        Miner: {ant: new MinerAnt(), prio: 11},
-        Upgrader: {ant: new UpgraderAnt(), prio: 11},
-        Worker: {ant: new WorkerAnt(), prio: 11},
-        Builder: {ant: new BuilderAnt(), prio: 11},
+    public static jobs: Record<string, JobDef> = {
+        Transporter: {ant: new TransporterAnt(), jobPrio: 30, spawnPrio: 10},
+        Miner: {ant: new MinerAnt(), jobPrio: 11, spawnPrio: 10},
+        Upgrader: {ant: new UpgraderAnt(), jobPrio: 11, spawnPrio: 10},
+        Worker: {ant: new WorkerAnt(), jobPrio: 11, spawnPrio: 10},
+        Builder: {ant: new BuilderAnt(), jobPrio: 11, spawnPrio: 10},
     };
 
     private static bucketNorm: Array<{ creep: Creep; ant: Ant }> = [];
@@ -29,8 +29,7 @@ export class Jobs {
             const def = this.jobs[creep.memory.job];
 
             if (!def) {
-                delete Memory.creeps[name];
-                creep.suicide();
+                CleanUpManager.addToCleanupQueue(name);
                 continue;
             }
 
@@ -40,9 +39,9 @@ export class Jobs {
                 }
             }
 
-            if (def.prio >= 21) {
+            if (def.jobPrio >= 21) {
                 def.ant.doJob(creep);
-            } else if (def.prio >= 11) {
+            } else if (def.jobPrio >= 11) {
                 this.bucketNorm.push({creep, ant: def.ant});
             } else {
                 this.bucketLow.push({creep, ant: def.ant});
@@ -59,27 +58,6 @@ export class Jobs {
     static doLowJobs() {
         for (const {creep, ant} of this.bucketLow) {
             ant.doJob(creep);
-        }
-    }
-
-    static spawn() {
-        for (const spawnName in Game.spawns) {
-            let spawn = Game.spawns[spawnName];
-
-            if (spawn.spawning) {
-                continue;
-            }
-
-            for (const name in roomConfig) {
-                const room = Game.rooms[name];
-
-                for (let jobName in Jobs.jobs) {
-                    let job: Ant = this.jobs[jobName].ant;
-                    if (job.spawn(spawn, room)) {
-                        break;
-                    }
-                }
-            }
         }
     }
 }

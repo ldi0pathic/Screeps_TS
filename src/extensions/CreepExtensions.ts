@@ -1,6 +1,5 @@
 ﻿export function extendCreep() {
-
-
+    
     Creep.prototype.goToFinalPos = function (): void {
         const finalPos = this.memory.finalLocation
 
@@ -15,5 +14,5 @@
 
         }
     }
-    
+
 }

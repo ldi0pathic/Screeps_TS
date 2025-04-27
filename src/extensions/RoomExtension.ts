@@ -1,5 +1,4 @@
-﻿// Implementierung
-import {SourceData} from "../records/SourceData";
+﻿import {SourceData} from "../records/SourceData";
 
 export function extendRoom() {
     Room.prototype.getOrFindSource = function (): SourceData[] {

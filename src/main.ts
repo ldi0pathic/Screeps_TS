@@ -1,7 +1,8 @@
 import {ErrorMapper} from "utils/ErrorMapper";
-import {Mem} from "./controller/Memory";
-import {Jobs} from "./controller/Jobs";
 import {loadExtensions} from "./extensions/loader";
+import {SpawnController} from "./controller/SpawnController";
+import {JobsController} from "./controller/JobsController";
+import {CleanUpManager} from "./controller/CleanUpManager";
 
 const maxCpu = Game.cpu.limit;
 loadExtensions();
@@ -9,26 +10,22 @@ loadExtensions();
 export const loop = ErrorMapper.wrapLoop
 (() => {
 
-    Jobs.spawn()
-    Jobs.doPrioJobs();
+    CleanUpManager.cleanMemory();
+    SpawnController.findNeededCreeps();
+    SpawnController.processSpawns();
+    JobsController.doPrioJobs();
 
     let used = Game.cpu.getUsed();
-    if (used >= maxCpu * 0.5) {
+    if (used >= maxCpu * 0.4) {
         return;
     }
 
-
-    if (Game.time % 2 === 0) {
-        Mem.clean();
-    }
-
-    Jobs.doJobs()
+    JobsController.doJobs()
 
     used = Game.cpu.getUsed();
-    if (used >= maxCpu) {
+    if (used >= maxCpu * 0.8) {
         return;
     }
-
-
-    Jobs.doLowJobs();
+    JobsController.doLowJobs();
+    CleanUpManager.processCleanupQueue();
 });

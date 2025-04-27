@@ -38,6 +38,10 @@ export class UpgraderAnt extends Ant {
         }
     }
 
+    public getProfil(): BodyPartConstant[] {
+        return [WORK, CARRY, MOVE]
+    }
+
     protected onSpawnAction(workroom: Room): void {
 
     }
@@ -50,11 +54,7 @@ export class UpgraderAnt extends Ant {
         return eJobType.upgrader
     }
 
-    protected shouldSpawn(spawn: StructureSpawn, workroom: Room, creeps: Creep[]): boolean {
+    protected shouldSpawn(workroom: Room): boolean {
         return true;
-    }
-
-    protected getProfil(): BodyPartConstant[] {
-        return [WORK, CARRY, MOVE]
     }
 }

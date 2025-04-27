@@ -97,7 +97,8 @@ declare global {
 
     interface JobDef {
         ant: Ant;
-        prio: number;
+        jobPrio: number;
+        spawnPrio: number
     }
 
     interface CreepMemory {
@@ -108,7 +109,7 @@ declare global {
         spawn: string;
 
         roundRobin: number | undefined;
-
+        cleaning?: boolean;
         energySourceId: Id<Source> | undefined;
         containerId: Id<StructureContainer> | undefined
         linkId: Id<StructureLink> | undefined
