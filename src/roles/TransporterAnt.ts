@@ -13,18 +13,32 @@ export class TransporterAnt extends Ant {
                 let container = Game.getObjectById(containerId);
 
                 if (container?.structureType == STRUCTURE_CONTAINER) {
-                    if (creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                        creep.moveTo(container);
-                        return;
+                    if (container.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+                        if (creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                            creep.moveTo(container);
+                            return;
+                        }
+                    } else {
+                        creep.say('📦🚫');
                     }
+
                 } else {
                     creep.memory.containerId = undefined;
+                    //creep löschen?
                 }
             }
         } else {
-            let spawn = Game.spawns[creep.memory.spawn];
-            if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(spawn);
+            const targets = creep.room.find(FIND_STRUCTURES, {
+                filter: s => (s.structureType === STRUCTURE_SPAWN ||
+                        s.structureType === STRUCTURE_EXTENSION) &&
+                    s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+            });
+
+            if (targets.length > 0) {
+                const target = creep.pos.findClosestByRange(targets);
+                if (target && creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target);
+                }
             }
         }
     }
@@ -33,7 +47,8 @@ export class TransporterAnt extends Ant {
         return [CARRY, CARRY, MOVE]
     }
 
-    public override getSpawnOptions(spawn: StructureSpawn, workroom: Room): SpawnOptions {
+    public override getSpawnMemory(spawn: StructureSpawn, roomname: string): CreepMemory {
+        const workroom = Game.rooms[roomname];
         const job = this.getJob();
         const sources = workroom.getOrFindSource();
         const creeps = _.filter(Game.creeps, creep =>
@@ -60,32 +75,28 @@ export class TransporterAnt extends Ant {
             }
         }
         return {
-            memory: {
-                job: job,
-                spawn: spawn.name,
-                state: eJobState.harvest,
-                workroom: workroom.name,
-                energySourceId: undefined,
-                containerId: containerId,
-                linkId: undefined,
-                buildId: undefined,
-                onPosition: false,
-                finalLocation: undefined,
-                roundRobin: undefined,
-            }
+            job: job,
+            spawn: spawn.name,
+            minTicksToLive: 100,
+            ticktToPos: 1,
+            state: eJobState.harvest,
+            workroom: workroom.name,
+            energySourceId: undefined,
+            containerId: containerId,
+            linkId: undefined,
+            buildId: undefined,
+            onPosition: false,
+            finalLocation: undefined,
+            roundRobin: undefined,
         }
     }
 
-    protected onSpawnAction(workroom: Room): void {
-
+    public override getJob(): eJobType {
+        return eJobType.transporter;
     }
 
     protected getMaxCreeps(workroom: Room): number {
-        return workroom.getOrFindSource().length;
-    }
-
-    protected getJob(): eJobType {
-        return eJobType.transporter;
+        return workroom.getOrFindSource().length || 0;
     }
 
     protected shouldSpawn(workroom: Room): boolean {

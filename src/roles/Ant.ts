@@ -27,7 +27,7 @@ export abstract class Ant {
         );
 
         const countOfAnts = _.filter(existingCreeps, (creep) =>
-            ((creep.ticksToLive != undefined && creep.ticksToLive > 100) || creep.spawning)
+            ((creep.ticksToLive != undefined && creep.ticksToLive > creep.memory.minTicksToLive) || creep.spawning)
         ).length;
 
         if (countOfAnts >= max) {
@@ -38,36 +38,37 @@ export abstract class Ant {
             return false;
         }
 
-        SpawnController.addToJobQueue(job, workroom);
+        const dynamicPriority = SpawnController.getSpawnPriority(this, workroom);
+        SpawnController.addToJobQueue(job, workroom, dynamicPriority);
 
         return false;
     }
 
     public abstract getProfil(): BodyPartConstant[];
 
-    public getSpawnOptions(spawn: StructureSpawn, workroom: Room): SpawnOptions {
+    public getSpawnMemory(spawn: StructureSpawn, workroom: string): CreepMemory {
         const job = this.getJob();
 
         return {
-            memory: {
-                job: job,
-                spawn: spawn.name,
-                state: eJobState.harvest,
-                workroom: workroom.name,
-                energySourceId: undefined,
-                onPosition: undefined,
-                finalLocation: undefined,
-                containerId: undefined,
-                linkId: undefined,
-                buildId: undefined,
-                roundRobin: undefined,
-            }
+            job: job,
+            minTicksToLive: 100,
+            ticktToPos: 1,
+            spawn: spawn.name,
+            state: eJobState.harvest,
+            workroom: workroom,
+            energySourceId: undefined,
+            onPosition: undefined,
+            finalLocation: undefined,
+            containerId: undefined,
+            linkId: undefined,
+            buildId: undefined,
+            roundRobin: undefined,
         }
     }
 
-    protected abstract getMaxCreeps(workroom: Room): number;
+    public abstract getJob(): eJobType;
 
-    protected abstract getJob(): eJobType;
+    protected abstract getMaxCreeps(workroom: Room): number;
 
     protected abstract shouldSpawn(workroom: Room): boolean;
 

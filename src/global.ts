@@ -3,6 +3,7 @@ import {SourceData} from "./records/SourceData";
 
 export {};
 
+
 declare global {
     const enum eJobType {
         miner = 'Miner',
@@ -107,6 +108,8 @@ declare global {
 
         workroom: string;
         spawn: string;
+        ticktToPos: number;
+        minTicksToLive: number;
 
         roundRobin: number | undefined;
         cleaning?: boolean;
@@ -125,9 +128,24 @@ declare global {
     }
 
     interface Creep {
-        goToFinalPos(): void;
+        goToFinalPos(): boolean;
     }
 
+    interface SpawnRequest {
+        jobKey: eJobType;
+        targetRoom: string;
+        bodyParts: BodyPartConstant[];
+        priority: number;
+        timestamp: number;
+    }
+
+    interface Memory {
+        spawnQueue: SpawnRequest[];
+        cleanupQueue: string[];
+        cpuHistory: number[];
+        lastCpuTick: number;
+        lastTickCpu: number;
+    }
 
     interface RoomMemory {
         energySources: SourceData[],
