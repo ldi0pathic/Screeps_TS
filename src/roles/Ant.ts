@@ -38,9 +38,10 @@ export abstract class Ant {
             return false;
         }
 
-        SpawnController.addToJobQueue(job, workroom);
+        const dynamicPriority = SpawnController.getSpawnPriority(this, workroom);
+        SpawnController.addToJobQueue(job, workroom, dynamicPriority);
 
-        return false;
+        return true;
     }
 
     public abstract getProfil(): BodyPartConstant[];
@@ -65,9 +66,9 @@ export abstract class Ant {
         }
     }
 
-    protected abstract getMaxCreeps(workroom: Room): number;
+    abstract getJob(): eJobType;
 
-    protected abstract getJob(): eJobType;
+    protected abstract getMaxCreeps(workroom: Room): number;
 
     protected abstract shouldSpawn(workroom: Room): boolean;
 

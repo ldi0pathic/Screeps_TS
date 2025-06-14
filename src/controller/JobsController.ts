@@ -6,31 +6,104 @@ import {BuilderAnt} from "../roles/BuilderAnt";
 import {TransporterAnt} from "../roles/TransporterAnt";
 import {CleanUpManager} from "./CleanUpManager";
 
-
 export class JobsController {
 
     public static jobs: Record<string, JobDef> = {
-        Transporter: {ant: new TransporterAnt(), jobPrio: 30, spawnPrio: 10},
-        Miner: {ant: new MinerAnt(), jobPrio: 11, spawnPrio: 10},
-        Upgrader: {ant: new UpgraderAnt(), jobPrio: 11, spawnPrio: 10},
-        Worker: {ant: new WorkerAnt(), jobPrio: 11, spawnPrio: 10},
-        Builder: {ant: new BuilderAnt(), jobPrio: 11, spawnPrio: 10},
+        [eJobType.transporter]: {ant: new TransporterAnt(), jobPrio: 30, spawnPrio: 10},
+        [eJobType.miner]: {ant: new MinerAnt(), jobPrio: 11, spawnPrio: 10},
+        [eJobType.upgrader]: {ant: new UpgraderAnt(), jobPrio: 11, spawnPrio: 10},
+        [eJobType.worker]: {ant: new WorkerAnt(), jobPrio: 11, spawnPrio: 10},
+        [eJobType.builder]: {ant: new BuilderAnt(), jobPrio: 11, spawnPrio: 10},
     };
+
 
     private static bucketNorm: Array<{ creep: Creep; ant: Ant }> = [];
     private static bucketLow: Array<{ creep: Creep; ant: Ant }> = [];
+
+    static getDynamicPriority(jobType: eJobType, room: Room): number {
+        const baseConfig = this.jobs[jobType];
+        if (!baseConfig) return 11;
+
+        switch (jobType) {
+            case eJobType.miner:
+                // Hohe Priorität bei wenig Energie
+                return room.energyAvailable < room.energyCapacityAvailable * 0.3 ? 25 : 15;
+
+            case eJobType.upgrader:
+                // Kritisch wenn Controller bald downgraded
+                const controller = room.controller;
+                if (controller && controller.ticksToDowngrade < 5000) {
+                    return 30; // Höchste Priorität!
+                }
+                return controller?.level === 8 ? 5 : 11; // Niedrig bei RCL8
+
+            case eJobType.builder:
+                const sites = room.find(FIND_CONSTRUCTION_SITES);
+                return sites.length > 5 ? 20 : (sites.length > 0 ? 11 : 3);
+
+            case eJobType.transporter:
+                // Hoch wenn Container voll sind
+                const containers = room.find(FIND_STRUCTURES, {
+                    filter: s => s.structureType === STRUCTURE_CONTAINER
+                }) as StructureContainer[];
+
+                if (containers.length === 0) return 11;
+
+                const avgFillRatio = containers.reduce((sum, c) =>
+                    sum + c.store.getUsedCapacity() / c.store.getCapacity(), 0) / containers.length;
+
+                return avgFillRatio > 0.8 ? 25 : 11;
+
+        }
+
+        return baseConfig.jobPrio;
+    }
+
+    static assignRoundRobin(creep: Creep, room: Room): void {
+        const jobType = creep.memory.job;
+
+        // Kritische Jobs: Jeder Tick
+        if (this.getDynamicPriority(jobType, room) >= 25) {
+            creep.memory.roundRobin = undefined;
+            return;
+        }
+
+        // Normale Jobs: Jeden 2. Tick
+        if (this.getDynamicPriority(jobType, room) >= 15) {
+            creep.memory.roundRobin = 2;
+            return;
+        }
+
+        // Niedrige Jobs: Jeden 3-5 Tick (je nach CPU-Last)
+        const cpuLoad = Game.cpu.getUsed() / Game.cpu.limit;
+        creep.memory.roundRobin = cpuLoad > 0.7 ? 5 : 3;
+    }
 
     static doPrioJobs() {
         this.bucketNorm.length = 0;
         this.bucketLow.length = 0;
 
+        const creepCount = Object.keys(Game.creeps).length;
+        if (creepCount === 0) {
+            return;
+        }
+
         for (const name in Game.creeps) {
             const creep = Game.creeps[name];
+
+            if (creep.spawning) {
+                continue;
+            }
             const def = this.jobs[creep.memory.job];
 
             if (!def) {
                 CleanUpManager.addToCleanupQueue(name);
                 continue;
+            }
+
+            // Dynamische Round-Robin Zuweisung
+            if (creep.memory.roundRobin === undefined || Game.time % 100 === 0) {
+                this.assignRoundRobin(creep, creep.room);
             }
 
             if (creep.memory.roundRobin != undefined) {
@@ -39,9 +112,12 @@ export class JobsController {
                 }
             }
 
-            if (def.jobPrio >= 21) {
+            // Dynamische Priorität berechnen
+            const dynamicPrio = this.getDynamicPriority(creep.memory.job, creep.room);
+
+            if (dynamicPrio >= 21) {
                 def.ant.doJob(creep);
-            } else if (def.jobPrio >= 11) {
+            } else if (dynamicPrio >= 11) {
                 this.bucketNorm.push({creep, ant: def.ant});
             } else {
                 this.bucketLow.push({creep, ant: def.ant});

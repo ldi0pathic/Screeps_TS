@@ -1,5 +1,6 @@
 ﻿import {Ant} from "./roles/Ant";
 import {SourceData} from "./records/SourceData";
+import {SpawnRequest} from "./types";
 
 export {};
 
@@ -128,6 +129,13 @@ declare global {
         goToFinalPos(): void;
     }
 
+    interface Memory {
+        spawnQueue: SpawnRequest[];
+        cleanupQueue: string[];
+        cpuHistory: number[];
+        lastCpuTick: number;
+        lastTickCpu: number;
+    }
 
     interface RoomMemory {
         energySources: SourceData[],

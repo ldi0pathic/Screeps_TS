@@ -50,7 +50,7 @@ export class MinerAnt extends Ant {
                         return;
                     }
                     case ERR_NO_BODYPART: {
-                       
+
 
                         return;
                     }
@@ -193,10 +193,13 @@ export class MinerAnt extends Ant {
         }
     }
 
-    protected getMaxCreeps(workroom: Room): number {
-        return workroom.getOrFindSource().length;
+    public override getJob(): eJobType {
+        return eJobType.miner;
     }
 
+    protected getMaxCreeps(workroom: Room): number {
+        return workroom.getOrFindSource().length || 0;
+    }
 
     protected shouldSpawn(workroom: Room): boolean {
 
@@ -207,10 +210,6 @@ export class MinerAnt extends Ant {
         );
 
         return roomConfig[workroom.name].sendMiner && ids.length > creeps.length;
-    }
-
-    protected getJob(): eJobType {
-        return eJobType.miner;
     }
 
 }

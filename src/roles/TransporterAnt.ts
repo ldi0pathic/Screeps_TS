@@ -13,19 +13,56 @@ export class TransporterAnt extends Ant {
                 let container = Game.getObjectById(containerId);
 
                 if (container?.structureType == STRUCTURE_CONTAINER) {
-                    if (creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                        creep.moveTo(container);
-                        return;
+                    if (container.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+                        if (creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                            creep.moveTo(container);
+                            return;
+                        }
+                    } else {
+                        creep.say('📦🚫');
                     }
+
                 } else {
                     creep.memory.containerId = undefined;
                 }
             }
-        } else {
-            let spawn = Game.spawns[creep.memory.spawn];
-            if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(spawn);
+
+            if (!containerId) {
+                const containers = creep.room.find(FIND_STRUCTURES, {
+                    filter: s => s.structureType === STRUCTURE_CONTAINER &&
+                        s.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+                }) as StructureContainer[];
+
+                if (containers.length > 0) {
+                    const nearest = creep.pos.findClosestByRange(containers);
+                    if (nearest) {
+                        creep.memory.containerId = nearest.id;
+                    }
+                } else {
+                    creep.moveTo(25, 25)
+                }
             }
+
+
+        } else {
+            const targets = creep.room.find(FIND_STRUCTURES, {
+                filter: s => (s.structureType === STRUCTURE_SPAWN ||
+                        s.structureType === STRUCTURE_EXTENSION) &&
+                    s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+            });
+
+            if (targets.length > 0) {
+                const target = creep.pos.findClosestByRange(targets);
+                if (target && creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target);
+                }
+            } else {
+                let spawn = Game.spawns[creep.memory.spawn];
+                if (spawn && creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(spawn);
+                }
+            }
+
         }
     }
 
@@ -76,16 +113,16 @@ export class TransporterAnt extends Ant {
         }
     }
 
+    public override getJob(): eJobType {
+        return eJobType.transporter;
+    }
+
     protected onSpawnAction(workroom: Room): void {
 
     }
 
     protected getMaxCreeps(workroom: Room): number {
-        return workroom.getOrFindSource().length;
-    }
-
-    protected getJob(): eJobType {
-        return eJobType.transporter;
+        return workroom.getOrFindSource().length || 0;
     }
 
     protected shouldSpawn(workroom: Room): boolean {

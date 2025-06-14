@@ -10,8 +10,12 @@ export class WorkerAnt extends Ant {
 
             if (!sourceId) {
                 let source = creep.room.find(FIND_SOURCES);
-                sourceId = source[0].id;
-                creep.memory.energySourceId = sourceId
+                if (source.length > 0) {
+                    sourceId = source[0].id;
+                    creep.memory.energySourceId = sourceId
+                } else {
+                    return;
+                }
             }
 
             let source = Game.getObjectById(sourceId)
@@ -29,9 +33,17 @@ export class WorkerAnt extends Ant {
             creep.memory.energySourceId = undefined
 
             let spawn = Game.spawns[creep.memory.spawn];
-            if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(spawn);
+            if (spawn) {
+                if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(spawn);
+                }
+            } else {
+                const nearestSpawn = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
+                if (nearestSpawn && creep.transfer(nearestSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(nearestSpawn);
+                }
             }
+
         }
     }
 
@@ -39,16 +51,16 @@ export class WorkerAnt extends Ant {
         return [WORK, CARRY, MOVE]
     }
 
+    public override getJob(): eJobType {
+        return eJobType.worker;
+    }
+
     protected onSpawnAction(workroom: Room): void {
 
     }
 
     protected getMaxCreeps(workroom: Room): number {
-        return roomConfig[workroom.name].workerCount;
-    }
-
-    protected getJob(): eJobType {
-        return eJobType.worker;
+        return roomConfig[workroom.name].workerCount || 0;
     }
 
     protected shouldSpawn(workroom: Room): boolean {

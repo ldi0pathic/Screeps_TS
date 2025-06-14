@@ -1,10 +1,13 @@
 ﻿export class CleanUpManager {
     private static cleanupQueue: string[] = [];
+    private static lastCleanupTick: number = 0;
+
 
     static addToCleanupQueue(creepName: string): void {
-        if (!this.cleanupQueue.includes(creepName)) {
-            this.cleanupQueue.push(creepName);
+        if (!Memory.cleanupQueue) Memory.cleanupQueue = [];
 
+        if (!Memory.cleanupQueue.includes(creepName)) {
+            Memory.cleanupQueue.push(creepName);
             const creep = Game.creeps[creepName];
             if (creep) {
                 creep.memory.cleaning = true;
@@ -13,20 +16,22 @@
     }
 
     static processCleanupQueue(): void {
-        for (let i = this.cleanupQueue.length - 1; i >= 0; i--) {
-            const name = this.cleanupQueue[i];
+
+        if (!Memory.cleanupQueue) Memory.cleanupQueue = [];
+
+        const toProcess = Memory.cleanupQueue.splice(0, 1);
+
+        for (const name of toProcess) {
             const creep = Game.creeps[name];
+            if (!creep) continue;
 
-            if (!creep) {
-                this.cleanupQueue.splice(i, 1);
-                continue;
-            }
-
-            if (this.cleanCreep(creep)) {
-                this.cleanupQueue.splice(i, 1);
+            if (!this.cleanCreep(creep)) {
+                Memory.cleanupQueue.unshift(name);
             }
         }
+
     }
+
 
     public static cleanMemory(): void {
         for (const name in Memory.creeps) {
@@ -63,5 +68,6 @@
         delete Memory.creeps[creep.name];
         creep.suicide();
         return true;
+
     }
 }

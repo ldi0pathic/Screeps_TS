@@ -1,11 +1,12 @@
 ﻿import {SourceData} from "./records/SourceData";
 
-interface JobDef {
-    ant: import("./roles/Ant").Ant;
-    jobPrio: number;
-    spawnPrio: number;
+interface SpawnRequest {
+    jobKey: eJobType;
+    targetRoom: Room;
+    bodyParts: BodyPartConstant[];
+    priority: number;
+    timestamp: number;
 }
-
 
 interface RoomConfig {
     [roomName: string]: any;

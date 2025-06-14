@@ -10,8 +10,12 @@ export class BuilderAnt extends Ant {
 
             if (!sourceId) {
                 let source = creep.room.find(FIND_SOURCES);
-                sourceId = source[0].id;
-                creep.memory.energySourceId = sourceId
+                if (source.length > 0) {
+                    sourceId = source[0].id;
+                    creep.memory.energySourceId = sourceId
+                } else {
+                    return;
+                }
             }
 
             let source = Game.getObjectById(sourceId)
@@ -21,9 +25,9 @@ export class BuilderAnt extends Ant {
                     creep.moveTo(source);
                     return;
                 }
+            } else {
+                creep.memory.energySourceId = undefined
             }
-
-            creep.memory.energySourceId = undefined
 
         } else {
 
@@ -41,27 +45,35 @@ export class BuilderAnt extends Ant {
                 const build = Game.getObjectById(buildId);
                 if (build) {
                     creep.say('🪚');
-                    if (creep.build(build) == OK) {
-                        return;
+                    if (creep.build(build) === ERR_NOT_IN_RANGE) {
+                        creep.moveTo(build);
                     }
+                    return;
+
                 }
+            } else {
+                creep.memory.buildId = undefined;
             }
 
-            creep.memory.buildId = undefined;
-
+            if (creep.room.find(FIND_CONSTRUCTION_SITES).length === 0) {
+                const controller = creep.room.controller;
+                if (controller && creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+                    creep.moveTo(controller);
+                }
+            }
         }
     }
 
     public getProfil(): BodyPartConstant[] {
         return [WORK, CARRY, MOVE]
     }
-    
-    protected getMaxCreeps(workroom: Room): number {
-        return roomConfig[workroom.name].builderCount;
+
+    public override getJob(): eJobType {
+        return eJobType.builder;
     }
 
-    protected getJob(): eJobType {
-        return eJobType.builder;
+    protected getMaxCreeps(workroom: Room): number {
+        return roomConfig[workroom.name].builderCount || 0;
     }
 
     protected shouldSpawn(workroom: Room): boolean {

@@ -42,16 +42,16 @@ export class UpgraderAnt extends Ant {
         return [WORK, CARRY, MOVE]
     }
 
+    public override getJob(): eJobType {
+        return eJobType.upgrader
+    }
+
     protected onSpawnAction(workroom: Room): void {
 
     }
 
     protected getMaxCreeps(workroom: Room): number {
-        return roomConfig[workroom.name].upgraderCount;
-    }
-
-    protected getJob(): eJobType {
-        return eJobType.upgrader
+        return roomConfig[workroom.name].upgraderCount || 0;
     }
 
     protected shouldSpawn(workroom: Room): boolean {
