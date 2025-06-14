@@ -1,6 +1,6 @@
 ﻿import {JobsController} from "./JobsController";
 import {roomConfig} from "../config";
-import {Ant} from "../roles/Ant";
+import {Ant} from "../roles/base/Ant";
 import {Jobs} from "../records/Jobs";
 
 export class SpawnController {
@@ -80,7 +80,7 @@ export class SpawnController {
             if (!room) continue;
 
             for (let jobName in Jobs.jobs) {
-                let job: Ant = Jobs.jobs[jobName].ant;
+                let job: Ant<any> = Jobs.jobs[jobName].ant;
                 job.spawn(room);
             }
         }
@@ -161,7 +161,7 @@ export class SpawnController {
         }
     }
 
-    static getSpawnPriority(ant: Ant, room: Room): number {
+    static getSpawnPriority(ant: Ant<any>, room: Room): number {
         const jobType = ant.getJob();
 
         if (jobType === eJobType.miner) {
@@ -250,7 +250,7 @@ export class SpawnController {
 
         const spawnAnt = def.ant;
         const name = this.getName(request);
-        const memory = spawnAnt.getSpawnMemory(spawn, request.targetRoom);
+        const memory = spawnAnt.createSpawnMemory(spawn, request.targetRoom);
 
         if (spawn.spawnCreep(request.bodyParts, name, {dryRun: true}) === OK) {
             if (spawn.spawnCreep(request.bodyParts, name, {memory: memory}) === OK) {

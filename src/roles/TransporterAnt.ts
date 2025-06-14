@@ -1,4 +1,4 @@
-﻿import {Ant} from "./Ant";
+﻿import {Ant} from "./base/Ant";
 import _ from "lodash";
 
 

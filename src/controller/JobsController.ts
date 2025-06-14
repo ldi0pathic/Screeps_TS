@@ -4,8 +4,8 @@ import {Jobs} from "../records/Jobs";
 
 
 export class JobsController {
-    private static bucketNorm: Array<{ creep: Creep; ant: Ant }> = [];
-    private static bucketLow: Array<{ creep: Creep; ant: Ant }> = [];
+    private static bucketNorm: Array<{ creep: Creep; ant: Ant<any> }> = [];
+    private static bucketLow: Array<{ creep: Creep; ant: Ant<any> }> = [];
 
     static getDynamicPriority(jobType: eJobType, room: Room): number {
         const baseConfig = Jobs.jobs[jobType];

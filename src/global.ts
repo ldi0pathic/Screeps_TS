@@ -97,7 +97,7 @@ declare global {
     }
 
     interface JobDef {
-        ant: Ant;
+        ant: Ant<any>;
         jobPrio: number;
         spawnPrio: number
     }
@@ -105,20 +105,38 @@ declare global {
     interface CreepMemory {
         job: eJobType;
         state: eJobState;
-
-        workroom: string;
         spawn: string;
-        ticktToPos: number;
+        workroom: string;
         minTicksToLive: number;
+    }
 
-        roundRobin: number | undefined;
-        cleaning?: boolean;
+    /**
+     * ticktToPos: number;
+     *         roundRobin: number | undefined;
+     *         cleaning?: boolean;
+     *         energySourceId: Id<Source> | undefined;
+     *         containerId: Id<StructureContainer> | undefined
+     *         linkId: Id<StructureLink> | undefined
+     *         buildId: Id<ConstructionSite> | undefined
+     *         onPosition: boolean | undefined;
+     *         finalLocation: RoomPosition | undefined;
+     */
+    interface BuilderMemory extends CreepMemory {
         energySourceId: Id<Source> | undefined;
-        containerId: Id<StructureContainer> | undefined
-        linkId: Id<StructureLink> | undefined
         buildId: Id<ConstructionSite> | undefined
-        onPosition: boolean | undefined;
-        finalLocation: RoomPosition | undefined;
+    }
+
+    interface StationaryCreepMemory extends CreepMemory {
+        onPosition: boolean;
+        ticksToPos: number;
+        finalLocation: RoomPosition;
+    }
+
+    interface MinerMemory extends StationaryCreepMemory {
+        energySourceId: Id<Source> | undefined;
+        containerId: Id<StructureContainer> | undefined;
+        buildId: Id<ConstructionSite> | undefined;
+        linkId: Id<StructureLink> | undefined;
     }
 
     interface Room {
