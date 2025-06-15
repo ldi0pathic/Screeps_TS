@@ -1,9 +1,16 @@
 ﻿import {Ant} from "./base/Ant";
 import {roomConfig} from "../config";
+import {Movement} from "../utils/Movement";
 
 export class BuilderAnt extends Ant<BuilderMemory> {
 
     doJob(): void {
+        
+        if (Movement.shouldContinueMoving(this.creep)) {
+            Movement.continueMoving(this.creep);
+            return;
+        }
+
         this.checkHarvest();
 
         if (this.memory.state == eJobState.harvest) {
@@ -23,7 +30,7 @@ export class BuilderAnt extends Ant<BuilderMemory> {
 
             if (source) {
                 if (this.creep.harvest(source) === ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(source);
+                    this.moveTo(source);
                     return;
                 }
             } else {
@@ -47,7 +54,7 @@ export class BuilderAnt extends Ant<BuilderMemory> {
                 if (build) {
                     this.creep.say('🪚');
                     if (this.creep.build(build) === ERR_NOT_IN_RANGE) {
-                        this.creep.moveTo(build);
+                        this.moveTo(build);
                     }
                     return;
 
@@ -59,7 +66,7 @@ export class BuilderAnt extends Ant<BuilderMemory> {
             if (this.creep.room.find(FIND_CONSTRUCTION_SITES).length === 0) {
                 const controller = this.creep.room.controller;
                 if (controller && this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(controller);
+                    this.moveTo(controller);
                 }
             }
         }
@@ -74,6 +81,7 @@ export class BuilderAnt extends Ant<BuilderMemory> {
             state: eJobState.harvest,
             workroom: workroom,
             roundRobin: undefined,
+            moving: false,
         } as BuilderMemory;
     }
 

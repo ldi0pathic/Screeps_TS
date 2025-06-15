@@ -239,6 +239,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             onPosition: false,
             finalLocation: finalLocation,
             roundRobin: undefined,
+            moving: false,
 
         } as MinerMemory;
     }

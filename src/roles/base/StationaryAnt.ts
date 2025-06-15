@@ -8,11 +8,13 @@ export abstract class StationaryAnt<TMemory extends StationaryCreepMemory> exten
                 this.creep.pos.x === finalPos.x &&
                 this.creep.pos.y === finalPos.y) {
                 this.memory.onPosition = true;
+                this.memory.moving = false;
+                this.memory.targetPos = undefined;
                 this.memory.minTicksToLive = this.memory.ticksToPos;
                 return true;
             }
 
-            if (this.creep.moveTo(new RoomPosition(finalPos.x, finalPos.y, this.memory.workroom)) === OK) {
+            if (this.moveTo(new RoomPosition(finalPos.x, finalPos.y, this.memory.workroom)) === OK) {
                 this.memory.ticksToPos = this.memory.ticksToPos + 1;
             }
             return true;

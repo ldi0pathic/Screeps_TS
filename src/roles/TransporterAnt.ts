@@ -1,9 +1,17 @@
 ﻿import {Ant} from "./base/Ant";
 import _ from "lodash";
+import {Movement} from "../utils/Movement";
 
 
 export class TransporterAnt extends Ant<TransporterMemory> {
     doJob(): void {
+
+        if (Movement.shouldContinueMoving(this.creep)) {
+            Movement.continueMoving(this.creep);
+            return;
+        }
+
+
         this.checkHarvest();
         if (this.memory.state == eJobState.harvest) {
 
@@ -15,7 +23,7 @@ export class TransporterAnt extends Ant<TransporterMemory> {
                 if (container?.structureType == STRUCTURE_CONTAINER) {
                     if (container.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
                         if (this.creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                            this.creep.moveTo(container);
+                            this.moveTo(container);
                             return;
                         }
                     } else {
@@ -37,7 +45,7 @@ export class TransporterAnt extends Ant<TransporterMemory> {
             if (targets.length > 0) {
                 const target = this.creep.pos.findClosestByRange(targets);
                 if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(target);
+                    this.moveTo(target);
                 }
             }
         }
@@ -83,6 +91,7 @@ export class TransporterAnt extends Ant<TransporterMemory> {
             workroom: workroom.name,
             harvestContainerId: containerId,
             roundRobin: undefined,
+            moving: false,
         }
     }
 

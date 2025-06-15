@@ -1,9 +1,16 @@
 ﻿import {Ant} from "./base/Ant";
 import {roomConfig} from "../config";
+import {Movement} from "../utils/Movement";
 
 export class WorkerAnt extends Ant<WorkerMemory> {
 
     doJob(): void {
+
+        if (Movement.shouldContinueMoving(this.creep)) {
+            Movement.continueMoving(this.creep);
+            return;
+        }
+
         this.checkHarvest();
 
         if (this.memory.state == eJobState.harvest) {
@@ -23,7 +30,7 @@ export class WorkerAnt extends Ant<WorkerMemory> {
 
             if (source) {
                 if (this.creep.harvest(source) === ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(source);
+                    this.moveTo(source);
                 }
             } else {
                 this.memory.energySourceId = undefined
@@ -36,12 +43,12 @@ export class WorkerAnt extends Ant<WorkerMemory> {
             let spawn = Game.spawns[this.memory.spawn];
             if (spawn) {
                 if (this.creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(spawn);
+                    this.moveTo(spawn);
                 }
             } else {
                 const nearestSpawn = this.creep.pos.findClosestByRange(FIND_MY_SPAWNS);
                 if (nearestSpawn && this.creep.transfer(nearestSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(nearestSpawn);
+                    this.moveTo(nearestSpawn);
                 }
             }
 
@@ -57,6 +64,7 @@ export class WorkerAnt extends Ant<WorkerMemory> {
             workroom: workroom,
             energySourceId: undefined,
             roundRobin: undefined,
+            moving: false,
         }
     }
 

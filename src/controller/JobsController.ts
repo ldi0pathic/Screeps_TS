@@ -44,24 +44,38 @@ export class JobsController {
         return baseConfig.jobPrio;
     }
 
+  
     static assignRoundRobin(creep: Creep, room: Room): void {
         const jobType = creep.memory.job;
+        const priority = this.getDynamicPriority(jobType, room);
+        const cpuUsage = Game.cpu.getUsed() / Game.cpu.limit;
+        const tickTime = Game.cpu.tickLimit;
 
-        // Kritische Jobs: Jeder Tick
-        if (this.getDynamicPriority(jobType, room) >= 25) {
-            creep.memory.roundRobin = undefined;
+        // Kritische Jobs: Immer ausführen
+        if (priority >= 25) {
+            creep.memory.roundRobin = 1;
             return;
         }
 
-        // Normale Jobs: Jeden 2. Tick
-        if (this.getDynamicPriority(jobType, room) >= 15) {
-            creep.memory.roundRobin = 2;
-            return;
+        // Adaptive Frequenz basierend auf CPU-Last und Priorität
+        let frequency = 2;
+
+        if (priority >= 20) {
+            frequency = cpuUsage > 0.8 ? 3 : 2;
+        } else if (priority >= 15) {
+            frequency = cpuUsage > 0.8 ? 4 : 3;
+        } else if (priority >= 10) {
+            frequency = cpuUsage > 0.8 ? 6 : 4;
+        } else {
+            frequency = cpuUsage > 0.8 ? 10 : 6;
         }
 
-        // Niedrige Jobs: Jeden 3-5 Tick (je nach CPU-Last)
-        const cpuLoad = Game.cpu.getUsed() / Game.cpu.limit;
-        creep.memory.roundRobin = cpuLoad > 0.7 ? 5 : 3;
+        // Zusätzliche Anpassung für niedrige Tick-Zeit
+        if (tickTime < 100) {
+            frequency = Math.min(frequency * 2, 10);
+        }
+
+        creep.memory.roundRobin = frequency;
     }
 
     static doJobs() {
@@ -75,12 +89,123 @@ export class JobsController {
             ant.doJob();
         }
     }
+    
+    static shouldSkipCreep(creep: Creep): boolean {
 
-    // NEUE HILFSMETHODEN für bessere Performance und Debugging
+        if (creep.fatigue > 0) return true;
+        if (creep.spawning) return true;
+        if (creep.ticksToLive !== undefined && creep.ticksToLive < 5) return true;
 
-    /**
-     * Gibt Statistiken über die aktuelle Job-Verteilung zurück
-     */
+        return false;
+    }
+
+    
+    static redistributeJobsOnHighCPU(): void {
+        const cpuUsage = Game.cpu.getUsed() / Game.cpu.limit;
+
+        if (cpuUsage > 0.85) {
+            // Reduziere Round-Robin Frequenz für alle nicht-kritischen Jobs
+            for (const name in Game.creeps) {
+                const creep = Game.creeps[name];
+                const priority = this.getDynamicPriority(creep.memory.job, creep.room);
+
+                if (priority < 20 && creep.memory.roundRobin) {
+                    creep.memory.roundRobin = Math.min(creep.memory.roundRobin * 2, 10);
+                }
+            }
+        }
+    }
+    
+    static doPrioJobs() {
+        this.bucketNorm.length = 0;
+        this.bucketLow.length = 0;
+
+        const creepCount = Object.keys(Game.creeps).length;
+        if (creepCount === 0) return;
+
+        // Dynamisches CPU-Budget basierend auf verfügbarer Zeit
+        const availableCPU = Game.cpu.limit - Game.cpu.getUsed();
+        const cpuBudget = Math.min(availableCPU * 0.9, Game.cpu.limit * 0.8);
+        const startCpu = Game.cpu.getUsed();
+
+        // Sortiere Creeps nach Priorität für bessere Abarbeitung
+        const creepEntries = Object.entries(Game.creeps).sort(([, a], [, b]) => {
+            const prioA = this.getDynamicPriority(a.memory.job, a.room);
+            const prioB = this.getDynamicPriority(b.memory.job, b.room);
+            return prioB - prioA;
+        });
+
+        let processedCount = 0;
+        let skippedCount = 0;
+
+        for (const [name, creep] of creepEntries) {
+
+            const currentCpuUsed = Game.cpu.getUsed() - startCpu;
+            const estimatedCpuForNextCreep = currentCpuUsed / Math.max(processedCount, 1);
+
+            if (currentCpuUsed + estimatedCpuForNextCreep > cpuBudget) {
+                skippedCount = creepEntries.length - processedCount;
+                console.log(`⚠️ CPU-Budget überschritten, ${skippedCount} Creeps übersprungen`);
+                break;
+            }
+
+            if (this.shouldSkipCreep(creep)) {
+                continue;
+            }
+
+            const def = Jobs.jobs[creep.memory.job];
+            if (!def) {
+                CleanUpManager.addToCleanupQueue(name);
+                continue;
+            }
+
+            // Adaptive Round-Robin alle 50 Ticks neu berechnen
+            if (Game.time % 50 === 0 || creep.memory.roundRobin === undefined) {
+                this.assignRoundRobin(creep, creep.room);
+            }
+
+            // Round-Robin Check
+            if (!creep.memory.moving && creep.memory.roundRobin && creep.memory.roundRobin > 1) {
+                if (Game.time % creep.memory.roundRobin !== 0) {
+                    creep.say(`⏸️${creep.memory.roundRobin}`);
+                    continue;
+                }
+            }
+
+            const ant = Jobs.createAnt(creep.memory.job, creep);
+            if (!ant) {
+                console.log(`⚠️ Konnte keine Ant-Instanz für Job ${creep.memory.job} erstellen`);
+                CleanUpManager.addToCleanupQueue(name);
+                continue;
+            }
+
+            const dynamicPrio = this.getDynamicPriority(creep.memory.job, creep.room);
+
+            // Erweiterte Prioritätsstufen
+            if (dynamicPrio >= 25) {
+                ant.doJob(); // Kritisch - sofort ausführen
+            } else if (dynamicPrio >= 20) {
+                this.bucketNorm.unshift({creep, ant}); // Hoch - am Anfang der Norm-Queue
+            } else if (dynamicPrio >= 11) {
+                this.bucketNorm.push({creep, ant}); // Normal
+            } else {
+                this.bucketLow.push({creep, ant}); // Niedrig
+            }
+
+            processedCount++;
+        }
+
+        // Logging nur bei signifikanten Änderungen
+        if (skippedCount > 0 || Game.time % 100 === 0) {
+            console.log(`🔄 Jobs: Verarbeitet=${processedCount}, Übersprungen=${skippedCount}, CPU=${(Game.cpu.getUsed() - startCpu).toFixed(2)}`);
+        }
+
+        // Adaptive Umverteilung bei hoher CPU-Last
+        if (Game.cpu.getUsed() / Game.cpu.limit > 0.8) {
+            this.redistributeJobsOnHighCPU();
+        }
+    }
+    
     static getJobStats(): Record<string, { count: number; priority: number }> {
         const stats: Record<string, { count: number; priority: number }> = {};
 
@@ -99,98 +224,36 @@ export class JobsController {
 
         return stats;
     }
-
-    /**
-     * CPU-Optimierung: Überspringe Creeps die zu weit entfernt sind
-     */
-    static shouldSkipCreep(creep: Creep): boolean {
-        // Überspringe Creeps die gerade bewegen und weit von ihrem Ziel entfernt sind
-        if (creep.fatigue > 0) return true;
-
-        // Weitere Optimierungen können hier hinzugefügt werden
-        return false;
+    
+    static getPerformanceMetrics(): any {
+        return {
+            totalCreeps: Object.keys(Game.creeps).length,
+            bucketsSize: {
+                normal: this.bucketNorm.length,
+                low: this.bucketLow.length
+            },
+            cpuUsage: Game.cpu.getUsed(),
+            cpuLimit: Game.cpu.limit,
+            cpuPercent: (Game.cpu.getUsed() / Game.cpu.limit * 100).toFixed(1)
+        };
     }
-
-    /**
-     * Erweiterte doPrioJobs mit CPU-Optimierungen
-     */
-    static doPrioJobs() {
-        this.bucketNorm.length = 0;
-        this.bucketLow.length = 0;
-
-        const creepCount = Object.keys(Game.creeps).length;
-        if (creepCount === 0) {
-            return;
-        }
-
-        // CPU-Budget für diesen Tick
-        const cpuBudget = Game.cpu.limit * 0.8; // 80% des Limits für Jobs
-        const startCpu = Game.cpu.getUsed();
-
-        for (const name in Game.creeps) {
-            // CPU-Check: Stoppe wenn Budget überschritten
-            if (Game.cpu.getUsed() - startCpu > cpuBudget) {
-                console.log(`⚠️ CPU-Budget überschritten, ${Object.keys(Game.creeps).length - Object.keys(Game.creeps).indexOf(name)} Creeps übersprungen`);
-                break;
-            }
-
-            const creep = Game.creeps[name];
-
-            if (creep.spawning || this.shouldSkipCreep(creep)) {
-                continue;
-            }
-
-            const def = Jobs.jobs[creep.memory.job];
-
-            if (!def) {
-                CleanUpManager.addToCleanupQueue(name);
-                continue;
-            }
-
-            // Round-Robin Check
-            if (creep.memory.roundRobin === undefined || Game.time % 100 === 0) {
-                this.assignRoundRobin(creep, creep.room);
-            }
-
-            if (creep.memory.roundRobin != undefined) {
-                if (Game.time % creep.memory.roundRobin != 0) {
-                    creep.say("⏸️");
-                    continue;
-                }
-            }
-
-            // Ant-Instanz erstellen
-            const ant = Jobs.createAnt(creep.memory.job, creep);
-            if (!ant) {
-                console.log(`⚠️ Konnte keine Ant-Instanz für Job ${creep.memory.job} erstellen`);
-                CleanUpManager.addToCleanupQueue(name);
-                continue;
-            }
-
-            // Priorität und Bucketing
-            const dynamicPrio = this.getDynamicPriority(creep.memory.job, creep.room);
-
-            if (dynamicPrio >= 21) {
-                ant.doJob();
-            } else if (dynamicPrio >= 11) {
-                this.bucketNorm.push({creep, ant});
-            } else {
-                this.bucketLow.push({creep, ant});
-            }
-        }
-    }
-
-    /**
-     * Debug-Ausgabe für Job-Verteilung
-     */
+    
     static logJobDistribution(): void {
+        if (Game.time % 50 !== 0) return; // Nur alle 50 Ticks
+
         const stats = this.getJobStats();
-        console.log("📊 Job Distribution:");
+        const metrics = this.getPerformanceMetrics();
 
-        for (const [jobType, data] of Object.entries(stats)) {
-            console.log(`  ${jobType}: ${data.count} Creeps (Prio: ${data.priority})`);
-        }
+        console.log(`📊 === Job System Status (Tick ${Game.time}) ===`);
+        console.log(`⚡ CPU: ${metrics.cpuPercent}% (${metrics.cpuUsage.toFixed(1)}/${metrics.cpuLimit})`);
+        console.log(`👥 Creeps: ${metrics.totalCreeps} (Buckets: N=${metrics.bucketsSize.normal}, L=${metrics.bucketsSize.low})`);
 
-        console.log(`  Buckets: Normal=${this.bucketNorm.length}, Low=${this.bucketLow.length}`);
+        console.log(`🎯 Prioritäten:`);
+        Object.entries(stats)
+            .sort(([, a], [, b]) => b.priority - a.priority)
+            .forEach(([jobType, data]) => {
+                const bar = '█'.repeat(Math.floor(data.count / 2)) + '░'.repeat(Math.max(0, 5 - Math.floor(data.count / 2)));
+                console.log(`  ${jobType.padEnd(12)}: ${data.count.toString().padStart(2)} [${bar}] P:${data.priority}`);
+            });
     }
 }

@@ -1,9 +1,16 @@
 ﻿import {Ant} from "./base/Ant";
 import {roomConfig} from "../config";
+import {Movement} from "../utils/Movement";
 
 export class UpgraderAnt extends Ant<UpgraderMemory> {
 
     doJob(): void {
+        
+        if (Movement.shouldContinueMoving(this.creep)) {
+            Movement.continueMoving(this.creep);
+            return;
+        }
+
         this.checkHarvest();
 
         if (this.memory.state == eJobState.harvest) {
@@ -19,7 +26,7 @@ export class UpgraderAnt extends Ant<UpgraderMemory> {
 
             if (source) {
                 if (this.creep.harvest(source) === ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(source);
+                    this.moveTo(source);
                 }
             } else {
                 this.memory.energySourceId = undefined
@@ -32,7 +39,7 @@ export class UpgraderAnt extends Ant<UpgraderMemory> {
             if (controller) {
                 controller.room.setRoomState(controller);
                 if (this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-                    this.creep.moveTo(controller);
+                    this.moveTo(controller);
                 }
 
             }
@@ -48,6 +55,7 @@ export class UpgraderAnt extends Ant<UpgraderMemory> {
             workroom: workroom,
             energySourceId: undefined,
             roundRobin: undefined,
+            moving: false,
         }
     }
 

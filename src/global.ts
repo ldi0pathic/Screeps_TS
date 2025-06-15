@@ -109,19 +109,14 @@ declare global {
         workroom: string;
         minTicksToLive: number;
         roundRobin: number | undefined;
+        moving: boolean;
+        targetPos?: {
+            x: number;
+            y: number;
+            roomName: string;
+        };
     }
 
-    /**
-     * ticktToPos: number;
-     *         roundRobin: number | undefined;
-     *         cleaning?: boolean;
-     *         energySourceId: Id<Source> | undefined;
-     *         containerId: Id<StructureContainer> | undefined
-     *         linkId: Id<StructureLink> | undefined
-     *         buildId: Id<ConstructionSite> | undefined
-     *         onPosition: boolean | undefined;
-     *         finalLocation: RoomPosition | undefined;
-     */
     interface BuilderMemory extends CreepMemory {
         energySourceId: Id<Source> | undefined;
         constructionId: Id<ConstructionSite> | undefined

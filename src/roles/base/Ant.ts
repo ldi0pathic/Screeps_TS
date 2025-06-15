@@ -1,5 +1,6 @@
 ﻿import _ from "lodash";
 import {SpawnController} from "../../controller/SpawnController";
+import {Movement} from "../../utils/Movement";
 
 export abstract class Ant<TMemory extends CreepMemory> {
     protected creep: Creep;
@@ -66,6 +67,10 @@ export abstract class Ant<TMemory extends CreepMemory> {
     protected abstract getMaxCreeps(workroom: Room): number;
 
     protected abstract shouldSpawn(workroom: Room): boolean;
+
+    protected moveTo(target: RoomPosition | _HasRoomPosition, opts?: MoveToOpts): ScreepsReturnCode {
+        return Movement.moveTo(this.creep, target, opts);
+    }
 
 
 }
