@@ -2,42 +2,42 @@
 import _ from "lodash";
 
 
-export class TransporterAnt extends Ant {
-    doJob(creep: Creep): void {
-        this.checkHarvest(creep);
-        if (creep.memory.state == eJobState.harvest) {
+export class TransporterAnt extends Ant<TransporterMemory> {
+    doJob(): void {
+        this.checkHarvest();
+        if (this.memory.state == eJobState.harvest) {
 
-            const containerId = creep.memory.containerId;
+            const containerId = this.memory.harvestContainerId;
 
             if (containerId) {
                 let container = Game.getObjectById(containerId);
 
                 if (container?.structureType == STRUCTURE_CONTAINER) {
                     if (container.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
-                        if (creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                            creep.moveTo(container);
+                        if (this.creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                            this.creep.moveTo(container);
                             return;
                         }
                     } else {
-                        creep.say('📦🚫');
+                        this.creep.say('📦🚫');
                     }
 
                 } else {
-                    creep.memory.containerId = undefined;
+                    this.memory.harvestContainerId = undefined;
                     //creep löschen?
                 }
             }
         } else {
-            const targets = creep.room.find(FIND_STRUCTURES, {
+            const targets = this.creep.room.find(FIND_STRUCTURES, {
                 filter: s => (s.structureType === STRUCTURE_SPAWN ||
                         s.structureType === STRUCTURE_EXTENSION) &&
                     s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
             });
 
             if (targets.length > 0) {
-                const target = creep.pos.findClosestByRange(targets);
-                if (target && creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target);
+                const target = this.creep.pos.findClosestByRange(targets);
+                if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(target);
                 }
             }
         }
@@ -47,13 +47,13 @@ export class TransporterAnt extends Ant {
         return [CARRY, CARRY, MOVE]
     }
 
-    public override getSpawnMemory(spawn: StructureSpawn, roomname: string): CreepMemory {
+    public override createSpawnMemory(spawn: StructureSpawn, roomname: string): TransporterMemory {
         const workroom = Game.rooms[roomname];
         const job = this.getJob();
         const sources = workroom.getOrFindSource();
-        const creeps = _.filter(Game.creeps, creep =>
-            creep.memory.job == job &&
-            creep.memory.workroom == workroom.name
+        const creeps = _.filter(Game.creeps, c =>
+            c.memory.job == job &&
+            c.memory.workroom == workroom.name
         );
 
         let containerId: Id<StructureContainer> | undefined = undefined;
@@ -62,7 +62,8 @@ export class TransporterAnt extends Ant {
             let found = false;
 
             for (let creep of creeps) {
-                if (creep.memory.containerId === s.containerId) {
+                const transporterMemory = creep.memory as TransporterMemory;
+                if (transporterMemory.harvestContainerId === s.containerId) {
                     found = true;
                     break;
                 }
@@ -78,15 +79,9 @@ export class TransporterAnt extends Ant {
             job: job,
             spawn: spawn.name,
             minTicksToLive: 100,
-            ticktToPos: 1,
             state: eJobState.harvest,
             workroom: workroom.name,
-            energySourceId: undefined,
-            containerId: containerId,
-            linkId: undefined,
-            buildId: undefined,
-            onPosition: false,
-            finalLocation: undefined,
+            harvestContainerId: containerId,
             roundRobin: undefined,
         }
     }

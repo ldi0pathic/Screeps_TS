@@ -12,9 +12,9 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             //todo wieso nicht? finale position evtl neu festlegen?
         }
 
-        if (this.memory.buildId) {
+        if (this.memory.containerConstructionId) {
             this.checkHarvest();
-            const build = Game.getObjectById(this.memory.buildId);
+            const build = Game.getObjectById(this.memory.containerConstructionId);
             if (build) {
                 if (this.memory.state == eJobState.work && build.progressTotal > build.progress) {
                     this.creep.say('🪚');
@@ -23,7 +23,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
                 }
             } else if (!build) {
-                this.memory.buildId = undefined;
+                this.memory.containerConstructionId = undefined;
                 let container = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
                     filter: {structureType: STRUCTURE_CONTAINER}
                 })[0];
@@ -53,7 +53,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                         filter: {structureType: STRUCTURE_CONTAINER}
                     })[0];
                     if (build) {
-                        this.memory.buildId = build.id;
+                        this.memory.containerConstructionId = build.id;
                     } else {
                         console.log("🚩 Miner braucht Container! ");
                     }
@@ -235,9 +235,10 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             energySourceId: sourceId,
             containerId: containerId,
             linkId: linkId,
-            buildId: buildId,
+            containerConstructionId: buildId,
             onPosition: false,
             finalLocation: finalLocation,
+            roundRobin: undefined,
 
         } as MinerMemory;
     }

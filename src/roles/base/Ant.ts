@@ -51,8 +51,8 @@ export abstract class Ant<TMemory extends CreepMemory> {
             return false;
         }
 
-        const dynamicPriority = SpawnController.getSpawnPriority(this, workroom);
-        SpawnController.addToJobQueue(job, workroom, dynamicPriority);
+        const dynamicPriority = SpawnController.getSpawnPriority(job, workroom);
+        SpawnController.addToJobQueue(job, workroom, this.getProfil(), dynamicPriority);
 
         return false;
     }

@@ -32,13 +32,13 @@ export class BuilderAnt extends Ant<BuilderMemory> {
 
         } else {
 
-            let buildId = this.memory.buildId;
+            let buildId = this.memory.constructionId;
 
             if (!buildId) {
                 const todos = this.creep.room.find(FIND_CONSTRUCTION_SITES);
                 if (todos.length > 0) {
                     buildId = todos[0].id;
-                    this.memory.buildId = buildId;
+                    this.memory.constructionId = buildId;
                 }
             }
 
@@ -53,7 +53,7 @@ export class BuilderAnt extends Ant<BuilderMemory> {
 
                 }
             } else {
-                this.memory.buildId = undefined;
+                this.memory.constructionId = undefined;
             }
 
             if (this.creep.room.find(FIND_CONSTRUCTION_SITES).length === 0) {
@@ -73,6 +73,7 @@ export class BuilderAnt extends Ant<BuilderMemory> {
             spawn: spawn.name,
             state: eJobState.harvest,
             workroom: workroom,
+            roundRobin: undefined,
         } as BuilderMemory;
     }
 

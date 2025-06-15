@@ -1,4 +1,4 @@
-﻿import {Ant} from "./roles/Ant";
+﻿import {Ant} from "./roles/base/Ant";
 import {SourceData} from "./records/SourceData";
 
 export {};
@@ -97,9 +97,9 @@ declare global {
     }
 
     interface JobDef {
-        ant: Ant<any>;
+        antClass: new (creep: Creep) => Ant<any>;
         jobPrio: number;
-        spawnPrio: number
+        spawnPrio: number;
     }
 
     interface CreepMemory {
@@ -108,6 +108,7 @@ declare global {
         spawn: string;
         workroom: string;
         minTicksToLive: number;
+        roundRobin: number | undefined;
     }
 
     /**
@@ -123,7 +124,7 @@ declare global {
      */
     interface BuilderMemory extends CreepMemory {
         energySourceId: Id<Source> | undefined;
-        buildId: Id<ConstructionSite> | undefined
+        constructionId: Id<ConstructionSite> | undefined
     }
 
     interface StationaryCreepMemory extends CreepMemory {
@@ -132,10 +133,22 @@ declare global {
         finalLocation: RoomPosition;
     }
 
+    interface TransporterMemory extends CreepMemory {
+        harvestContainerId: Id<StructureContainer> | undefined;
+    }
+
+    interface UpgraderMemory extends CreepMemory {
+        energySourceId: Id<Source> | undefined;
+    }
+
+    interface WorkerMemory extends CreepMemory {
+        energySourceId: Id<Source> | undefined;
+    }
+
     interface MinerMemory extends StationaryCreepMemory {
         energySourceId: Id<Source> | undefined;
         containerId: Id<StructureContainer> | undefined;
-        buildId: Id<ConstructionSite> | undefined;
+        containerConstructionId: Id<ConstructionSite> | undefined;
         linkId: Id<StructureLink> | undefined;
     }
 

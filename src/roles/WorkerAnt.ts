@@ -1,18 +1,19 @@
-﻿import {Ant} from "./Ant";
+﻿import {Ant} from "./base/Ant";
 import {roomConfig} from "../config";
 
-export class WorkerAnt extends Ant {
-    doJob(creep: Creep): void {
-        this.checkHarvest(creep);
+export class WorkerAnt extends Ant<WorkerMemory> {
 
-        if (creep.memory.state == eJobState.harvest) {
-            let sourceId = creep.memory.energySourceId;
+    doJob(): void {
+        this.checkHarvest();
+
+        if (this.memory.state == eJobState.harvest) {
+            let sourceId = this.memory.energySourceId;
 
             if (!sourceId) {
-                let source = creep.room.find(FIND_SOURCES);
+                let source = this.creep.room.find(FIND_SOURCES);
                 if (source.length > 0) {
                     sourceId = source[0].id;
-                    creep.memory.energySourceId = sourceId
+                    this.memory.energySourceId = sourceId
                 } else {
                     return;
                 }
@@ -21,29 +22,41 @@ export class WorkerAnt extends Ant {
             let source = Game.getObjectById(sourceId)
 
             if (source) {
-                if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
-                    creep.moveTo(source);
+                if (this.creep.harvest(source) === ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(source);
                 }
             } else {
-                creep.memory.energySourceId = undefined
+                this.memory.energySourceId = undefined
             }
 
         } else {
 
-            creep.memory.energySourceId = undefined
+            this.memory.energySourceId = undefined
 
-            let spawn = Game.spawns[creep.memory.spawn];
+            let spawn = Game.spawns[this.memory.spawn];
             if (spawn) {
-                if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(spawn);
+                if (this.creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(spawn);
                 }
             } else {
-                const nearestSpawn = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
-                if (nearestSpawn && creep.transfer(nearestSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(nearestSpawn);
+                const nearestSpawn = this.creep.pos.findClosestByRange(FIND_MY_SPAWNS);
+                if (nearestSpawn && this.creep.transfer(nearestSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    this.creep.moveTo(nearestSpawn);
                 }
             }
 
+        }
+    }
+
+    public createSpawnMemory(spawn: StructureSpawn, workroom: string): WorkerMemory {
+        return {
+            job: this.getJob(),
+            spawn: spawn.name,
+            minTicksToLive: 100,
+            state: eJobState.harvest,
+            workroom: workroom,
+            energySourceId: undefined,
+            roundRobin: undefined,
         }
     }
 
