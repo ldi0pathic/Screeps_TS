@@ -19,7 +19,6 @@ export class CleanUpManager {
         for (const name of toProcess) {
             const creep = Game.creeps[name];
             if (!creep) {
-                console.log(`⚠️ Creep ${name} not found in Game.creeps during cleanup`);
                 continue;
             }
 
@@ -47,10 +46,6 @@ export class CleanUpManager {
                     cleanedCount++;
                 }
             }
-        }
-
-        if (cleanedCount > 0) {
-            console.log(`🧹 Cleaned ${cleanedCount} dead objects from memory`);
         }
     }
 
