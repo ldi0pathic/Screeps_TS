@@ -5,7 +5,7 @@ import {Movement} from "../utils/Movement";
 export class UpgraderAnt extends Ant<UpgraderMemory> {
 
     doJob(): void {
-        
+
         if (Movement.shouldContinueMoving(this.creep)) {
             Movement.continueMoving(this.creep);
             return;
@@ -54,7 +54,8 @@ export class UpgraderAnt extends Ant<UpgraderMemory> {
             state: eJobState.harvest,
             workroom: workroom,
             energySourceId: undefined,
-            roundRobin: undefined,
+            roundRobin: 1,
+            roundRobinOffset: 0,
             moving: false,
         }
     }

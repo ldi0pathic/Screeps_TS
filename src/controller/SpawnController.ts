@@ -192,6 +192,8 @@ export class SpawnController {
     }
 
     public static getQueueStatus(): void {
+        if (Game.time % 50 !== 0) return; // Nur alle 50 Ticks
+        
         if (this.queue.length === 0) {
             console.log("🟢 Spawn Queue: Leer");
             return;

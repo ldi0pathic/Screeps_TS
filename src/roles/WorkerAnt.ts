@@ -63,7 +63,8 @@ export class WorkerAnt extends Ant<WorkerMemory> {
             state: eJobState.harvest,
             workroom: workroom,
             energySourceId: undefined,
-            roundRobin: undefined,
+            roundRobin: 1,
+            roundRobinOffset: 0,
             moving: false,
         }
     }

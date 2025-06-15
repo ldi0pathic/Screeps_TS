@@ -108,7 +108,8 @@ declare global {
         spawn: string;
         workroom: string;
         minTicksToLive: number;
-        roundRobin: number | undefined;
+        roundRobin: number;
+        roundRobinOffset: number | undefined;
         moving: boolean;
         targetPos?: {
             x: number;

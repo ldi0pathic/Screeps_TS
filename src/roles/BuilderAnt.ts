@@ -5,7 +5,7 @@ import {Movement} from "../utils/Movement";
 export class BuilderAnt extends Ant<BuilderMemory> {
 
     doJob(): void {
-        
+
         if (Movement.shouldContinueMoving(this.creep)) {
             Movement.continueMoving(this.creep);
             return;
@@ -80,7 +80,8 @@ export class BuilderAnt extends Ant<BuilderMemory> {
             spawn: spawn.name,
             state: eJobState.harvest,
             workroom: workroom,
-            roundRobin: undefined,
+            roundRobin: 1,
+            roundRobinOffset: 0,
             moving: false,
         } as BuilderMemory;
     }

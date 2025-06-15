@@ -44,7 +44,29 @@ export class JobsController {
         return baseConfig.jobPrio;
     }
 
-  
+    /**
+     * Berechnet einen individuellen Round-Robin Offset für echte Lastverteilung
+     */
+    static getJobOffset(creep: Creep, jobType: eJobType): number {
+        // Verwende eine Kombination aus Creep-Name und Job-Typ für einen stabilen Hash
+        const hashInput = creep.name + jobType;
+        let hash = 0;
+        for (let i = 0; i < hashInput.length; i++) {
+            const char = hashInput.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+
+        // Stelle sicher, dass der Hash positiv ist
+        hash = Math.abs(hash);
+
+        // Für Jobs mit gleicher Priorität: verteile sie gleichmäßig
+        const sameJobCreeps = Object.values(Game.creeps).filter(c => c.memory.job === jobType);
+        const maxOffset = Math.max(2, sameJobCreeps.length);
+
+        return hash % maxOffset;
+    }
+
     static assignRoundRobin(creep: Creep, room: Room): void {
         const jobType = creep.memory.job;
         const priority = this.getDynamicPriority(jobType, room);
@@ -54,6 +76,7 @@ export class JobsController {
         // Kritische Jobs: Immer ausführen
         if (priority >= 25) {
             creep.memory.roundRobin = 1;
+            creep.memory.roundRobinOffset = 0;
             return;
         }
 
@@ -76,6 +99,28 @@ export class JobsController {
         }
 
         creep.memory.roundRobin = frequency;
+
+        // Berechne Offset für Lastverteilung
+        if (Game.time % 50 === 0) {
+            creep.memory.roundRobinOffset = this.getJobOffset(creep, jobType);
+        }
+    }
+
+    /**
+     * Überprüft ob ein Creep in diesem Tick aktiv werden soll
+     */
+    static shouldExecuteCreep(creep: Creep): boolean {
+        // Kritische Jobs (roundRobin = 1) werden immer ausgeführt
+        if (creep.memory.roundRobin === 1) return true;
+
+        // Wenn der Creep sich bewegt, ist er aktiv
+        if (creep.memory.moving) return true;
+
+        // Round-Robin Check mit Offset für Lastverteilung
+        const offset = creep.memory.roundRobinOffset || 0;
+        const currentTick = Game.time + offset;
+
+        return currentTick % creep.memory.roundRobin === 0;
     }
 
     static doJobs() {
@@ -89,9 +134,8 @@ export class JobsController {
             ant.doJob();
         }
     }
-    
-    static shouldSkipCreep(creep: Creep): boolean {
 
+    static shouldSkipCreep(creep: Creep): boolean {
         if (creep.fatigue > 0) return true;
         if (creep.spawning) return true;
         if (creep.ticksToLive !== undefined && creep.ticksToLive < 5) return true;
@@ -99,7 +143,6 @@ export class JobsController {
         return false;
     }
 
-    
     static redistributeJobsOnHighCPU(): void {
         const cpuUsage = Game.cpu.getUsed() / Game.cpu.limit;
 
@@ -115,7 +158,7 @@ export class JobsController {
             }
         }
     }
-    
+
     static doPrioJobs() {
         this.bucketNorm.length = 0;
         this.bucketLow.length = 0;
@@ -139,7 +182,6 @@ export class JobsController {
         let skippedCount = 0;
 
         for (const [name, creep] of creepEntries) {
-
             const currentCpuUsed = Game.cpu.getUsed() - startCpu;
             const estimatedCpuForNextCreep = currentCpuUsed / Math.max(processedCount, 1);
 
@@ -164,12 +206,12 @@ export class JobsController {
                 this.assignRoundRobin(creep, creep.room);
             }
 
-            // Round-Robin Check
-            if (!creep.memory.moving && creep.memory.roundRobin && creep.memory.roundRobin > 1) {
-                if (Game.time % creep.memory.roundRobin !== 0) {
-                    creep.say(`⏸️${creep.memory.roundRobin}`);
-                    continue;
-                }
+            // Verbesserte Round-Robin Prüfung mit Lastverteilung
+            if (!this.shouldExecuteCreep(creep)) {
+                const offset = creep.memory.roundRobinOffset || 0;
+                const nextExecution = creep.memory.roundRobin - ((Game.time + offset) % creep.memory.roundRobin);
+                creep.say(`⏸️${nextExecution}`);
+                continue;
             }
 
             const ant = Jobs.createAnt(creep.memory.job, creep);
@@ -205,7 +247,7 @@ export class JobsController {
             this.redistributeJobsOnHighCPU();
         }
     }
-    
+
     static getJobStats(): Record<string, { count: number; priority: number }> {
         const stats: Record<string, { count: number; priority: number }> = {};
 
@@ -224,7 +266,7 @@ export class JobsController {
 
         return stats;
     }
-    
+
     static getPerformanceMetrics(): any {
         return {
             totalCreeps: Object.keys(Game.creeps).length,
@@ -237,7 +279,7 @@ export class JobsController {
             cpuPercent: (Game.cpu.getUsed() / Game.cpu.limit * 100).toFixed(1)
         };
     }
-    
+
     static logJobDistribution(): void {
         if (Game.time % 50 !== 0) return; // Nur alle 50 Ticks
 
@@ -255,5 +297,25 @@ export class JobsController {
                 const bar = '█'.repeat(Math.floor(data.count / 2)) + '░'.repeat(Math.max(0, 5 - Math.floor(data.count / 2)));
                 console.log(`  ${jobType.padEnd(12)}: ${data.count.toString().padStart(2)} [${bar}] P:${data.priority}`);
             });
+
+        // Zusätzliches Debug-Logging für Round-Robin
+        if (Game.time % 200 === 0) {
+            console.log(`🔄 Round-Robin Status:`);
+            const creepsByJob: Record<string, Creep[]> = {};
+
+            for (const creep of Object.values(Game.creeps)) {
+                const jobType = creep.memory.job;
+                if (!creepsByJob[jobType]) creepsByJob[jobType] = [];
+                creepsByJob[jobType].push(creep);
+            }
+
+            Object.entries(creepsByJob).forEach(([jobType, creeps]) => {
+                if (creeps.length > 1) {
+                    const offsets = creeps.map(c => c.memory.roundRobinOffset || 0).join(',');
+                    const frequencies = creeps.map(c => c.memory.roundRobin || 1).join(',');
+                    console.log(`  ${jobType}: Offsets=[${offsets}] Freq=[${frequencies}]`);
+                }
+            });
+        }
     }
 }

@@ -12,10 +12,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // CPU History am Tick-Start updaten
     CPUManager.updateHistory();
 
-    if (Game.time % 50 === 0) {
-        SpawnController.getQueueStatus();
-        CPUManager.getStatus();
-    }
+    //CPUManager.getStatus();
+    //JobsController.logJobDistribution();
+    //SpawnController.getQueueStatus();
 
     CleanUpManager.cleanMemory();
     SpawnController.processEmergencySpawns();
@@ -42,4 +41,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
     // CPU für nächsten Tick speichern
     Memory.lastTickCpu = Game.cpu.getUsed();
+
+
 });

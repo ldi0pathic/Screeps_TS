@@ -11,7 +11,6 @@ export class TransporterAnt extends Ant<TransporterMemory> {
             return;
         }
 
-
         this.checkHarvest();
         if (this.memory.state == eJobState.harvest) {
 
@@ -90,7 +89,8 @@ export class TransporterAnt extends Ant<TransporterMemory> {
             state: eJobState.harvest,
             workroom: workroom.name,
             harvestContainerId: containerId,
-            roundRobin: undefined,
+            roundRobin: 1,
+            roundRobinOffset: 0,
             moving: false,
         }
     }
