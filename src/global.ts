@@ -116,6 +116,11 @@ declare global {
             y: number;
             roomName: string;
         };
+
+        lastJobCost?: number;
+        jobEfficiency?: number;
+        emergencySkipped?: boolean;
+        priorityBoost?: number;
     }
 
     interface BuilderMemory extends CreepMemory {
@@ -172,11 +177,47 @@ declare global {
         cpuHistory: number[];
         lastCpuTick: number;
         lastTickCpu: number;
+        jobOffsets?: Record<string, number>;
+        jobCosts?: Record<string, JobCostStats>;
+        jobPerformance?: JobPerformanceData;
+        emergencyMode?: EmergencyModeData;
+    }
+
+    interface JobCostStats {
+        total: number;
+        count: number;
+        avg: number;
+        lastReset: number;
+        peak: number;
+    }
+
+    interface JobPerformanceData {
+        lastTick: number;
+        ticksWithHighCPU: number;
+        totalEmergencyActivations: number;
+        lastEmergencyTick: number;
+        avgCreepsPerTick: number;
+        cpuHistory: number[];
+    }
+
+    interface EmergencyModeData {
+        active: boolean;
+        activatedTick: number;
+        reason: 'cpu_critical' | 'bucket_low' | 'manual';
+        skipCount: number;
+        criticalJobsOnly: boolean;
     }
 
     interface RoomMemory {
         energySources: SourceData[],
         energySourceIds: Id<Source>[];
         state: eRoomState;
+        jobPriorities?: Record<string, number>;
+        lastJobRebalance?: number;
+        emergencyThresholds?: {
+            energy: number;
+            cpu: number;
+            controllerDowngrade: number;
+        };
     }
 }

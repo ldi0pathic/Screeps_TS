@@ -81,7 +81,7 @@ export class BuilderAnt extends Ant<BuilderMemory> {
             state: eJobState.harvest,
             workroom: workroom,
             roundRobin: 1,
-            roundRobinOffset: 0,
+            roundRobinOffset: undefined,
             moving: false,
         } as BuilderMemory;
     }

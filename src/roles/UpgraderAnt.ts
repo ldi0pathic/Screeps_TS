@@ -55,7 +55,7 @@ export class UpgraderAnt extends Ant<UpgraderMemory> {
             workroom: workroom,
             energySourceId: undefined,
             roundRobin: 1,
-            roundRobinOffset: 0,
+            roundRobinOffset: undefined,
             moving: false,
         }
     }

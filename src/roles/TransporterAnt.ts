@@ -90,7 +90,7 @@ export class TransporterAnt extends Ant<TransporterMemory> {
             workroom: workroom.name,
             harvestContainerId: containerId,
             roundRobin: 1,
-            roundRobinOffset: 0,
+            roundRobinOffset: undefined,
             moving: false,
         }
     }

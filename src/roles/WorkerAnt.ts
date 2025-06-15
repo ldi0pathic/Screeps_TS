@@ -64,7 +64,7 @@ export class WorkerAnt extends Ant<WorkerMemory> {
             workroom: workroom,
             energySourceId: undefined,
             roundRobin: 1,
-            roundRobinOffset: 0,
+            roundRobinOffset: undefined,
             moving: false,
         }
     }

@@ -12,15 +12,12 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // CPU History am Tick-Start updaten
     CPUManager.updateHistory();
 
-    //CPUManager.getStatus();
-    //JobsController.logJobDistribution();
-    //SpawnController.getQueueStatus();
 
-    CleanUpManager.cleanMemory();
     SpawnController.processEmergencySpawns();
     SpawnController.findNeededCreeps();
     SpawnController.processSpawns();
     JobsController.doPrioJobs();
+    JobsController.doCriticalJobs();
 
     if (!CPUManager.shouldContinue('normal')) {
         CPUManager.getStatus();
@@ -37,7 +34,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     JobsController.doLowJobs();
-    CleanUpManager.processCleanupQueue();
+    CleanUpManager.runAllCleanup();
+
+    //CPUManager.getStatus();
+    //JobsController.logJobDistribution();
+    //SpawnController.getQueueStatus();
 
     // CPU für nächsten Tick speichern
     Memory.lastTickCpu = Game.cpu.getUsed();
