@@ -4,10 +4,6 @@
 
         if (!Memory.cleanupQueue.includes(creepName)) {
             Memory.cleanupQueue.push(creepName);
-            const creep = Game.creeps[creepName];
-            if (creep) {
-                creep.memory.cleaning = true;
-            }
         }
     }
 

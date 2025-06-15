@@ -1,59 +1,59 @@
-﻿import {Ant} from "./Ant";
-import {roomConfig} from "../config";
+﻿import {roomConfig} from "../config";
 import _ from "lodash";
+import {StationaryAnt} from "./base/StationaryAnt";
 
-export class MinerAnt extends Ant {
+export class MinerAnt extends StationaryAnt<MinerMemory> {
 
-    doJob(creep: Creep): void {
-        if (!creep.memory.onPosition) {
-            if (!creep.goToFinalPos()) {
+    doJob(): void {
+        if (!this.isOnPosition()) {
+            if (!this.goToFinalPos()) {
                 return;
             }
             //todo wieso nicht? finale position evtl neu festlegen?
         }
 
-        if (creep.memory.buildId) {
-            this.checkHarvest(creep)
-            const build = Game.getObjectById(creep.memory.buildId);
+        if (this.memory.containerConstructionId) {
+            this.checkHarvest();
+            const build = Game.getObjectById(this.memory.containerConstructionId);
             if (build) {
-                if (creep.memory.state == eJobState.work && build.progressTotal > build.progress) {
-                    creep.say('🪚');
-                    creep.build(build)
+                if (this.memory.state == eJobState.work && build.progressTotal > build.progress) {
+                    this.creep.say('🪚');
+                    this.creep.build(build)
                     return;
 
                 }
             } else if (!build) {
-                creep.memory.buildId = undefined;
-                let container = creep.pos.findInRange(FIND_STRUCTURES, 1, {
+                this.memory.containerConstructionId = undefined;
+                let container = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
                     filter: {structureType: STRUCTURE_CONTAINER}
                 })[0];
                 if (container && container.structureType == STRUCTURE_CONTAINER) {
-                    creep.memory.containerId = container.id;
+                    this.memory.containerId = container.id;
                 }
             }
-        } else if (creep.memory.containerId) {
-            const container = Game.getObjectById(creep.memory.containerId);
+        } else if (this.memory.containerId) {
+            const container = Game.getObjectById(this.memory.containerId);
 
             if (container) {
                 if (container.store.getFreeCapacity() == 0) {
-                    creep.say('🚯');
+                    this.creep.say('🚯');
                     return;
                 }
             } else {
-                creep.memory.containerId = undefined;
+                this.memory.containerId = undefined;
 
-                let container = creep.pos.findInRange(FIND_STRUCTURES, 1, {
+                let container = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
                     filter: {structureType: STRUCTURE_CONTAINER}
                 })[0];
 
                 if (container && container.structureType == STRUCTURE_CONTAINER) {
-                    creep.memory.containerId = container.id;
+                    this.memory.containerId = container.id;
                 } else {
-                    let build = creep.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
+                    let build = this.creep.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
                         filter: {structureType: STRUCTURE_CONTAINER}
                     })[0];
                     if (build) {
-                        creep.memory.buildId = build.id;
+                        this.memory.containerConstructionId = build.id;
                     } else {
                         console.log("🚩 Miner braucht Container! ");
                     }
@@ -61,13 +61,13 @@ export class MinerAnt extends Ant {
             }
         }
 
-        if (creep.memory.energySourceId) {
-            const source = Game.getObjectById(creep.memory.energySourceId);
+        if (this.memory.energySourceId) {
+            const source = Game.getObjectById(this.memory.energySourceId);
             if (source) {
-                switch (creep.harvest(source)) {
+                switch (this.creep.harvest(source)) {
                     case ERR_TIRED:
                     case ERR_NOT_ENOUGH_ENERGY: {
-                        creep.say('😴');
+                        this.creep.say('😴');
                         return;
                     }
                     case ERR_NO_BODYPART: {
@@ -87,7 +87,7 @@ export class MinerAnt extends Ant {
         return [WORK, CARRY, MOVE]
     }
 
-    public override getSpawnMemory(spawn: StructureSpawn, roomname: string): CreepMemory {
+    public createSpawnMemory(spawn: StructureSpawn, roomname: string): MinerMemory {
         const workroom = Game.rooms[roomname];
 
         const job = this.getJob();
@@ -108,7 +108,8 @@ export class MinerAnt extends Ant {
             let found = false;
 
             for (let creep of creeps) {
-                if (creep.memory.energySourceId === s.sourceId) {
+                const minerMemory = creep.memory as MinerMemory;
+                if (minerMemory.energySourceId === s.sourceId) {
                     found = true;
                     break;
                 }
@@ -227,18 +228,19 @@ export class MinerAnt extends Ant {
         return {
             job: job,
             minTicksToLive: 100,
-            ticktToPos: 1,
+            ticksToPos: 1,
             spawn: spawn.name,
             state: eJobState.harvest,
             workroom: workroom.name,
             energySourceId: sourceId,
             containerId: containerId,
             linkId: linkId,
-            buildId: buildId,
+            containerConstructionId: buildId,
             onPosition: false,
             finalLocation: finalLocation,
             roundRobin: undefined,
-        }
+
+        } as MinerMemory;
     }
 
     public override getJob(): eJobType {

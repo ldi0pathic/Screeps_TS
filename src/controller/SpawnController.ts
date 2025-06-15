@@ -1,6 +1,6 @@
 ﻿import {JobsController} from "./JobsController";
 import {roomConfig} from "../config";
-import {Ant} from "../roles/Ant";
+import {Ant} from "../roles/base/Ant";
 import {Jobs} from "../records/Jobs";
 
 export class SpawnController {
@@ -14,19 +14,17 @@ export class SpawnController {
         Memory.spawnQueue = value;
     }
 
-    public static queueCreep(jobKey: eJobType, targetRoom: Room, priority?: number, bodyParts?: BodyPartConstant[]): number {
+    public static queueCreep(jobKey: eJobType, targetRoom: Room, bodyParts: BodyPartConstant[], priority?: number): number {
         const def = Jobs.jobs[jobKey];
         if (!def) return -1;
 
-        const body = bodyParts || def.ant.getProfil();
-
         const actualPriority = priority !== undefined ? priority :
-            this.getSpawnPriority(def.ant, targetRoom);
+            this.getSpawnPriority(jobKey, targetRoom);
 
         const request: SpawnRequest = {
             jobKey,
             targetRoom: targetRoom.name,
-            bodyParts: body,
+            bodyParts: bodyParts,
             priority: actualPriority,
             timestamp: Game.time
         };
@@ -49,8 +47,8 @@ export class SpawnController {
         return this.queue.length - 1;
     }
 
-    public static addToJobQueue(jobType: eJobType, targetRoom: Room, priority?: number) {
-        this.queueCreep(jobType, targetRoom, priority);
+    public static addToJobQueue(jobType: eJobType, targetRoom: Room, bodyParts: BodyPartConstant[], priority?: number) {
+        this.queueCreep(jobType, targetRoom, bodyParts, priority);
     }
 
     public static cancelSpawnRequest(index: number): boolean {
@@ -74,14 +72,18 @@ export class SpawnController {
         return [...this.queue];
     }
 
+    // GEÄNDERT: Neue Methode um Ant-Instanzen temporär zu erstellen
     public static findNeededCreeps() {
         for (const name in roomConfig) {
             const room = Game.rooms[name];
             if (!room) continue;
 
             for (let jobName in Jobs.jobs) {
-                let job: Ant = Jobs.jobs[jobName].ant;
-                job.spawn(room);
+                // Erstelle temporäre Ant-Instanz für spawn() Aufruf
+                const tempAnt = this.createTempAnt(jobName as eJobType, room);
+                if (tempAnt) {
+                    tempAnt.spawn(room);
+                }
             }
         }
     }
@@ -161,9 +163,8 @@ export class SpawnController {
         }
     }
 
-    static getSpawnPriority(ant: Ant, room: Room): number {
-        const jobType = ant.getJob();
-
+    // GEÄNDERT: Parameter von Ant<any> zu eJobType geändert
+    static getSpawnPriority(jobType: eJobType, room: Room): number {
         if (jobType === eJobType.miner) {
             const miners = _.filter(Game.creeps, c =>
                 c.memory.job === eJobType.miner && c.memory.workroom === room.name
@@ -182,8 +183,8 @@ export class SpawnController {
             if (!room) continue;
 
             const creeps = _.filter(Game.creeps, c => c.memory.workroom === roomName);
-            if (creeps.length === 0 && room.energyAvailable >= 200) {
-                this.queueCreep(eJobType.miner, room, 999);
+            if (creeps.length === 0) {
+                this.queueCreep(eJobType.miner, room, [WORK, CARRY, MOVE], 999);
                 return true;
             }
         }
@@ -204,6 +205,20 @@ export class SpawnController {
         if (this.queue.length > 5) {
             console.log(`  ... und ${this.queue.length - 5} weitere`);
         }
+    }
+
+    // GEÄNDERT: Hilfsmethode für temporäre Ant-Erstellung
+    private static createTempAnt(jobType: eJobType, room: Room): Ant<any> | null {
+        const def = Jobs.jobs[jobType];
+        if (!def) return null;
+
+        // Erstelle einen Mock-Creep für die temporäre Ant-Instanz
+        const mockCreep = {
+            memory: {job: jobType, workroom: room.name},
+            room: room
+        } as Creep;
+
+        return new def.antClass(mockCreep);
     }
 
     private static sortQueue(): void {
@@ -248,9 +263,12 @@ export class SpawnController {
         const cost = _.sum(request.bodyParts, part => BODYPART_COST[part]);
         if (spawn.room.energyAvailable < cost) return false;
 
-        const spawnAnt = def.ant;
+        // GEÄNDERT: Erstelle temporäre Ant-Instanz für createSpawnMemory
+        const tempAnt = this.createTempAnt(request.jobKey, Game.rooms[request.targetRoom]);
+        if (!tempAnt) return false;
+
         const name = this.getName(request);
-        const memory = spawnAnt.getSpawnMemory(spawn, request.targetRoom);
+        const memory = tempAnt.createSpawnMemory(spawn, request.targetRoom);
 
         if (spawn.spawnCreep(request.bodyParts, name, {dryRun: true}) === OK) {
             if (spawn.spawnCreep(request.bodyParts, name, {memory: memory}) === OK) {
