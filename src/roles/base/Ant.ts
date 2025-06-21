@@ -60,7 +60,18 @@ export abstract class Ant<TMemory extends CreepMemory> {
 
     public abstract getProfil(): BodyPartConstant[];
 
-    public abstract createSpawnMemory(spawn: StructureSpawn, workroom: string): TMemory;
+    public createSpawnMemory(spawn: StructureSpawn, workroom: string): CreepMemory {
+        const job = this.getJob();
+        return {
+            job: job,
+            state: eJobState.harvest,
+            spawn: spawn.name,
+            workroom: workroom,
+            minTicksToLive: 100,
+            roundRobin: 1,
+            moving: false,
+        } as CreepMemory;
+    }
 
     public abstract getJob(): eJobType;
 

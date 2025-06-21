@@ -35,17 +35,14 @@ export class TransporterAnt extends Ant<TransporterMemory> {
                 }
             }
         } else {
-            const targets = this.creep.room.find(FIND_STRUCTURES, {
+            const target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: s => (s.structureType === STRUCTURE_SPAWN ||
                         s.structureType === STRUCTURE_EXTENSION) &&
                     s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
             });
 
-            if (targets.length > 0) {
-                const target = this.creep.pos.findClosestByRange(targets);
-                if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    this.moveTo(target);
-                }
+            if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                this.moveTo(target);
             }
         }
     }

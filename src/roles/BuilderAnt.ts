@@ -1,8 +1,8 @@
-﻿import {Ant} from "./base/Ant";
-import {roomConfig} from "../config";
+﻿import {roomConfig} from "../config";
 import {Movement} from "../utils/Movement";
+import {HarvesterAnt} from "./base/HarvesterAnt";
 
-export class BuilderAnt extends Ant<BuilderMemory> {
+export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
 
     doJob(): void {
 
@@ -14,29 +14,7 @@ export class BuilderAnt extends Ant<BuilderMemory> {
         this.checkHarvest();
 
         if (this.memory.state == eJobState.harvest) {
-            let sourceId = this.memory.energySourceId;
-
-            if (!sourceId) {
-                let source = this.creep.room.find(FIND_SOURCES);
-                if (source.length > 0) {
-                    sourceId = source[0].id;
-                    this.memory.energySourceId = sourceId
-                } else {
-                    return;
-                }
-            }
-
-            let source = Game.getObjectById(sourceId)
-
-            if (source) {
-                if (this.creep.harvest(source) === ERR_NOT_IN_RANGE) {
-                    this.moveTo(source);
-                    return;
-                }
-            } else {
-                this.memory.energySourceId = undefined
-            }
-
+            this.doHarvest(RESOURCE_ENERGY);
         } else {
 
             let buildId = this.memory.constructionId;
@@ -70,18 +48,12 @@ export class BuilderAnt extends Ant<BuilderMemory> {
         }
     }
 
-    public createSpawnMemory(spawn: StructureSpawn, workroom: string): BuilderMemory {
-        const job = this.getJob();
+    public createSpawnMemory(spawn: StructureSpawn, workroom: string): BuilderCreepMemory {
+        let base = super.createSpawnMemory(spawn, workroom);
         return {
-            job: job,
-            minTicksToLive: 100,
-            spawn: spawn.name,
-            state: eJobState.harvest,
-            workroom: workroom,
-            roundRobin: 1,
-            roundRobinOffset: undefined,
-            moving: false,
-        } as BuilderMemory;
+            ...base,
+            constructionId: undefined,
+        } as BuilderCreepMemory;
     }
 
     public getProfil(): BodyPartConstant[] {

@@ -1,8 +1,8 @@
-﻿import {Ant} from "./base/Ant";
-import {roomConfig} from "../config";
+﻿import {roomConfig} from "../config";
 import {Movement} from "../utils/Movement";
+import {HarvesterAnt} from "./base/HarvesterAnt";
 
-export class UpgraderAnt extends Ant<UpgraderMemory> {
+export class UpgraderAnt extends HarvesterAnt<UpgraderMemory> {
 
     doJob(): void {
 
@@ -14,23 +14,7 @@ export class UpgraderAnt extends Ant<UpgraderMemory> {
         this.checkHarvest();
 
         if (this.memory.state == eJobState.harvest) {
-            let sourceId = this.memory.energySourceId;
-
-            if (!sourceId) {
-                let source = this.creep.room.find(FIND_SOURCES);
-                sourceId = source[0].id;
-                this.memory.energySourceId = sourceId
-            }
-
-            let source = Game.getObjectById(sourceId)
-
-            if (source) {
-                if (this.creep.harvest(source) === ERR_NOT_IN_RANGE) {
-                    this.moveTo(source);
-                }
-            } else {
-                this.memory.energySourceId = undefined
-            }
+            this.doHarvest(RESOURCE_ENERGY);
         } else {
 
             this.memory.energySourceId = undefined

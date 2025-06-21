@@ -109,7 +109,7 @@ declare global {
         workroom: string;
         minTicksToLive: number;
         roundRobin: number;
-        roundRobinOffset: number | undefined;
+        roundRobinOffset?: number;
         moving: boolean;
         targetPos?: {
             x: number;
@@ -123,15 +123,23 @@ declare global {
         priorityBoost?: number;
     }
 
-    interface BuilderMemory extends CreepMemory {
-        energySourceId: Id<Source> | undefined;
-        constructionId: Id<ConstructionSite> | undefined
+    interface BuilderCreepMemory extends HarvesterCreepMemory {
+        constructionId: Id<ConstructionSite> | undefined;
     }
 
     interface StationaryCreepMemory extends CreepMemory {
         onPosition: boolean;
         ticksToPos: number;
         finalLocation: RoomPosition;
+    }
+
+    interface HarvesterCreepMemory extends CreepMemory {
+        harvestContainerId?: Id<StructureContainer>;
+        harvestStorageId?: Id<StructureStorage>;
+        havestSourceId?: Id<Source>;
+        havestLinkId?: Id<StructureLink>;
+        harvestDroppedId?: Id<Resource>;
+        harvestTombstoneId?: Id<Tombstone>;
     }
 
     interface TransporterMemory extends CreepMemory {
@@ -142,10 +150,7 @@ declare global {
         energySourceId: Id<Source> | undefined;
     }
 
-    interface WorkerMemory extends CreepMemory {
-        energySourceId: Id<Source> | undefined;
-    }
-
+   
     interface MinerMemory extends StationaryCreepMemory {
         energySourceId: Id<Source> | undefined;
         containerId: Id<StructureContainer> | undefined;
@@ -161,6 +166,8 @@ declare global {
 
     interface Creep {
         goToFinalPos(): boolean;
+
+        findNearestContainerWithResource(resourceType: ResourceConstant): StructureContainer | null;
     }
 
     interface SpawnRequest {
