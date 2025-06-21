@@ -1,9 +1,9 @@
-﻿import {JobsController} from "./JobsController";
+﻿import {JobsManager} from "./JobsManager";
 import {roomConfig} from "../config";
 import {Ant} from "../roles/base/Ant";
 import {Jobs} from "../records/Jobs";
 
-export class SpawnController {
+export class SpawnManager {
 
     private static get queue(): SpawnRequest[] {
         if (!Memory.spawnQueue) Memory.spawnQueue = [];
@@ -51,14 +51,6 @@ export class SpawnController {
         this.queueCreep(jobType, targetRoom, bodyParts, priority);
     }
 
-    public static cancelSpawnRequest(index: number): boolean {
-        if (index >= 0 && index < this.queue.length) {
-            this.queue.splice(index, 1);
-            return true;
-        }
-        return false;
-    }
-
     public static updatePriority(index: number, priority: number): boolean {
         if (index >= 0 && index < this.queue.length) {
             this.queue[index].priority = priority;
@@ -68,11 +60,6 @@ export class SpawnController {
         return false;
     }
 
-    public static getQueue(): SpawnRequest[] {
-        return [...this.queue];
-    }
-
-    // GEÄNDERT: Neue Methode um Ant-Instanzen temporär zu erstellen
     public static findNeededCreeps() {
         for (const name in roomConfig) {
             const room = Game.rooms[name];
@@ -163,7 +150,6 @@ export class SpawnController {
         }
     }
 
-    // GEÄNDERT: Parameter von Ant<any> zu eJobType geändert
     static getSpawnPriority(jobType: eJobType, room: Room): number {
         if (jobType === eJobType.miner) {
             const miners = _.filter(Game.creeps, c =>
@@ -174,7 +160,7 @@ export class SpawnController {
             }
         }
 
-        return JobsController.getDynamicPriority(jobType, room) + 10;
+        return JobsManager.getDynamicPriority(jobType, room) + 10;
     }
 
     static processEmergencySpawns(): boolean {
@@ -191,30 +177,10 @@ export class SpawnController {
         return false;
     }
 
-    public static getQueueStatus(): void {
-        if (Game.time % 50 !== 0) return; // Nur alle 50 Ticks
-        
-        if (this.queue.length === 0) {
-            console.log("🟢 Spawn Queue: Leer");
-            return;
-        }
-
-        console.log(`📋 Spawn Queue (${this.queue.length}):`);
-        this.queue.slice(0, 5).forEach((req, i) => {
-            console.log(`  ${i + 1}. ${req.jobKey} → ${req.targetRoom} (P:${req.priority})`);
-        });
-
-        if (this.queue.length > 5) {
-            console.log(`  ... und ${this.queue.length - 5} weitere`);
-        }
-    }
-
-    // GEÄNDERT: Hilfsmethode für temporäre Ant-Erstellung
     private static createTempAnt(jobType: eJobType, room: Room): Ant<any> | null {
         const def = Jobs.jobs[jobType];
         if (!def) return null;
 
-        // Erstelle einen Mock-Creep für die temporäre Ant-Instanz
         const mockCreep = {
             memory: {job: jobType, workroom: room.name},
             room: room
@@ -279,17 +245,6 @@ export class SpawnController {
             }
         }
 
-        return false;
-    }
-
-    private static trySpawnAt(spawn: StructureSpawn): boolean {
-        for (let i = 0; i < this.queue.length; i++) {
-            const req = this.queue[i];
-            if (this.spawnCreep(spawn, req)) {
-                this.queue.splice(i, 1);
-                return true;
-            }
-        }
         return false;
     }
 

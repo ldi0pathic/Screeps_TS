@@ -1,5 +1,5 @@
 ﻿import _ from "lodash";
-import {SpawnController} from "../../controller/SpawnController";
+import {SpawnManager} from "../../manager/SpawnManager";
 import {Movement} from "../../utils/Movement";
 
 export abstract class Ant<TMemory extends CreepMemory> {
@@ -52,8 +52,8 @@ export abstract class Ant<TMemory extends CreepMemory> {
             return false;
         }
 
-        const dynamicPriority = SpawnController.getSpawnPriority(job, workroom);
-        SpawnController.addToJobQueue(job, workroom, this.getProfil(), dynamicPriority);
+        const dynamicPriority = SpawnManager.getSpawnPriority(job, workroom);
+        SpawnManager.addToJobQueue(job, workroom, this.getProfil(), dynamicPriority);
 
         return false;
     }

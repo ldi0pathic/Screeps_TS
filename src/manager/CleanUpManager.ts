@@ -29,13 +29,10 @@ export class CleanUpManager {
     }
 
     public static cleanMemory(): void {
-        let cleanedCount = 0;
 
-        // Clean dead creeps from memory
         for (const name in Memory.creeps) {
             if (!(name in Game.creeps)) {
                 delete Memory.creeps[name];
-                cleanedCount++;
             }
         }
 
@@ -43,7 +40,6 @@ export class CleanUpManager {
             for (const roomName in Memory.rooms) {
                 if (!roomConfig[roomName]) {
                     delete Memory.rooms[roomName];
-                    cleanedCount++;
                 }
             }
         }
@@ -79,6 +75,12 @@ export class CleanUpManager {
         }
 
         console.log(`🧹 Job Memory cleanup completed - ${cleanedJobs} jobs cleaned (Tick ${Game.time})`);
+    }
+
+    static runAllCleanup(): void {
+        this.cleanMemory();
+        this.processCleanupQueue();
+        this.cleanupJobMemory();
     }
 
     private static cleanCreep(creep: Creep): boolean {
@@ -122,12 +124,6 @@ export class CleanUpManager {
         delete Memory.creeps[creep.name];
         creep.suicide();
         return true;
-    }
-
-    static runAllCleanup(): void {
-        this.cleanMemory();
-        this.processCleanupQueue();
-        this.cleanupJobMemory();
     }
 
 }

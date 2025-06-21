@@ -2,7 +2,7 @@
 import {CleanUpManager} from "./CleanUpManager";
 import {Jobs} from "../records/Jobs";
 
-export class JobsController {
+export class JobsManager {
     private static bucketNorm: Array<{ creep: Creep; ant: Ant<any>; estimatedCost: number }> = [];
     private static bucketLow: Array<{ creep: Creep; ant: Ant<any>; estimatedCost: number }> = [];
     private static bucketCritical: Array<{ creep: Creep; ant: Ant<any> }> = [];

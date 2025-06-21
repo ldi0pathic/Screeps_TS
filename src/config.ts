@@ -3,6 +3,7 @@
     upgraderCount: number;
     workerCount: number;
     sendMiner: boolean;
+    buildRoads: boolean;
 }
 
 export const roomConfig: { [roomName: string]: RoomConfig } = {
@@ -10,6 +11,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         builderCount: 1,
         upgraderCount: 1,
         workerCount: 1,
-        sendMiner: true
+        sendMiner: true,
+        buildRoads: true,
     },
 };

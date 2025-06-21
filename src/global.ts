@@ -210,14 +210,8 @@ declare global {
 
     interface RoomMemory {
         energySources: SourceData[],
-        energySourceIds: Id<Source>[];
         state: eRoomState;
-        jobPriorities?: Record<string, number>;
-        lastJobRebalance?: number;
-        emergencyThresholds?: {
-            energy: number;
-            cpu: number;
-            controllerDowngrade: number;
-        };
+        plannedRoads?: string[];
     }
+
 }

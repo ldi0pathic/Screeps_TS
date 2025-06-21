@@ -1,9 +1,10 @@
 import {loadExtensions} from "./extensions/loader";
 import {ErrorMapper} from "utils/ErrorMapper";
-import {SpawnController} from "./controller/SpawnController";
-import {JobsController} from "./controller/JobsController";
-import {CleanUpManager} from "./controller/CleanUpManager";
-import {CPUManager} from "./controller/CPUManager";
+import {SpawnManager} from "./manager/SpawnManager";
+import {JobsManager} from "./manager/JobsManager";
+import {CleanUpManager} from "./manager/CleanUpManager";
+import {CPUManager} from "./manager/CPUManager";
+import {RoadManager} from "./manager/RoadManager";
 
 loadExtensions();
 
@@ -13,11 +14,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
     CPUManager.updateHistory();
 
 
-    SpawnController.processEmergencySpawns();
-    SpawnController.findNeededCreeps();
-    SpawnController.processSpawns();
-    JobsController.doPrioJobs();
-    JobsController.doCriticalJobs();
+    SpawnManager.processEmergencySpawns();
+    SpawnManager.findNeededCreeps();
+    SpawnManager.processSpawns();
+    JobsManager.doPrioJobs();
+    JobsManager.doCriticalJobs();
 
     if (!CPUManager.shouldContinue('normal')) {
         CPUManager.getStatus();
@@ -25,7 +26,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
         return;
     }
 
-    JobsController.doJobs();
+    JobsManager.doJobs();
 
     if (!CPUManager.shouldContinue('low')) {
         CPUManager.getStatus();
@@ -33,12 +34,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
         return;
     }
 
-    JobsController.doLowJobs();
+    JobsManager.doLowJobs();
     CleanUpManager.runAllCleanup();
-
-    //CPUManager.getStatus();
-    //JobsController.logJobDistribution();
-    //SpawnController.getQueueStatus();
+    RoadManager.buildRoads();
 
     // CPU für nächsten Tick speichern
     Memory.lastTickCpu = Game.cpu.getUsed();
