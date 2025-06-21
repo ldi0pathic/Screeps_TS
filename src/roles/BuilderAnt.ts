@@ -57,9 +57,7 @@ export class BuilderAnt extends Ant<BuilderMemory> {
                         this.moveTo(build);
                     }
                     return;
-
                 }
-            } else {
                 this.memory.constructionId = undefined;
             }
 
