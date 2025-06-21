@@ -9,7 +9,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             if (!this.goToFinalPos()) {
                 return;
             }
-            //todo wieso nicht? finale position evtl neu festlegen?
         }
 
         if (this.memory.containerConstructionId) {
@@ -35,7 +34,21 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             const container = Game.getObjectById(this.memory.containerId);
 
             if (container) {
-                if (container.store.getFreeCapacity() == 0) {
+
+                if (container.hits < (container.hitsMax * 0.75)) {
+                    if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > (this.creep.store.getCapacity() * 0.95)) {
+                        this.creep.repair(container);
+                        this.creep.say('🛠️');
+                        return;
+                    }
+                }
+
+                if (container.store.getFreeCapacity() == 0 && this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+                    if (container.hits < container.hitsMax) {
+                        this.creep.repair(container);
+                        this.creep.say('🚯🛠️');
+                        return;
+                    }
                     this.creep.say('🚯');
                     return;
                 }
@@ -70,12 +83,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                         this.creep.say('😴');
                         return;
                     }
-                    case ERR_NO_BODYPART: {
-
-
-                        return;
-                    }
-                    case OK: {
+                    default: {
                         return;
                     }
                 }
