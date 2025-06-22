@@ -35,13 +35,11 @@ export abstract class Ant<TMemory extends CreepMemory> {
         const max = this.getMaxCreeps(workroom);
         const job = this.getJob();
 
-        const existingCreeps = _.filter(Game.creeps, c =>
+        const countOfAnts = _.filter(Game.creeps, (c) =>
             c.memory.job == job &&
-            c.memory.workroom == workroom.name
-        );
-
-        const countOfAnts = _.filter(existingCreeps, (c) =>
-            ((c.ticksToLive != undefined && c.ticksToLive > c.memory.minTicksToLive) || c.spawning)
+            c.memory.workroom == workroom.name &&
+            ((c.ticksToLive != undefined && c.ticksToLive > c.memory.minTicksToLive) ||
+                c.spawning)
         ).length;
 
         if (countOfAnts >= max) {

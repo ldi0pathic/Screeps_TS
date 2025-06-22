@@ -19,6 +19,31 @@
         return creep.moveTo(target, opts);
     }
 
+    static moveToRoom(creep: Creep, targetRoomName: string): ScreepsReturnCode {
+        if (creep.room.name === targetRoomName) {
+            return OK;
+        }
+
+        const route = Game.map.findRoute(creep.room.name, targetRoomName);
+        if (route === ERR_NO_PATH) {
+            console.log(`Kein Pfad zu ${targetRoomName} von ${creep.room.name} gefunden`);
+            return ERR_NO_PATH;
+        }
+
+        const nextRoom = route[0];
+        const exit = creep.room.findExitTo(nextRoom.room);
+        if (exit === ERR_NO_PATH || exit === ERR_INVALID_ARGS) {
+            return ERR_NO_PATH;
+        }
+
+        const exitPos = creep.pos.findClosestByPath(exit);
+        if (!exitPos) {
+            return ERR_NO_PATH;
+        }
+
+        return this.moveTo(creep, exitPos);
+    }
+
     static shouldContinueMoving(creep: Creep): boolean {
         if (!creep.memory.moving || !creep.memory.targetPos) {
             return false;

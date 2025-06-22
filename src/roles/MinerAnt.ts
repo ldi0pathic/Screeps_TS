@@ -99,7 +99,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         const workroom = Game.rooms[roomname];
 
         const job = this.getJob();
-        const sources = workroom.getOrFindSource();
+        const sources = workroom.getOrFindEnergieSource();
         const creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == job &&
             creep.memory.workroom == workroom.name
@@ -258,12 +258,12 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
     }
 
     protected getMaxCreeps(workroom: Room): number {
-        return workroom.getOrFindSource().length || 0;
+        return workroom.getOrFindEnergieSource().length || 0;
     }
 
     protected shouldSpawn(workroom: Room): boolean {
 
-        const ids = workroom.getOrFindSource();
+        const ids = workroom.getOrFindEnergieSource();
         const creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
             creep.memory.workroom == workroom.name

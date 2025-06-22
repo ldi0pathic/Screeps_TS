@@ -4,6 +4,7 @@ import {UpgraderAnt} from "../roles/UpgraderAnt";
 import {WorkerAnt} from "../roles/WorkerAnt";
 import {BuilderAnt} from "../roles/BuilderAnt";
 import {Ant} from "../roles/base/Ant";
+import {ScoutAnt} from "../roles/ScoutAnt";
 
 export class Jobs {
     public static jobs: Record<string, JobDef> = {
@@ -12,6 +13,7 @@ export class Jobs {
         Upgrader: {antClass: UpgraderAnt, jobPrio: 11, spawnPrio: 10},
         Worker: {antClass: WorkerAnt, jobPrio: 11, spawnPrio: 10},
         Builder: {antClass: BuilderAnt, jobPrio: 11, spawnPrio: 10},
+        Scout: {antClass: ScoutAnt, jobPrio: 1, spawnPrio: 1},
     };
 
     public static createAnt(jobType: eJobType, creep: Creep): Ant<any> | null {
@@ -26,7 +28,7 @@ export class Jobs {
     public static getJobNames(): string[] {
         return Object.keys(this.jobs);
     }
-    
+
     public static getJobDef(jobName: string): JobDef | undefined {
         return this.jobs[jobName];
     }

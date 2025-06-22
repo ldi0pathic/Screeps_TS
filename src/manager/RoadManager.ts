@@ -6,7 +6,15 @@ export class RoadManager {
         for (const name in roomConfig) {
             if (roomConfig[name].buildRoads) {
                 const room = Game.rooms[name];
-                this.planRoadNetwork(room);
+                if (room.memory.state < eRoomState.phase2) {
+                    continue;
+                }
+                if (
+                    room.controller?.my &&
+                    room.controller.level < 8 &&
+                    room.find(FIND_MY_SPAWNS).length > 0
+                )
+                    this.planRoadNetwork(room);
                 this.buildPlannedRoads(room);
             }
         }
@@ -22,7 +30,8 @@ export class RoadManager {
             return;
         }
 
-        let sources = room.getOrFindSource();
+        let sources = room.getOrFindEnergieSource();
+        let minerals = room.getOrFindMineralSource();
         let spawns = room.find(FIND_MY_SPAWNS);
 
         let allConnections: Array<{ spawn: StructureSpawn, target: StructureContainer | StructureController, path: RoomPosition[] }> = [];
@@ -68,6 +77,31 @@ export class RoadManager {
                     }
                 });
                 allConnections.push({spawn, target: room.controller, path: path.path});
+            }
+
+            if (room.memory.state >= eRoomState.phase6) { //Mineralabbau :) 
+                minerals.forEach(mineral => {
+                    if (mineral.containerId) {
+                        let container = Game.getObjectById(mineral.containerId);
+                        if (container) {
+                            const path = PathFinder.search(spawn.pos, {pos: container.pos, range: 1}, {
+                                plainCost: 2,
+                                roomCallback: (roomName: string) => {
+                                    if (roomName !== room.name) return false;
+
+                                    const costs = new PathFinder.CostMatrix();
+                                    room.find(FIND_STRUCTURES).forEach(structure => {
+                                        if (structure.structureType === STRUCTURE_ROAD) {
+                                            costs.set(structure.pos.x, structure.pos.y, 1);
+                                        }
+                                    });
+                                    return costs;
+                                }
+                            });
+                            allConnections.push({spawn, target: container, path: path.path});
+                        }
+                    }
+                })
             }
         });
 

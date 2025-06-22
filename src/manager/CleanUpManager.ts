@@ -1,6 +1,4 @@
-﻿import {roomConfig} from "../config";
-
-export class CleanUpManager {
+﻿export class CleanUpManager {
 
     static addToCleanupQueue(creepName: string): void {
         if (!Memory.cleanupQueue) Memory.cleanupQueue = [];
@@ -33,14 +31,6 @@ export class CleanUpManager {
         for (const name in Memory.creeps) {
             if (!(name in Game.creeps)) {
                 delete Memory.creeps[name];
-            }
-        }
-
-        if (Memory.rooms) {
-            for (const roomName in Memory.rooms) {
-                if (!roomConfig[roomName]) {
-                    delete Memory.rooms[roomName];
-                }
             }
         }
     }
@@ -121,8 +111,9 @@ export class CleanUpManager {
                 }
             });
         }
-        delete Memory.creeps[creep.name];
         creep.suicide();
+        delete Memory.creeps[creep.name];
+
         return true;
     }
 

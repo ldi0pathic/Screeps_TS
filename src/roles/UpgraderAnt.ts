@@ -2,7 +2,7 @@
 import {Movement} from "../utils/Movement";
 import {HarvesterAnt} from "./base/HarvesterAnt";
 
-export class UpgraderAnt extends HarvesterAnt<UpgraderMemory> {
+export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
 
     doJob(): void {
 
@@ -30,7 +30,7 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderMemory> {
         }
     }
 
-    public createSpawnMemory(spawn: StructureSpawn, workroom: string): UpgraderMemory {
+    public createSpawnMemory(spawn: StructureSpawn, workroom: string): UpgraderCreepMemory {
         return {
             job: this.getJob(),
             spawn: spawn.name,

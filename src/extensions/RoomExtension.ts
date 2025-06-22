@@ -1,7 +1,7 @@
-﻿import {SourceData} from "../records/SourceData";
+﻿import {EnergieSourceData, MineralSourceData} from "../records/EnergieSourceData";
 
 export function extendRoom() {
-    Room.prototype.getOrFindSource = function (): SourceData[] {
+    Room.prototype.getOrFindEnergieSource = function (): EnergieSourceData[] {
         let ids = this.memory.energySources;
 
         if (ids && ids.length > 0) {
@@ -11,10 +11,26 @@ export function extendRoom() {
         const source = Game.rooms[this.name].find(FIND_SOURCES)
         this.memory.energySources = []
         for (let s of source) {
-            this.memory.energySources.push(new SourceData(s.id));
+            this.memory.energySources.push(new EnergieSourceData(s.id));
         }
 
+
         return this.memory.energySources;
+    }
+
+    Room.prototype.getOrFindMineralSource = function (): MineralSourceData[] {
+        let ids = this.memory.mineralSources;
+
+        if (ids && ids.length > 0) {
+            return ids;
+        }
+
+        const mineral = Game.rooms[this.name].find(FIND_MINERALS);
+        for (let m of mineral) {
+            this.memory.mineralSources.push(new MineralSourceData(m.id, m.mineralType));
+        }
+
+        return this.memory.mineralSources;
     }
 
     Room.prototype.setRoomState = function (controller: StructureController): void {

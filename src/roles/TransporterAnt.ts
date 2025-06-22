@@ -3,7 +3,7 @@ import _ from "lodash";
 import {Movement} from "../utils/Movement";
 
 
-export class TransporterAnt extends Ant<TransporterMemory> {
+export class TransporterAnt extends Ant<TransporterCreepMemory> {
     doJob(): void {
 
         if (Movement.shouldContinueMoving(this.creep)) {
@@ -51,10 +51,10 @@ export class TransporterAnt extends Ant<TransporterMemory> {
         return [CARRY, CARRY, MOVE]
     }
 
-    public override createSpawnMemory(spawn: StructureSpawn, roomname: string): TransporterMemory {
+    public override createSpawnMemory(spawn: StructureSpawn, roomname: string): TransporterCreepMemory {
         const workroom = Game.rooms[roomname];
         const job = this.getJob();
-        const sources = workroom.getOrFindSource();
+        const sources = workroom.getOrFindEnergieSource();
         const creeps = _.filter(Game.creeps, c =>
             c.memory.job == job &&
             c.memory.workroom == workroom.name
@@ -66,7 +66,7 @@ export class TransporterAnt extends Ant<TransporterMemory> {
             let found = false;
 
             for (let creep of creeps) {
-                const transporterMemory = creep.memory as TransporterMemory;
+                const transporterMemory = creep.memory as TransporterCreepMemory;
                 if (transporterMemory.harvestContainerId === s.containerId) {
                     found = true;
                     break;
@@ -97,7 +97,7 @@ export class TransporterAnt extends Ant<TransporterMemory> {
     }
 
     protected getMaxCreeps(workroom: Room): number {
-        return workroom.getOrFindSource().length || 0;
+        return workroom.getOrFindEnergieSource().length || 0;
     }
 
     protected shouldSpawn(workroom: Room): boolean {

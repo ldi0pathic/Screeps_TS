@@ -230,8 +230,7 @@ export class SpawnManager {
 
         const cost = _.sum(request.bodyParts, part => BODYPART_COST[part]);
         if (spawn.room.energyAvailable < cost) return false;
-
-        // GEÄNDERT: Erstelle temporäre Ant-Instanz für createSpawnMemory
+        
         const tempAnt = this.createTempAnt(request.jobKey, Game.rooms[request.targetRoom]);
         if (!tempAnt) return false;
 

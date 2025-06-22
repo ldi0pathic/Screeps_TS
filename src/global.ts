@@ -1,5 +1,5 @@
 ﻿import {Ant} from "./roles/base/Ant";
-import {SourceData} from "./records/SourceData";
+import {EnergieSourceData, MineralSourceData} from "./records/EnergieSourceData";
 
 export {};
 
@@ -10,7 +10,8 @@ declare global {
         worker = 'Worker',
         upgrader = 'Upgrader',
         builder = 'Builder',
-        transporter = 'Transporter'
+        transporter = 'Transporter',
+        scout = 'Scout',
     }
 
     const enum eRoomState {
@@ -89,6 +90,7 @@ declare global {
         // Terminal
 
         otherPlayer,
+        invader
     }
 
     const enum eJobState {
@@ -142,15 +144,19 @@ declare global {
         harvestTombstoneId?: Id<Tombstone>;
     }
 
-    interface TransporterMemory extends CreepMemory {
+    interface TransporterCreepMemory extends CreepMemory {
         harvestContainerId: Id<StructureContainer> | undefined;
     }
 
-    interface UpgraderMemory extends CreepMemory {
+    interface UpgraderCreepMemory extends CreepMemory {
         energySourceId: Id<Source> | undefined;
     }
 
-   
+    interface ScoutCreepMemory extends CreepMemory {
+        scoutRoom?: string;
+    }
+
+
     interface MinerMemory extends StationaryCreepMemory {
         energySourceId: Id<Source> | undefined;
         containerId: Id<StructureContainer> | undefined;
@@ -161,7 +167,9 @@ declare global {
     interface Room {
         setRoomState(controller: StructureController): void;
 
-        getOrFindSource(): SourceData[];
+        getOrFindEnergieSource(): EnergieSourceData[];
+
+        getOrFindMineralSource(): MineralSourceData[];
     }
 
     interface Creep {
@@ -216,7 +224,8 @@ declare global {
     }
 
     interface RoomMemory {
-        energySources: SourceData[],
+        energySources: EnergieSourceData[],
+        mineralSources: MineralSourceData[],
         state: eRoomState;
         plannedRoads?: string[];
     }
