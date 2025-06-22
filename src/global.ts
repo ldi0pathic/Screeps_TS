@@ -1,5 +1,6 @@
 ﻿import {Ant} from "./roles/base/Ant";
-import {EnergieSourceData, MineralSourceData} from "./records/EnergieSourceData";
+import {EnergieSourceData} from "./records/EnergieSourceData";
+import {MineralSourceData} from "./records/MineralSourceData";
 
 export {};
 

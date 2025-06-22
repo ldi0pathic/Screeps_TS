@@ -1,6 +1,7 @@
 ﻿import {Ant} from "./base/Ant";
 import {Movement} from "../utils/Movement";
-import {EnergieSourceData, MineralSourceData} from "../records/EnergieSourceData";
+import {EnergieSourceData} from "../records/EnergieSourceData";
+import {MineralSourceData} from "../records/MineralSourceData";
 
 
 export class ScoutAnt extends Ant<ScoutCreepMemory> {
