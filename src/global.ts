@@ -228,6 +228,7 @@ declare global {
         energySources: EnergieSourceData[],
         mineralSources: MineralSourceData[],
         state: eRoomState;
+        scoutState?: eRoomState;
         plannedRoads?: string[];
     }
 

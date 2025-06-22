@@ -48,12 +48,22 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
     protected shouldSpawn(workroom: Room): boolean {
 
         const roomState = Memory.rooms[workroom.name]?.state;
-        if (!roomState || roomState < eRoomState.phase1) {
+        const scoutState = Memory.rooms[workroom.name]?.scoutState;
+        if (!roomState || roomState < eRoomState.phase2) {
             return false; // Erst ab Phase 1
+        }
+
+        //somit startet einmalig eine suche, wenn  der status sich ändert :) 
+        if (scoutState && scoutState >= roomState) {
+            return false;
         }
 
         const scoutRadius = this.getScoutRadius(roomState);
         const unexploredRooms = this.findUnexploredRooms(workroom.name, scoutRadius);
+
+        if (unexploredRooms.length == 0) {
+            Memory.rooms[workroom.name].scoutState = roomState;
+        }
 
         return unexploredRooms.length > 0;
 
