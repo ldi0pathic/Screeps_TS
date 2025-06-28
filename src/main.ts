@@ -4,16 +4,23 @@ import {SpawnManager} from "./manager/SpawnManager";
 import {JobsManager} from "./manager/JobsManager";
 import {CleanUpManager} from "./manager/CleanUpManager";
 import {CPUManager} from "./manager/CPUManager";
-import {RoadManager} from "./manager/RoadManager";
+import {LayoutManager} from "./manager/LayoutManager";
 
 loadExtensions();
 
-
+let exportDone = false;
 export const loop = ErrorMapper.wrapLoop(() => {
+
+    /*
+        if (!exportDone) {
+            LayoutExporter.exportRoomToConsole("W5N8")
+            exportDone = true;
+        }
+     */
+    
     // CPU History am Tick-Start updaten
     CPUManager.updateHistory();
-
-
+    
     SpawnManager.processEmergencySpawns();
     SpawnManager.findNeededCreeps();
     SpawnManager.processSpawns();
@@ -34,12 +41,19 @@ export const loop = ErrorMapper.wrapLoop(() => {
         return;
     }
 
-    JobsManager.doLowJobs();
     CleanUpManager.runAllCleanup();
-    RoadManager.buildRoads();
+    JobsManager.doLowJobs();
+
+
+    if (!CPUManager.shouldContinue('low')) {
+        CPUManager.getStatus();
+        Memory.lastTickCpu = Game.cpu.getUsed();
+        return;
+    }
+
+    LayoutManager.run();
+
 
     // CPU für nächsten Tick speichern
     Memory.lastTickCpu = Game.cpu.getUsed();
-
-
 });

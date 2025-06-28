@@ -6,16 +6,17 @@ export class RoadManager {
         for (const name in roomConfig) {
             if (roomConfig[name].buildRoads) {
                 const room = Game.rooms[name];
-                if (room.memory.state < eRoomState.phase2) {
+                if (room.memory.state < eRoomState.phase2 || room.memory.state > eRoomState.phase8) {
                     continue;
                 }
-                if (
-                    room.controller?.my &&
-                    room.controller.level < 8 &&
-                    room.find(FIND_MY_SPAWNS).length > 0
-                )
+
+                if (room.controller?.my &&
+                    room.find(FIND_MY_SPAWNS).length > 0) {
+
                     this.planRoadNetwork(room);
-                this.buildPlannedRoads(room);
+                    this.buildPlannedRoads(room);
+                }
+
             }
         }
     }

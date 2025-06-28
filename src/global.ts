@@ -230,6 +230,53 @@ declare global {
         state: eRoomState;
         scoutState?: eRoomState;
         plannedRoads?: string[];
+        plannedBuildings?: PlannedBuilding[];
+    }
+
+    interface PlannedBuilding {
+        x: number;
+        y: number;
+        structureType: BuildableStructureConstant;
+        phase: eRoomState;
+    }
+
+    interface Position {
+        x: number;
+        y: number;
+    }
+
+    interface BuildingPositions {
+        [key: string]: Position[];
+    }
+
+    interface TerrainData {
+        wall: Position[];
+        swamp: Position[];
+    }
+
+    interface MineralData {
+        mineralType: MineralConstant;
+        x: number;
+        y: number;
+    }
+
+    interface RoomLayout {
+        rcl: number;
+        buildings: BuildingPositions;
+        controller: Position | null;
+        terrain: TerrainData;
+        sources: Position[];
+        mineral: MineralData | null;
+    }
+
+    interface MinRoomLayout {
+        buildings: BuildingPositions;
+    }
+
+    interface BuildResult {
+        success: number;
+        failed: number;
+        errors: string[];
     }
 
 }
