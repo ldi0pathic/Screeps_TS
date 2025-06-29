@@ -231,6 +231,7 @@ declare global {
         scoutState?: eRoomState;
         plannedRoads?: string[];
         plannedBuildings?: PlannedBuilding[];
+        spawnPrioBlock?: boolean;
     }
 
     interface PlannedBuilding {

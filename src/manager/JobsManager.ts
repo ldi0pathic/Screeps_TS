@@ -43,7 +43,7 @@ export class JobsManager {
 
         switch (jobType) {
             case eJobType.miner:
-                return room.energyAvailable < room.energyCapacityAvailable * 0.3 ? 25 : 15;
+                return room.energyAvailable < room.energyCapacityAvailable * 0.3 ? 45 : 25;
 
             case eJobType.upgrader:
                 const controller = room.controller;

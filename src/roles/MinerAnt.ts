@@ -4,10 +4,10 @@ import {StationaryAnt} from "./base/StationaryAnt";
 
 export class MinerAnt extends StationaryAnt<MinerMemory> {
 
-    doJob(): void {
+    doJob(): boolean {
         if (!this.isOnPosition()) {
             if (!this.goToFinalPos()) {
-                return;
+                return true;
             }
         }
 
@@ -18,7 +18,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                 if (this.memory.state == eJobState.work && build.progressTotal > build.progress) {
                     this.creep.say('🪚');
                     this.creep.build(build)
-                    return;
+                    return true;
 
                 }
             } else if (!build) {
@@ -39,7 +39,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                     if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > (this.creep.store.getCapacity() * 0.95)) {
                         this.creep.repair(container);
                         this.creep.say('🛠️');
-                        return;
+                        return true;
                     }
                 }
 
@@ -47,10 +47,10 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                     if (container.hits < container.hitsMax) {
                         this.creep.repair(container);
                         this.creep.say('🚯🛠️');
-                        return;
+                        return true;
                     }
                     this.creep.say('🚯');
-                    return;
+                    return true;
                 }
             } else {
                 this.memory.containerId = undefined;
@@ -81,21 +81,41 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                     case ERR_TIRED:
                     case ERR_NOT_ENOUGH_ENERGY: {
                         this.creep.say('😴');
-                        return;
-                    }
-                    default: {
-                        return;
                     }
                 }
             }
         }
+        return true;
     }
 
-    public getProfil(): BodyPartConstant[] {
-        return [WORK, CARRY, MOVE]
+    public override getProfil(workroom: Room): BodyPartConstant[] {
+
+        if (workroom.memory.state < eRoomState.phase3) {
+            return [WORK, CARRY, MOVE]
+        }
+
+        const availableEnergy = workroom.energyCapacityAvailable;
+
+        const workPerSet = 2;
+        const carryPerSet = 1;
+        const setCost = workPerSet * BODYPART_COST[WORK] + carryPerSet * BODYPART_COST[CARRY]; // 2*100 + 1*50 = 250
+
+        const moveCost = BODYPART_COST[MOVE]; // 50
+        const maxSets = Math.floor((availableEnergy - moveCost) / setCost);
+        const numberOfSets = Math.min(8, maxSets); // Limit auf 8 Sets
+
+        const body = [];
+        for (let i = 0; i < numberOfSets; i++) {
+            body.push(...Array(workPerSet).fill(WORK));
+            body.push(...Array(carryPerSet).fill(CARRY));
+        }
+        body.push(MOVE);
+
+        return body;
     }
 
-    public createSpawnMemory(spawn: StructureSpawn, roomname: string): MinerMemory {
+
+    public override createSpawnMemory(spawn: StructureSpawn, roomname: string): MinerMemory {
         const workroom = Game.rooms[roomname];
 
         const job = this.getJob();

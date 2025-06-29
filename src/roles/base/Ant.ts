@@ -17,7 +17,7 @@ export abstract class Ant<TMemory extends CreepMemory> {
         this.creep.memory = value
     }
 
-    abstract doJob(): void;
+    abstract doJob(): boolean;
 
     checkHarvest(): void {
 
@@ -51,12 +51,12 @@ export abstract class Ant<TMemory extends CreepMemory> {
         }
 
         const dynamicPriority = SpawnManager.getSpawnPriority(job, workroom);
-        SpawnManager.addToJobQueue(job, workroom, this.getProfil(), dynamicPriority);
+        SpawnManager.addToJobQueue(job, workroom, this.getProfil(workroom), dynamicPriority);
 
         return false;
     }
 
-    public abstract getProfil(): BodyPartConstant[];
+    public abstract getProfil(workroom: Room): BodyPartConstant[];
 
     public createSpawnMemory(spawn: StructureSpawn, workroom: string): CreepMemory {
         const job = this.getJob();

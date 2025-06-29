@@ -5,28 +5,30 @@ import {MineralSourceData} from "../records/MineralSourceData";
 
 
 export class ScoutAnt extends Ant<ScoutCreepMemory> {
-    doJob(): void {
+    doJob(): boolean {
 
         if (!this.memory.scoutRoom) {
             this.assignNextTarget();
-            return;
+            return true;
         }
 
         if (this.creep.room.name == this.memory.scoutRoom) {
             this.scoutCurrentRoom();
             this.assignNextTarget();
-            return;
+            return true;
         }
 
         if (this.creep.room.name !== this.memory.scoutRoom) {
             const result = Movement.moveToRoom(this.creep, this.memory.scoutRoom);
             if (result === OK) {
-                return;
+                return true;
             }
         }
+
+        return true;
     }
 
-    public getProfil(): BodyPartConstant[] {
+    public override getProfil(workroom: Room): BodyPartConstant[] {
         return [MOVE]
     }
 

@@ -1,33 +1,25 @@
 ﻿import {roomConfig} from "../config";
-import {Movement} from "../utils/Movement";
 import {HarvesterAnt} from "./base/HarvesterAnt";
 
 export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
 
-    doJob(): void {
+    doJob(): boolean {
 
-        if (Movement.shouldContinueMoving(this.creep)) {
-            Movement.continueMoving(this.creep);
-            return;
+        if (super.doJob()) {
+            return true;
         }
 
-        this.checkHarvest();
+        this.memory.energySourceId = undefined
 
-        if (this.memory.state == eJobState.harvest) {
-            this.doHarvest(RESOURCE_ENERGY);
-        } else {
-
-            this.memory.energySourceId = undefined
-
-            const controller = this.creep.room.controller
-            if (controller) {
-                controller.room.setRoomState(controller);
-                if (this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-                    this.moveTo(controller);
-                }
-
+        const controller = this.creep.room.controller
+        if (controller) {
+            controller.room.setRoomState(controller);
+            if (this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+                this.moveTo(controller);
             }
+
         }
+        return true;
     }
 
     public createSpawnMemory(spawn: StructureSpawn, workroom: string): UpgraderCreepMemory {
@@ -44,7 +36,7 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
         }
     }
 
-    public getProfil(): BodyPartConstant[] {
+    public override getProfil(workroom: Room): BodyPartConstant[] {
         return [WORK, CARRY, MOVE]
     }
 

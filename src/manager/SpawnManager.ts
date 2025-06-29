@@ -105,9 +105,15 @@ export class SpawnManager {
 
                 if (spawn.room.energyAvailable < cost) {
                     scoreMatrix[spawnIdx][reqIdx] = Infinity;
+                    if (req.priority > 900) {
+                        console.log('🚩 Spawn PrioBlock')
+                        spawn.room.memory.spawnPrioBlock = true;
+                        break;
+                    }
                     continue;
                 }
 
+                spawn.room.memory.spawnPrioBlock = false;
                 const dist = Game.map.getRoomLinearDistance(spawn.room.name, req.targetRoom);
                 const score = (1000 - req.priority) * 100 + dist * 10;
 
@@ -155,8 +161,8 @@ export class SpawnManager {
             const miners = _.filter(Game.creeps, c =>
                 c.memory.job === eJobType.miner && c.memory.workroom === room.name
             );
-            if (miners.length === 0 && room.energyAvailable > 200) {
-                return 100;
+            if (miners.length === 0 && room.energyAvailable <= 250) {
+                return 999;
             }
         }
 
@@ -230,7 +236,7 @@ export class SpawnManager {
 
         const cost = _.sum(request.bodyParts, part => BODYPART_COST[part]);
         if (spawn.room.energyAvailable < cost) return false;
-        
+
         const tempAnt = this.createTempAnt(request.jobKey, Game.rooms[request.targetRoom]);
         if (!tempAnt) return false;
 

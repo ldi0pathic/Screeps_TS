@@ -4,40 +4,52 @@ import {Movement} from "../utils/Movement";
 
 
 export class TransporterAnt extends Ant<TransporterCreepMemory> {
-    doJob(): void {
+    doJob(): boolean {
 
         if (Movement.shouldContinueMoving(this.creep)) {
             Movement.continueMoving(this.creep);
-            return;
+            return true;
         }
 
         this.checkHarvest();
         if (this.memory.state == eJobState.harvest) {
 
-            const containerId = this.memory.harvestContainerId;
+            let container: StructureContainer | undefined;
 
-            if (containerId) {
-                let container = Game.getObjectById(containerId);
-
-                if (container?.structureType == STRUCTURE_CONTAINER) {
-                    if (container.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
-                        if (this.creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                            this.moveTo(container);
-                            return;
-                        }
-                    } else {
-                        this.creep.say('📦🚫');
+            if (this.memory.harvestContainerId) {
+                container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
+            } else {
+                container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: (structure) => {
+                        return structure.structureType === STRUCTURE_CONTAINER &&
+                            (structure as StructureContainer).store[RESOURCE_ENERGY] > 0;
                     }
+                }) as StructureContainer | undefined;
+            }
 
-                } else {
-                    this.memory.harvestContainerId = undefined;
-                    //creep löschen?
+            if (!container) {
+                this.memory.harvestContainerId = undefined;
+                return false;
+            }
+
+            if (container.store?.getUsedCapacity(RESOURCE_ENERGY) > this.creep.store.getCapacity() * 0.5) {
+                this.memory.harvestContainerId = container.id;
+
+                let state = this.creep.withdraw(container, RESOURCE_ENERGY);
+                switch (state) {
+                    case ERR_NOT_IN_RANGE:
+                        this.moveTo(container);
+                        return true;
+                    case OK:
+                        this.memory.harvestContainerId = undefined;
+                        return true;
                 }
             }
         } else {
             const target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: s => (s.structureType === STRUCTURE_SPAWN ||
-                        s.structureType === STRUCTURE_EXTENSION) &&
+                        s.structureType === STRUCTURE_EXTENSION ||
+                        s.structureType === STRUCTURE_TOWER) &&
                     s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
             });
 
@@ -45,9 +57,10 @@ export class TransporterAnt extends Ant<TransporterCreepMemory> {
                 this.moveTo(target);
             }
         }
+        return true;
     }
 
-    public getProfil(): BodyPartConstant[] {
+    public override getProfil(workroom: Room): BodyPartConstant[] {
         return [CARRY, CARRY, MOVE]
     }
 

@@ -4,48 +4,42 @@ import {HarvesterAnt} from "./base/HarvesterAnt";
 
 export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
 
-    doJob(): void {
+    doJob(): boolean {
 
-        if (Movement.shouldContinueMoving(this.creep)) {
-            Movement.continueMoving(this.creep);
-            return;
+        if (super.doJob()) {
+            return true;
         }
 
-        this.checkHarvest();
+        let buildId = this.memory.constructionId;
 
-        if (this.memory.state == eJobState.harvest) {
-            this.doHarvest(RESOURCE_ENERGY);
-        } else {
-
-            let buildId = this.memory.constructionId;
-
-            if (!buildId) {
-                const todos = this.creep.room.find(FIND_CONSTRUCTION_SITES);
-                if (todos.length > 0) {
-                    buildId = todos[0].id;
-                    this.memory.constructionId = buildId;
-                }
-            }
-
-            if (buildId) {
-                const build = Game.getObjectById(buildId);
-                if (build) {
-                    this.creep.say('🪚');
-                    if (this.creep.build(build) === ERR_NOT_IN_RANGE) {
-                        this.moveTo(build);
-                    }
-                    return;
-                }
-                this.memory.constructionId = undefined;
-            }
-
-            if (this.creep.room.find(FIND_CONSTRUCTION_SITES).length === 0) {
-                const controller = this.creep.room.controller;
-                if (controller && this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-                    this.moveTo(controller);
-                }
+        if (!buildId) {
+            const todos = this.creep.room.find(FIND_CONSTRUCTION_SITES);
+            if (todos.length > 0) {
+                buildId = todos[0].id;
+                this.memory.constructionId = buildId;
             }
         }
+
+        if (buildId) {
+            const build = Game.getObjectById(buildId);
+            if (build) {
+                this.creep.say('🪚');
+                if (this.creep.build(build) === ERR_NOT_IN_RANGE) {
+                    this.moveTo(build);
+                }
+                return true;
+            }
+            this.memory.constructionId = undefined;
+        }
+
+        if (this.creep.room.find(FIND_CONSTRUCTION_SITES).length === 0) {
+            const controller = this.creep.room.controller;
+            if (controller && this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+                this.moveTo(controller);
+                return true;
+            }
+        }
+        return true;
     }
 
     public createSpawnMemory(spawn: StructureSpawn, workroom: string): BuilderCreepMemory {
@@ -56,7 +50,7 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
         } as BuilderCreepMemory;
     }
 
-    public getProfil(): BodyPartConstant[] {
+    public override getProfil(workroom: Room): BodyPartConstant[] {
         return [WORK, CARRY, MOVE]
     }
 

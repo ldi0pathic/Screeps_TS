@@ -1,4 +1,5 @@
 ﻿import {Ant} from "./Ant";
+import {Movement} from "../../utils/Movement";
 
 export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends Ant<TMemory> {
 
@@ -7,6 +8,38 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         return {
             ...base,
         } as HarvesterCreepMemory;
+    }
+
+    doJob(): boolean {
+        if (Movement.shouldContinueMoving(this.creep)) {
+            Movement.continueMoving(this.creep);
+            return true;
+        }
+
+        this.checkHarvest();
+
+        if (this.memory.state == eJobState.harvest) {
+            this.doHarvest(RESOURCE_ENERGY);
+            return true;
+        } else if (this.creep.memory.workroom) {
+            let room = Game.rooms[this.creep.memory.workroom];
+
+            if (room.memory.spawnPrioBlock) {
+                this.creep.say('🚩🚩🚩')
+                const target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                    filter: s => (s.structureType === STRUCTURE_SPAWN ||
+                            s.structureType === STRUCTURE_EXTENSION) &&
+                        s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                });
+
+                if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    this.moveTo(target);
+                }
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     hasHarvestTarget(): boolean {
@@ -36,6 +69,10 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
 
         if (this.harvestRoomContainer(resource)) {
             return;
+        }
+
+        if (resource == RESOURCE_ENERGY) {
+            this.harvestEnergySource()
         }
     }
 
@@ -179,5 +216,30 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
     }
 
 
+    private harvestEnergySource() {
+        let source: Source | undefined;
+
+        if (this.memory.havestSourceId) {
+            source = Game.getObjectById(this.memory.havestSourceId) as Source;
+        } else {
+            source = this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source | undefined;
+        }
+
+        if (source) {
+            switch (this.creep.harvest(source)) {
+                case ERR_TIRED:
+                case ERR_NOT_ENOUGH_ENERGY: {
+                    this.creep.say('😴');
+                    return;
+                }
+                case ERR_NOT_IN_RANGE:
+                    this.moveTo(source);
+                    return;
+                default: {
+                    return;
+                }
+            }
+        }
+    }
 }
     

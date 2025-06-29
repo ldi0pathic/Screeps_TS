@@ -4,32 +4,26 @@ import {HarvesterAnt} from "./base/HarvesterAnt";
 
 export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
 
-    doJob(): void {
+    doJob(): boolean {
 
-        if (Movement.shouldContinueMoving(this.creep)) {
-            Movement.continueMoving(this.creep);
-            return;
+        if (super.doJob()) {
+            return true;
         }
 
-        this.checkHarvest();
-
-        if (this.memory.state == eJobState.harvest) {
-            this.doHarvest(RESOURCE_ENERGY);
-        } else {
-            const todos = this.creep.room.find(FIND_CONSTRUCTION_SITES);
-            if (todos.length > 0) {
-                this.creep.say('🪚');
-                if (this.creep.build(todos[0]) === ERR_NOT_IN_RANGE) {
-                    this.moveTo(todos[0]);
-                }
-                return;
+        const todos = this.creep.room.find(FIND_CONSTRUCTION_SITES);
+        if (todos.length > 0) {
+            this.creep.say('🪚');
+            if (this.creep.build(todos[0]) === ERR_NOT_IN_RANGE) {
+                this.moveTo(todos[0]);
             }
-
-            const nearestSpawn = this.creep.pos.findClosestByRange(FIND_MY_SPAWNS);
-            if (nearestSpawn && this.creep.transfer(nearestSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                this.moveTo(nearestSpawn);
-            }
+            return true;
         }
+
+        const nearestSpawn = this.creep.pos.findClosestByRange(FIND_MY_SPAWNS);
+        if (nearestSpawn && this.creep.transfer(nearestSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            this.moveTo(nearestSpawn);
+        }
+        return true
     }
 
     public createSpawnMemory(spawn: StructureSpawn, workroom: string): HarvesterCreepMemory {
@@ -37,7 +31,7 @@ export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
 
     }
 
-    public getProfil(): BodyPartConstant[] {
+    public override getProfil(workroom: Room): BodyPartConstant[] {
         return [WORK, CARRY, MOVE]
     }
 
