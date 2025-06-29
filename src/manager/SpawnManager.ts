@@ -28,8 +28,7 @@ export class SpawnManager {
             this.getSpawnPriority(jobKey, targetRoom);
 
         if (existingIndex !== -1) {
-            // Update nur die Priorität wenn sie sich geändert hat
-            if (this.queue[existingIndex].priority !== actualPriority) {
+            if (this.queue[existingIndex].priority < actualPriority) {
                 console.log(`🔄 Priorität für ${jobKey} in ${targetRoom.name} aktualisiert: ${this.queue[existingIndex].priority} → ${actualPriority}`);
                 this.updatePriority(existingIndex, actualPriority);
             }
@@ -184,7 +183,16 @@ export class SpawnManager {
             const miners = _.filter(Game.creeps, c =>
                 c.memory.job === eJobType.miner && c.memory.workroom === room.name
             );
-            if (miners.length === 0 && room.energyAvailable <= 250) {
+            if (miners.length === 0) {
+                return 999;
+            }
+        }
+
+        if (jobType === eJobType.transporter && room.memory.state < eRoomState.phase7) {
+            const transporter = _.filter(Game.creeps, c =>
+                c.memory.job === eJobType.transporter && c.memory.workroom === room.name
+            );
+            if (transporter.length === 0) {
                 return 999;
             }
         }

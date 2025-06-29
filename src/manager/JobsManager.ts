@@ -51,24 +51,10 @@ export class JobsManager {
                     return 30;
                 }
                 return controller?.level === 8 ? 5 : 11;
-
-            case eJobType.builder:
-                return 25;
-
-            case eJobType.transporter:
-                const containers = room.find(FIND_STRUCTURES, {
-                    filter: s => s.structureType === STRUCTURE_CONTAINER
-                }) as StructureContainer[];
-
-                if (containers.length === 0) return 11;
-
-                const avgFillRatio = containers.reduce((sum, c) =>
-                    sum + c.store.getUsedCapacity() / c.store.getCapacity(), 0) / containers.length;
-
-                return avgFillRatio > 0.8 ? 25 : 11;
+                
         }
 
-        return baseConfig.jobPrio;
+        return baseConfig.spawnPrio;
     }
 
     static isCriticalJob(jobType: eJobType, room: Room): boolean {
@@ -287,7 +273,7 @@ export class JobsManager {
     }
 
     static doCriticalJobs() {
-        
+
         for (const {creep, ant} of this.bucketCritical) {
             const jobStartCpu = Game.cpu.getUsed();
 

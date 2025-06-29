@@ -9,7 +9,7 @@ import {WallBuilderAnt} from "../roles/WallBuilderAnt";
 
 export class Jobs {
     public static jobs: Record<string, JobDef> = {
-        Transporter: {antClass: TransporterAnt, jobPrio: 30, spawnPrio: 10},
+        Transporter: {antClass: TransporterAnt, jobPrio: 30, spawnPrio: 50},
         Miner: {antClass: MinerAnt, jobPrio: 11, spawnPrio: 10},
         Upgrader: {antClass: UpgraderAnt, jobPrio: 11, spawnPrio: 10},
         Worker: {antClass: WorkerAnt, jobPrio: 11, spawnPrio: 10},
