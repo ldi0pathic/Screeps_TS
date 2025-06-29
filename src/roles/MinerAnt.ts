@@ -96,18 +96,16 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         const availableEnergy = workroom.energyCapacityAvailable;
 
-        const workPerSet = 2;
-        const carryPerSet = 1;
-        const setCost = workPerSet * BODYPART_COST[WORK] + carryPerSet * BODYPART_COST[CARRY]; // 2*100 + 1*50 = 250
 
-        const moveCost = BODYPART_COST[MOVE]; // 50
+        const setCost = BODYPART_COST[WORK];
+
+        const moveCost = BODYPART_COST[MOVE] + BODYPART_COST[CARRY];
         const maxSets = Math.floor((availableEnergy - (moveCost * 2)) / setCost);
-        const numberOfSets = Math.min(8, maxSets); // Limit auf 8 Sets
+        const numberOfSets = Math.min(20, maxSets); // Limit auf 8 Sets
 
-        const body = [MOVE, MOVE];
+        const body: BodyPartConstant[] = [MOVE, CARRY];
         for (let i = 0; i < numberOfSets; i++) {
-            body.push(...Array(workPerSet).fill(WORK));
-            body.push(...Array(carryPerSet).fill(CARRY));
+            body.push(WORK);
         }
 
         return body;
@@ -290,9 +288,8 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         let creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
-            creep.memory.workroom == workroom.name &&
-            (creep.ticksToLive && creep.memory.minTicksToLive > creep.ticksToLive) || creep.ticksToLive == undefined);
-        
+            creep.memory.workroom == workroom.name);
+
         return ids.length > creeps.length;
     }
 

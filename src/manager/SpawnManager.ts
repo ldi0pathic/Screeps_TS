@@ -1,5 +1,4 @@
-﻿import {JobsManager} from "./JobsManager";
-import {roomConfig} from "../config";
+﻿import {roomConfig} from "../config";
 import {Ant} from "../roles/base/Ant";
 import {Jobs} from "../records/Jobs";
 
@@ -123,6 +122,10 @@ export class SpawnManager {
             for (let reqIdx = 0; reqIdx < this.queue.length; reqIdx++) {
                 const req = this.queue[reqIdx];
 
+                if (req.targetRoom != spawn.room.name) {
+                    continue;
+                }
+
                 const cost = _.sum(req.bodyParts, part => BODYPART_COST[part]);
 
                 if (spawn.room.energyAvailable < cost) {
@@ -130,9 +133,8 @@ export class SpawnManager {
                     if (req.priority > 900) {
                         console.log('🚩 Spawn PrioBlock')
                         spawn.room.memory.spawnPrioBlock = true;
-                        break;
                     }
-                    continue;
+                    break;
                 }
 
                 spawn.room.memory.spawnPrioBlock = false;
@@ -197,7 +199,7 @@ export class SpawnManager {
             }
         }
 
-        return JobsManager.getDynamicPriority(jobType, room) + 10;
+        return Jobs.jobs[jobType].spawnPrio;
     }
 
     static processEmergencySpawns(): boolean {
@@ -207,7 +209,7 @@ export class SpawnManager {
 
             const creeps = _.filter(Game.creeps, c => c.memory.workroom === roomName);
             if (creeps.length === 0) {
-                this.queueCreep(eJobType.miner, room, [WORK, CARRY, MOVE], 999);
+                this.queueCreep(eJobType.worker, room, [WORK, CARRY, MOVE], 999);
                 return true;
             }
         }

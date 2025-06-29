@@ -51,10 +51,10 @@ export class JobsManager {
                     return 30;
                 }
                 return controller?.level === 8 ? 5 : 11;
-                
+
         }
 
-        return baseConfig.spawnPrio;
+        return baseConfig.jobPrio;
     }
 
     static isCriticalJob(jobType: eJobType, room: Room): boolean {

@@ -19,6 +19,27 @@ export function extendRoom() {
         return this.memory.energySources;
     }
 
+    Room.prototype.findAllContainersNearSpawns = function (): StructureContainer[] {
+        const spawns = Game.rooms[this.name].find(FIND_MY_SPAWNS);
+        const containers: StructureContainer[] = [];
+
+        for (const spawn of spawns) {
+            const nearbyContainers = spawn.pos.findInRange(FIND_STRUCTURES, 2, {
+                filter: (structure: Structure) => {
+                    return structure.structureType === STRUCTURE_CONTAINER;
+                }
+            }) as StructureContainer[];
+
+            // Duplikate vermeiden
+            for (const container of nearbyContainers) {
+                if (!containers.find(c => c.id === container.id)) {
+                    containers.push(container);
+                }
+            }
+        }
+
+        return containers;
+    }
     Room.prototype.getOrFindMineralSource = function (): MineralSourceData[] {
         let ids = this.memory.mineralSources;
 

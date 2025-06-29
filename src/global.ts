@@ -134,7 +134,7 @@ declare global {
     interface WallBuilderCreepMemory extends HarvesterCreepMemory {
         constructionId: Id<ConstructionSite> | undefined;
         repairId: Id<Structure> | undefined;
-       
+
     }
 
     interface StationaryCreepMemory extends CreepMemory {
@@ -156,8 +156,8 @@ declare global {
         harvestContainerId: Id<StructureContainer> | undefined;
     }
 
-    interface UpgraderCreepMemory extends CreepMemory {
-        energySourceId: Id<Source> | undefined;
+    interface UpgraderCreepMemory extends StationaryCreepMemory {
+        harvestContainerId: Id<StructureContainer> | undefined;
     }
 
     interface ScoutCreepMemory extends CreepMemory {
@@ -178,6 +178,8 @@ declare global {
         getOrFindEnergieSource(): EnergieSourceData[];
 
         getOrFindMineralSource(): MineralSourceData[];
+
+        findAllContainersNearSpawns(): StructureContainer[];
     }
 
     interface Creep {
@@ -239,6 +241,7 @@ declare global {
         plannedRoads?: string[];
         plannedBuildings?: PlannedBuilding[];
         spawnPrioBlock?: boolean;
+        controllerContainerId?: Id<StructureContainer> | undefined;
     }
 
     interface PlannedBuilding {

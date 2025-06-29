@@ -16,15 +16,37 @@ export class TransporterAnt extends Ant<TransporterCreepMemory> {
 
             let container: StructureContainer | undefined;
 
-            if (this.memory.harvestContainerId) {
-                container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
-            } else {
-                container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
-                    filter: (structure) => {
-                        return structure.structureType === STRUCTURE_CONTAINER &&
-                            (structure as StructureContainer).store[RESOURCE_ENERGY] > 0;
+            let sources = this.creep.room.getOrFindEnergieSource();
+
+            if (!this.memory.harvestContainerId && sources.length > 0) {
+                sources.forEach(source => {
+                    if (source.containerId) {
+
+                        if (!container) {
+                            container = Game.getObjectById(source.containerId) as StructureContainer;
+                        } else {
+                            let newContainer = Game.getObjectById(source.containerId) as StructureContainer;
+                            if (newContainer && container.store[RESOURCE_ENERGY] < newContainer.store[RESOURCE_ENERGY]) {
+                                container = newContainer;
+                            }
+                        }
                     }
-                }) as StructureContainer | undefined;
+                })
+
+                this.memory.harvestContainerId = container?.id;
+            }
+
+            if (!container) {
+                if (this.memory.harvestContainerId) {
+                    container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
+                } else {
+                    container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                        filter: (structure) => {
+                            return structure.structureType === STRUCTURE_CONTAINER &&
+                                (structure as StructureContainer).store[RESOURCE_ENERGY] > 0;
+                        }
+                    }) as StructureContainer | undefined;
+                }
             }
 
             if (!container) {
@@ -46,16 +68,41 @@ export class TransporterAnt extends Ant<TransporterCreepMemory> {
                 }
             }
         } else {
-            const target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            let target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: s => (s.structureType === STRUCTURE_SPAWN ||
                         s.structureType === STRUCTURE_EXTENSION ||
                         s.structureType === STRUCTURE_TOWER) &&
                     s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
             });
 
+            if (!target) {
+                let targets = this.creep.room.controller?.pos.findInRange(FIND_STRUCTURES, 2, {
+                    filter: (structure) => {
+                        return structure.structureType === STRUCTURE_CONTAINER &&
+                            (structure as StructureContainer).store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+                    }
+                })
+                if (targets && targets.length > 0) {
+                    target = targets[0];
+                }
+            }
+
+            if (!target) {
+                let targets = this.creep.room.findAllContainersNearSpawns();
+                for (let t of targets) {
+                    if (target && t.store.getFreeCapacity(RESOURCE_ENERGY) > target.store.getFreeCapacity(RESOURCE_ENERGY)) {
+                        target = t;
+                    } else if (t.store.getFreeCapacity(RESOURCE_ENERGY) > 100) {
+                        target = t;
+                    }
+                }
+            }
+
             if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 this.moveTo(target);
             }
+
+
         }
         return true;
     }

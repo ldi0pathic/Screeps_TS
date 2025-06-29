@@ -153,7 +153,13 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
     }
 
     protected shouldSpawn(workroom: Room): boolean {
-        const todos = workroom.find(FIND_CONSTRUCTION_SITES);
+        const todos = workroom.find(FIND_STRUCTURES, {
+            filter: (structure: Structure) => {
+                return (structure.structureType === STRUCTURE_RAMPART ||
+                        structure.structureType === STRUCTURE_WALL) &&
+                    structure.hits < structure.hitsMax
+            }
+        });
         return todos.length > 0;
     }
 }
