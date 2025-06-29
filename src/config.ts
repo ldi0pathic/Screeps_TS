@@ -9,7 +9,7 @@
 
 export const roomConfig: { [roomName: string]: RoomConfig } = {
     "W5N8": {
-        builderCount: 5,
+        builderCount: 2,
         upgraderCount: 1,
         workerCount: 1,
         sendMiner: true,

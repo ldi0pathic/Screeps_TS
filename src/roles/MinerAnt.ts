@@ -101,15 +101,14 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         const setCost = workPerSet * BODYPART_COST[WORK] + carryPerSet * BODYPART_COST[CARRY]; // 2*100 + 1*50 = 250
 
         const moveCost = BODYPART_COST[MOVE]; // 50
-        const maxSets = Math.floor((availableEnergy - moveCost) / setCost);
+        const maxSets = Math.floor((availableEnergy - (moveCost * 2)) / setCost);
         const numberOfSets = Math.min(8, maxSets); // Limit auf 8 Sets
 
-        const body = [];
+        const body = [MOVE, MOVE];
         for (let i = 0; i < numberOfSets; i++) {
             body.push(...Array(workPerSet).fill(WORK));
             body.push(...Array(carryPerSet).fill(CARRY));
         }
-        body.push(MOVE);
 
         return body;
     }
@@ -277,19 +276,24 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         return eJobType.miner;
     }
 
-    protected getMaxCreeps(workroom: Room): number {
+    public override getMaxCreeps(workroom: Room): number {
         return workroom.getOrFindEnergieSource().length || 0;
     }
 
     protected shouldSpawn(workroom: Room): boolean {
 
-        const ids = workroom.getOrFindEnergieSource();
-        const creeps = _.filter(Game.creeps, creep =>
-            creep.memory.job == this.getJob() &&
-            creep.memory.workroom == workroom.name
-        );
+        if (!roomConfig[workroom.name].sendMiner) {
+            return false;
+        }
 
-        return roomConfig[workroom.name].sendMiner && ids.length > creeps.length;
+        const ids = workroom.getOrFindEnergieSource();
+
+        let creeps = _.filter(Game.creeps, creep =>
+            creep.memory.job == this.getJob() &&
+            creep.memory.workroom == workroom.name &&
+            (creep.ticksToLive && creep.memory.minTicksToLive > creep.ticksToLive) || creep.ticksToLive == undefined);
+        
+        return ids.length > creeps.length;
     }
 
 }

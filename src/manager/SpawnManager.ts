@@ -18,9 +18,25 @@ export class SpawnManager {
         const def = Jobs.jobs[jobKey];
         if (!def) return -1;
 
+        // Prüfe ob bereits ein Request für diesen Job/Raum in der Queue existiert
+        const existingIndex = this.queue.findIndex(r =>
+            r.jobKey === jobKey &&
+            r.targetRoom === targetRoom.name
+        );
+
         const actualPriority = priority !== undefined ? priority :
             this.getSpawnPriority(jobKey, targetRoom);
 
+        if (existingIndex !== -1) {
+            // Update nur die Priorität wenn sie sich geändert hat
+            if (this.queue[existingIndex].priority !== actualPriority) {
+                console.log(`🔄 Priorität für ${jobKey} in ${targetRoom.name} aktualisiert: ${this.queue[existingIndex].priority} → ${actualPriority}`);
+                this.updatePriority(existingIndex, actualPriority);
+            }
+            return existingIndex; // Kein neuer Request, bestehender bleibt
+        }
+
+        // Nur wenn noch kein Request existiert, einen neuen erstellen
         const request: SpawnRequest = {
             jobKey,
             targetRoom: targetRoom.name,
@@ -29,21 +45,10 @@ export class SpawnManager {
             timestamp: Game.time
         };
 
-        const index = this.queue.findIndex(r =>
-            r.jobKey === request.jobKey &&
-            r.targetRoom === request.targetRoom
-        );
-
-        if (index === -1) {
-            this.queue.push(request);
-        } else {
-            let prio = this.queue[index].priority
-            if (request.priority != prio) {
-                this.updatePriority(index, request.priority)
-            }
-        }
-
+        this.queue.push(request);
         this.sortQueue();
+
+        console.log(`➕ Neuer Spawn-Request: ${jobKey} für ${targetRoom.name} (Priorität: ${actualPriority})`);
         return this.queue.length - 1;
     }
 
@@ -66,13 +71,31 @@ export class SpawnManager {
             if (!room) continue;
 
             for (let jobName in Jobs.jobs) {
+                const jobType = jobName as eJobType;
+
                 // Erstelle temporäre Ant-Instanz für spawn() Aufruf
-                const tempAnt = this.createTempAnt(jobName as eJobType, room);
+                const tempAnt = this.createTempAnt(jobType, room);
                 if (tempAnt) {
                     tempAnt.spawn(room);
                 }
             }
         }
+    }
+
+    // Neue Methode: Zählt Creeps eines bestimmten Jobs in einem Raum
+    public static getCreepCount(jobType: eJobType, roomName: string): number {
+        return _.filter(Game.creeps, c =>
+            c.memory.job === jobType &&
+            c.memory.workroom === roomName
+        ).length;
+    }
+
+    // Neue Methode: Zählt Queue-Einträge für einen Job
+    public static getQueuedCount(jobType: eJobType, roomName: string): number {
+        return _.filter(this.queue, req =>
+            req.jobKey === jobType &&
+            req.targetRoom === roomName
+        ).length;
     }
 
     public static processSpawns() {
@@ -218,6 +241,7 @@ export class SpawnManager {
                 return false;
             }
 
+            // Prüfe ob der Request noch benötigt wird - aber nur basierend auf Queue-Duplikaten
             const key = `${req.jobKey}|${req.targetRoom}`;
 
             if (seen.has(key)) {
@@ -269,5 +293,49 @@ export class SpawnManager {
         }
 
         return name;
+    }
+
+    // Debug-Methode um den aktuellen Status zu sehen
+    public static getStatus(): string {
+        let status = "🔍 SpawnManager Status:\n";
+        status += `📋 Queue: ${this.queue.length} Requests\n`;
+
+        // Zeige Queue-Inhalt
+        if (this.queue.length > 0) {
+            status += "\n📝 Queue-Inhalt:\n";
+            this.queue.forEach((req, idx) => {
+                status += `  ${idx}: ${req.jobKey} → ${req.targetRoom} (Prio: ${req.priority}, Age: ${Game.time - req.timestamp})\n`;
+            });
+        }
+
+        status += "\n";
+
+        for (const roomName in roomConfig) {
+            const room = Game.rooms[roomName];
+            if (!room) continue;
+
+            status += `\n📍 ${roomName}:\n`;
+
+            for (let jobName in Jobs.jobs) {
+                const jobType = jobName as eJobType;
+                const creepCount = this.getCreepCount(jobType, roomName);
+                const queuedCount = this.getQueuedCount(jobType, roomName);
+
+                const tempAnt = this.createTempAnt(jobType, room);
+                const maxCreeps = tempAnt?.getMaxCreeps ? tempAnt.getMaxCreeps(room) : "?";
+
+                if (creepCount > 0 || queuedCount > 0 || maxCreeps > 0) {
+                    const spawningCount = _.filter(Game.creeps, c =>
+                        c.memory.job === jobType &&
+                        c.memory.workroom === roomName &&
+                        c.spawning
+                    ).length;
+
+                    status += `  ${jobType}: ${creepCount}/${maxCreeps} (${queuedCount} queued, ${spawningCount} spawning)\n`;
+                }
+            }
+        }
+
+        return status;
     }
 }

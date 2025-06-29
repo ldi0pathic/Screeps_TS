@@ -10,20 +10,20 @@ loadExtensions();
 
 let exportDone = false;
 export const loop = ErrorMapper.wrapLoop(() => {
-
+    //console.log("--Loop--");
     /*
         if (!exportDone) {
             LayoutExporter.exportRoomToConsole("W5N8")
             exportDone = true;
         }
      */
-    
+
     // CPU History am Tick-Start updaten
     CPUManager.updateHistory();
-    
+
     SpawnManager.processEmergencySpawns();
-    SpawnManager.findNeededCreeps();
     SpawnManager.processSpawns();
+    SpawnManager.findNeededCreeps();
     JobsManager.doPrioJobs();
     JobsManager.doCriticalJobs();
 
@@ -52,6 +52,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     LayoutManager.run();
+
+    SpawnManager.getStatus()
 
 
     // CPU für nächsten Tick speichern

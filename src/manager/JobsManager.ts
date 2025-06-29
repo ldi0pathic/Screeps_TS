@@ -275,8 +275,6 @@ export class JobsManager {
     }
 
     static doLowJobs() {
-        const startCpu = Game.cpu.getUsed();
-
         for (const {creep, ant, estimatedCost} of this.bucketLow) {
             const jobStartCpu = Game.cpu.getUsed();
 
@@ -286,16 +284,10 @@ export class JobsManager {
             this.trackJobCost(creep.memory.job, actualCost);
             creep.memory.lastJobCost = actualCost;
         }
-
-        const totalCpuUsed = Game.cpu.getUsed() - startCpu;
-        if (totalCpuUsed > 3) {
-            console.log(`🔧 Low Priority Jobs: ${this.bucketLow.length} jobs, ${totalCpuUsed.toFixed(2)} CPU`);
-        }
     }
 
     static doCriticalJobs() {
-        const startCpu = Game.cpu.getUsed();
-
+        
         for (const {creep, ant} of this.bucketCritical) {
             const jobStartCpu = Game.cpu.getUsed();
 
@@ -304,11 +296,6 @@ export class JobsManager {
             const actualCost = Game.cpu.getUsed() - jobStartCpu;
             this.trackJobCost(creep.memory.job, actualCost);
             creep.memory.lastJobCost = actualCost;
-        }
-
-        const totalCpuUsed = Game.cpu.getUsed() - startCpu;
-        if (this.bucketCritical.length > 0) {
-            console.log(`🚨 Critical Jobs: ${this.bucketCritical.length} jobs, ${totalCpuUsed.toFixed(2)} CPU`);
         }
     }
 

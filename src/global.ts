@@ -13,6 +13,7 @@ declare global {
         builder = 'Builder',
         transporter = 'Transporter',
         scout = 'Scout',
+        wallBuilder = 'WallBuilder',
     }
 
     const enum eRoomState {
@@ -128,6 +129,12 @@ declare global {
 
     interface BuilderCreepMemory extends HarvesterCreepMemory {
         constructionId: Id<ConstructionSite> | undefined;
+    }
+
+    interface WallBuilderCreepMemory extends HarvesterCreepMemory {
+        constructionId: Id<ConstructionSite> | undefined;
+        repairId: Id<Structure> | undefined;
+       
     }
 
     interface StationaryCreepMemory extends CreepMemory {
@@ -276,8 +283,6 @@ declare global {
 
     interface BuildResult {
         success: number;
-        failed: number;
-        errors: string[];
     }
 
 }

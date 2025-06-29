@@ -39,7 +39,7 @@ export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
         return eJobType.worker;
     }
 
-    protected getMaxCreeps(workroom: Room): number {
+    public override getMaxCreeps(workroom: Room): number {
         return roomConfig[workroom.name].workerCount || 0;
     }
 

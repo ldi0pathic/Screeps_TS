@@ -43,7 +43,7 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
         return eJobType.scout;
     }
 
-    protected getMaxCreeps(workroom: Room): number {
+    public override getMaxCreeps(workroom: Room): number {
         return 1;
     }
 

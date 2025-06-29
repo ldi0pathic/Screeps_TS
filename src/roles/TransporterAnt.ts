@@ -61,7 +61,25 @@ export class TransporterAnt extends Ant<TransporterCreepMemory> {
     }
 
     public override getProfil(workroom: Room): BodyPartConstant[] {
-        return [CARRY, CARRY, MOVE]
+        if (workroom.memory.state < eRoomState.phase3) {
+            return [CARRY, CARRY, MOVE]
+        }
+
+        const availableEnergy = workroom.energyCapacityAvailable;
+
+
+        const setCost = BODYPART_COST[CARRY] + BODYPART_COST[MOVE];
+
+        const maxSets = Math.floor(availableEnergy / setCost);
+        const numberOfSets = Math.min(13, maxSets);
+
+        const body: BodyPartConstant[] = [];
+        for (let i = 0; i < numberOfSets; i++) {
+            body.push(CARRY);
+            body.push(MOVE);
+        }
+
+        return body;
     }
 
     public override createSpawnMemory(spawn: StructureSpawn, roomname: string): TransporterCreepMemory {
@@ -109,7 +127,7 @@ export class TransporterAnt extends Ant<TransporterCreepMemory> {
         return eJobType.transporter;
     }
 
-    protected getMaxCreeps(workroom: Room): number {
+    public override getMaxCreeps(workroom: Room): number {
         return workroom.getOrFindEnergieSource().length || 0;
     }
 

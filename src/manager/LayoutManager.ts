@@ -42,7 +42,10 @@ export class LayoutManager {
                     return;
                 }
 
-                builder.buildAll();
+                let count = builder.buildAll();
+                if (count > 0) {
+                    console.log("Es wurden " + count + " neue Baustellen eingeplant")
+                }
 
             }
         }

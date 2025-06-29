@@ -8,29 +8,6 @@
         this.layout = layout;
     }
 
-    /**
-     * Mapping von Layout-Strukturnamen zu Screeps-Strukturkonstanten
-     */
-    private getStructureTypeMapping(): Record<string, BuildableStructureConstant> {
-        return {
-            'spawn': STRUCTURE_SPAWN,
-            'extension': STRUCTURE_EXTENSION,
-            'road': STRUCTURE_ROAD,
-            'constructedWall': STRUCTURE_WALL,
-            'rampart': STRUCTURE_RAMPART,
-            'link': STRUCTURE_LINK,
-            'storage': STRUCTURE_STORAGE,
-            'tower': STRUCTURE_TOWER,
-            'observer': STRUCTURE_OBSERVER,
-            'powerSpawn': STRUCTURE_POWER_SPAWN,
-            'extractor': STRUCTURE_EXTRACTOR,
-            'lab': STRUCTURE_LAB,
-            'terminal': STRUCTURE_TERMINAL,
-            'container': STRUCTURE_CONTAINER,
-            'nuker': STRUCTURE_NUKER,
-            'factory': STRUCTURE_FACTORY
-        };
-    }
 
     /**
      * Überprüft, ob eine Struktur für das aktuelle RCL gebaut werden kann
@@ -38,6 +15,7 @@
     private canBuildAtRCL(structureType: BuildableStructureConstant, room: Room): boolean {
         const rcl = room.controller?.level || 0;
 
+        // @ts-ignore
         const rclRequirements: Record<BuildableStructureConstant, number> = {
             [STRUCTURE_SPAWN]: 1,
             [STRUCTURE_EXTENSION]: 2,
@@ -51,9 +29,6 @@
             [STRUCTURE_EXTRACTOR]: 6,
             [STRUCTURE_LAB]: 6,
             [STRUCTURE_TERMINAL]: 6,
-            [STRUCTURE_OBSERVER]: 8,
-            [STRUCTURE_POWER_SPAWN]: 8,
-            [STRUCTURE_NUKER]: 8,
             [STRUCTURE_FACTORY]: 7
         };
 
@@ -274,54 +249,36 @@
     /**
      * Baut alle Strukturen eines bestimmten Typs
      */
-    private buildStructureType(structureTypeName: string, positions: Position[]): BuildResult {
-        const result: BuildResult = {
-            success: 0,
-            failed: 0,
-            errors: []
-        };
+    private buildStructureType(structureType: BuildableStructureConstant, positions: Position[]): number {
+        let success = 0;
 
         const room = Game.rooms[this.roomName];
         if (!room) {
-            result.errors.push(`Raum ${this.roomName} nicht verfügbar`);
-            return result;
+            return success;
         }
-
-        const typeMapping = this.getStructureTypeMapping();
-        const structureType = typeMapping[structureTypeName];
 
         if (!structureType) {
-            result.errors.push(`Unbekannter Strukturtyp: ${structureTypeName}`);
-            result.failed = positions.length;
-            return result;
+            return success;
         }
 
-        // Sortiere Positionen nach Priorität (Roads zuerst, dann wichtige Strukturen)
         const sortedPositions = this.sortPositionsByPriority(positions, structureType);
 
         for (const pos of sortedPositions) {
-            // Prüfe Baustellen-Limit vor jedem Build-Versuch
+
             if (this.getConstructionSiteCount(room) >= this.maxConstructionSites) {
-                result.errors.push(`Baustellen-Limit von ${this.maxConstructionSites} erreicht`);
-                result.failed += sortedPositions.length - result.success;
                 break;
             }
 
             const buildResult = this.buildStructure(pos.x, pos.y, structureType);
 
             if (buildResult === OK) {
-                result.success++;
+                success++;
             } else if (buildResult === ERR_FULL) {
-                result.errors.push(`Baustellen-Limit erreicht bei ${structureTypeName}`);
-                result.failed += sortedPositions.length - result.success;
                 break;
-            } else {
-                result.failed++;
-                result.errors.push(`Fehler beim Bauen von ${structureTypeName} at (${pos.x},${pos.y}): ${buildResult}`);
             }
         }
 
-        return result;
+        return success;
     }
 
     /**
@@ -356,71 +313,36 @@
     /**
      * Baut alle Strukturen aus dem Layout (mit RCL-Filterung)
      */
-    public buildAll(): BuildResult {
-        const totalResult: BuildResult = {
-            success: 0,
-            failed: 0,
-            errors: []
-        };
+    public buildAll(): number {
+
+        let success = 0;
+
 
         const room = Game.rooms[this.roomName];
         if (!room) {
-            totalResult.errors.push(`Raum ${this.roomName} nicht verfügbar`);
-            return totalResult;
+            return success;
         }
 
         const rcl = room.controller?.level || 0;
         console.log(`Starte Layout-Build für Raum ${this.roomName} (RCL ${rcl})`);
 
         // Baue in sinnvoller Reihenfolge: Roads zuerst, dann wichtige Strukturen
-        const buildOrder = ['road', 'spawn', 'extension', 'container', 'tower', 'storage', 'link',
-            'terminal', 'extractor', 'lab', 'factory', 'observer', 'powerSpawn',
-            'nuker', 'constructedWall', 'rampart'];
+        const buildOrder = [STRUCTURE_ROAD, STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_CONTAINER, STRUCTURE_TOWER, STRUCTURE_TOWER, STRUCTURE_LINK,
+            STRUCTURE_TERMINAL, STRUCTURE_EXTRACTOR, STRUCTURE_LAB, STRUCTURE_FACTORY, STRUCTURE_OBSERVER, STRUCTURE_POWER_SPAWN,
+            STRUCTURE_NUKER, STRUCTURE_WALL, STRUCTURE_RAMPART];
 
-        for (const structureTypeName of buildOrder) {
-            const positions = this.layout.buildings[structureTypeName];
+        for (const structureType of buildOrder) {
+            const positions = this.layout.buildings[structureType];
             if (positions && positions.length > 0) {
-                console.log(`Baue ${positions.length} ${structureTypeName}(s)...`);
-                const result = this.buildStructureType(structureTypeName, positions);
-
-                totalResult.success += result.success;
-                totalResult.failed += result.failed;
-                totalResult.errors.push(...result.errors);
-
-                console.log(`${structureTypeName}: ${result.success} erfolgreich, ${result.failed} fehlgeschlagen`);
-
-                // Stoppe wenn Baustellen-Limit erreicht
+                const result = this.buildStructureType(structureType, positions);
+                success += result;
                 if (this.getConstructionSiteCount(room) >= this.maxConstructionSites) {
-                    console.log(`Baustellen-Limit von ${this.maxConstructionSites} erreicht, stoppe Build`);
                     break;
                 }
             }
         }
 
-        console.log(`Build abgeschlossen: ${totalResult.success} erfolgreich, ${totalResult.failed} fehlgeschlagen`);
-        console.log(`Aktuelle Baustellen: ${this.getConstructionSiteCount(room)}/${this.maxConstructionSites}`);
-
-        if (totalResult.errors.length > 0) {
-            console.log(`Fehler:`, totalResult.errors);
-        }
-
-        return totalResult;
-    }
-
-    /**
-     * Baut nur Strukturen eines bestimmten Typs
-     */
-    public buildStructureTypeOnly(structureTypeName: string): BuildResult {
-        const positions = this.layout.buildings[structureTypeName];
-        if (!positions || positions.length === 0) {
-            return {
-                success: 0,
-                failed: 0,
-                errors: [`Keine ${structureTypeName} im Layout gefunden`]
-            };
-        }
-
-        return this.buildStructureType(structureTypeName, positions);
+        return success;
     }
 
     /**
@@ -440,12 +362,12 @@
         let totalBuilding = 0;
         let buildableAtCurrentRCL = 0;
 
-        const typeMapping = this.getStructureTypeMapping();
         const structureBreakdown: Record<string, { total: number, buildable: number, existing: number, maxAllowed: number }> = {};
 
-        for (const [typeName, positions] of Object.entries(this.layout.buildings)) {
+        for (const [type, positions] of Object.entries(this.layout.buildings)) {
             if (positions && positions.length > 0) {
-                const structureType = typeMapping[typeName];
+
+                let structureType = this.getStructureTypeMapping(type)
                 const total = positions.length;
                 totalStructures += total;
 
@@ -453,20 +375,27 @@
                 let existing = 0;
                 let maxAllowed = 0;
 
+
                 if (structureType && room) {
                     maxAllowed = this.getMaxStructuresAtRCL(structureType, room);
+                    let maxPlanned = this.layout.buildings[structureType].length;
+
+                    if (maxAllowed > maxPlanned) {
+                        maxAllowed = maxPlanned;
+                    }
+
                     existing = this.countExistingStructures(structureType, room);
                     totalBuilding += this.getConstructionSiteCount(room);
-
                     if (this.canBuildAtRCL(structureType, room)) {
                         // Berechne wie viele noch gebaut werden können
                         const remainingSlots = Math.max(0, maxAllowed - existing);
                         buildable = Math.min(total, remainingSlots);
                         buildableAtCurrentRCL += buildable;
+                       
                     }
                 }
 
-                structureBreakdown[typeName] = {
+                structureBreakdown[type] = {
                     total,
                     buildable,
                     existing,
@@ -509,7 +438,7 @@
     }
 
     /**
-     * Visualisiert das komplette Layout mit ungebauten Strukturen
+     * Visualisiert das komplette Layout mit nicht gebauten Strukturen
      */
     public visualizeUnbuiltLayout(): void {
         const room = Game.rooms[this.roomName];
@@ -519,7 +448,6 @@
         }
 
         const visual = room.visual;
-        const typeMapping = this.getStructureTypeMapping();
 
         // Farben und Symbole für verschiedene Strukturtypen
         const visualConfig: Record<string, { color: string, symbol: string, size?: number }> = {
@@ -541,20 +469,17 @@
             'factory': {color: '#8000ff', symbol: 'F', size: 0.6}
         };
 
-        let totalUnbuilt = 0;
-        let totalVisualized = 0;
-
         // Durchlaufe alle Strukturtypen im Layout
-        for (const [typeName, positions] of Object.entries(this.layout.buildings)) {
+        for (const [type, positions] of Object.entries(this.layout.buildings)) {
             if (!positions || positions.length === 0) continue;
 
-            const structureType = typeMapping[typeName];
+            let structureType = this.getStructureTypeMapping(type);
+
             if (!structureType) continue;
 
-            const config = visualConfig[typeName];
-            if (!config) continue;
 
-            let unbuiltCount = 0;
+            const config = visualConfig[structureType];
+            if (!config) continue;
 
             // Prüfe jede Position
             for (const pos of positions) {
@@ -587,130 +512,48 @@
                         stroke: visualColor,
                         strokeWidth: 0.1
                     });
-
-                    unbuiltCount++;
-                    totalVisualized++;
                 }
             }
         }
     }
 
-    /**
-     * Visualisiert nur einen bestimmten Strukturtyp
-     */
-    public visualizeStructureType(structureTypeName: string): void {
-        const room = Game.rooms[this.roomName];
-        if (!room) {
-            console.log(`Raum ${this.roomName} nicht verfügbar`);
-            return;
+    private getStructureTypeMapping(type: string): BuildableStructureConstant | undefined {
+        switch (type) {
+            case 'spawn':
+                return STRUCTURE_SPAWN;
+            case 'extension':
+                return STRUCTURE_EXTENSION;
+            case 'road':
+                return STRUCTURE_ROAD;
+            case 'constructedWall':
+                return STRUCTURE_WALL;
+            case 'rampart':
+                return STRUCTURE_RAMPART;
+            case 'link':
+                return STRUCTURE_LINK;
+            case 'storage':
+                return STRUCTURE_STORAGE;
+            case 'tower':
+                return STRUCTURE_TOWER;
+            case 'observer':
+                return STRUCTURE_OBSERVER;
+            case 'powerSpawn':
+                return STRUCTURE_POWER_SPAWN;
+            case 'extractor':
+                return STRUCTURE_EXTRACTOR;
+            case 'lab':
+                return STRUCTURE_LAB;
+            case 'terminal':
+                return STRUCTURE_TERMINAL;
+            case 'container':
+                return STRUCTURE_CONTAINER;
+            case 'nuker':
+                return STRUCTURE_NUKER;
+            case 'factory':
+                return STRUCTURE_FACTORY;
         }
 
-        const positions = this.layout.buildings[structureTypeName];
-        if (!positions || positions.length === 0) {
-            console.log(`Keine ${structureTypeName} im Layout gefunden`);
-            return;
-        }
-
-        const typeMapping = this.getStructureTypeMapping();
-        const structureType = typeMapping[structureTypeName];
-        if (!structureType) {
-            console.log(`Unbekannter Strukturtyp: ${structureTypeName}`);
-            return;
-        }
-
-        const visual = room.visual;
-        let unbuiltCount = 0;
-        let existingCount = 0;
-        let plannedCount = 0;
-
-        console.log(`\n=== ${structureTypeName} Visualisierung ===`);
-
-        for (const pos of positions) {
-            const isBuilt = this.structureExistsAtPosition(pos.x, pos.y, structureType, room);
-            const hasConstructionSite = room.lookForAt(LOOK_CONSTRUCTION_SITES, pos.x, pos.y)
-                .some(site => site.structureType === structureType);
-
-            if (isBuilt) {
-                // Bereits gebaut - grüner Kreis
-                visual.circle(pos.x, pos.y, {
-                    radius: 0.3,
-                    fill: '#00ff00',
-                    opacity: 0.6
-                });
-                existingCount++;
-            } else if (hasConstructionSite) {
-                // Baustelle - gelber Kreis
-                visual.circle(pos.x, pos.y, {
-                    radius: 0.3,
-                    fill: '#ffff00',
-                    opacity: 0.8
-                });
-                plannedCount++;
-            } else {
-                // Ungebaut - roter Kreis
-                const canBuild = this.canBuildAtRCL(structureType, room) &&
-                    this.canBuildMoreStructures(structureType, room);
-
-                visual.circle(pos.x, pos.y, {
-                    radius: 0.3,
-                    fill: canBuild ? '#ff0000' : '#666666',
-                    opacity: canBuild ? 0.8 : 0.4
-                });
-                unbuiltCount++;
-            }
-
-            // Positionsnummer anzeigen
-            visual.text((existingCount + plannedCount + unbuiltCount).toString(), pos.x, pos.y + 0.7, {
-                color: '#ffffff',
-                font: '0.4 Arial',
-                align: 'center'
-            });
-        }
-
-        // Status-Legende
-        visual.text(`${structureTypeName} Status:`, 1, 45, {
-            color: '#ffffff',
-            font: '0.6 Arial bold',
-            backgroundColor: '#000000',
-            backgroundPadding: 0.1
-        });
-
-        visual.text(`🟢 Gebaut: ${existingCount}`, 1, 46, {
-            color: '#00ff00',
-            font: '0.5 Arial',
-            backgroundColor: '#000000',
-            backgroundPadding: 0.1
-        });
-
-        visual.text(`🟡 Baustelle: ${plannedCount}`, 1, 47, {
-            color: '#ffff00',
-            font: '0.5 Arial',
-            backgroundColor: '#000000',
-            backgroundPadding: 0.1
-        });
-
-        visual.text(`🔴 Ungebaut: ${unbuiltCount}`, 1, 48, {
-            color: '#ff0000',
-            font: '0.5 Arial',
-            backgroundColor: '#000000',
-            backgroundPadding: 0.1
-        });
-
-        console.log(`${structureTypeName}: ${existingCount} gebaut, ${plannedCount} Baustellen, ${unbuiltCount} ungebaut`);
-    }
-
-    /**
-     * Löscht alle Visualisierungen im Raum
-     */
-    public clearVisualization(): void {
-        const room = Game.rooms[this.roomName];
-        if (!room) {
-            console.log(`Raum ${this.roomName} nicht verfügbar`);
-            return;
-        }
-
-        room.visual.clear();
-        console.log(`Visualisierung für ${this.roomName} gelöscht`);
+        return undefined;
     }
 }
 
