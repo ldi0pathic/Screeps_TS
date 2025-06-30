@@ -56,26 +56,90 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         );
     }
 
-    protected doWithdraw(resource: ResourceConstant): boolean {
+    protected doWithdraw(resource: ResourceConstant): void {
         if (this.harvestRoomDrop(resource)) {
-            return true;
+            return;
         }
 
         if (this.harvestRoomTombstone(resource)) {
-            return true;
+            return;
         }
 
         if (this.creep.room.controller?.my) {
             if (this.harvestRoomStorage(resource)) {
-                return true;
+                return;
             }
         }
 
-        return this.harvestRoomContainer(resource);
+        let container: StructureContainer | undefined;
+
+        let sources = this.creep.room.getOrFindEnergieSource();
+
+        if (!this.memory.harvestContainerId && sources.length > 0) {
+            sources.forEach(source => {
+                if (source.containerId) {
+
+                    if (!container) {
+                        container = Game.getObjectById(source.containerId) as StructureContainer;
+                    } else {
+                        let newContainer = Game.getObjectById(source.containerId) as StructureContainer;
+                        if (newContainer && container.store[RESOURCE_ENERGY] < newContainer.store[RESOURCE_ENERGY]) {
+                            container = newContainer;
+                        }
+                    }
+                }
+            })
+            this.memory.harvestContainerId = container?.id;
+        }
+
+        if (!container) {
+            if (this.memory.harvestContainerId) {
+                container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
+            } else {
+                container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: (structure) => {
+                        return structure.structureType === STRUCTURE_CONTAINER &&
+                            (structure as StructureContainer).store[RESOURCE_ENERGY] > 0;
+                    }
+                }) as StructureContainer | undefined;
+            }
+        }
+
+        if (container) {
+
+            if (container.store?.getUsedCapacity(RESOURCE_ENERGY) > this.creep.store.getCapacity() * 0.5) {
+                this.memory.harvestContainerId = container.id;
+
+                let state = this.creep.withdraw(container, RESOURCE_ENERGY);
+                switch (state) {
+                    case ERR_NOT_IN_RANGE:
+                        this.moveTo(container);
+                        return;
+                    case OK:
+                        this.memory.harvestContainerId = undefined;
+                        return;
+                }
+            }
+        }
+
     }
 
     protected doHarvest(resource: ResourceConstant): void {
-        if (this.doWithdraw(resource)) {
+        if (this.harvestRoomDrop(resource)) {
+            return;
+        }
+
+        if (this.harvestRoomTombstone(resource)) {
+            return;
+        }
+
+        if (this.creep.room.controller?.my) {
+            if (this.harvestRoomStorage(resource)) {
+                return;
+            }
+        }
+
+        if (this.harvestRoomContainer(resource)) {
             return;
         }
 
