@@ -9,11 +9,17 @@ export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
         if (super.doJob()) {
             return true;
         }
-        
-        const nearestSpawn = this.creep.pos.findClosestByRange(FIND_MY_SPAWNS);
-        if (nearestSpawn && this.creep.transfer(nearestSpawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            this.moveTo(nearestSpawn);
+
+        const target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: s => (s.structureType === STRUCTURE_SPAWN ||
+                    s.structureType === STRUCTURE_EXTENSION) &&
+                s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+        });
+
+        if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            this.moveTo(target);
         }
+        
         return true
     }
 

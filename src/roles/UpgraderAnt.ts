@@ -1,6 +1,5 @@
 ﻿import {roomConfig} from "../config";
 import {StationaryAnt} from "./base/StationaryAnt";
-import {Movement} from "../utils/Movement";
 import _ from "lodash";
 
 
@@ -60,7 +59,7 @@ export class UpgraderAnt extends StationaryAnt<UpgraderCreepMemory> {
             if (this.memory.harvestContainerId) {
 
                 let container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
-             
+
                 if (container.hits < (container.hitsMax * 0.75)) {
                     this.creep.repair(container);
                     this.creep.say('🛠️');
@@ -113,7 +112,7 @@ export class UpgraderAnt extends StationaryAnt<UpgraderCreepMemory> {
             return [WORK, CARRY, MOVE]
         }
 
-        const availableEnergy = workroom.energyCapacityAvailable;
+        const availableEnergy = workroom.getMaxAvailableEnergy();
 
         const workPerSet = 3;
         const carryPerSet = 1;

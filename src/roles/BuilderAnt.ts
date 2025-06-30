@@ -64,7 +64,7 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
             return [WORK, CARRY, MOVE]
         }
 
-        const availableEnergy = workroom.energyCapacityAvailable;
+        const availableEnergy = workroom.getMaxAvailableEnergy();
 
         const workPerSet = 3;
         const carryPerSet = 2;

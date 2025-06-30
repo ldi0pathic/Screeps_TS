@@ -72,7 +72,28 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                     }
                 }
             }
+        } else if (this.memory.energySourceId) {
+            const source = Game.getObjectById(this.memory.energySourceId);
+            if (source) {
+                let container = source.pos.findInRange(FIND_STRUCTURES, 1, {
+                    filter: {structureType: STRUCTURE_CONTAINER}
+                })[0] as StructureContainer | undefined;
+
+                if (container) {
+                    this.memory.containerId = container.id;
+                } else {
+
+                    let build = source.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
+                        filter: {structureType: STRUCTURE_CONTAINER}
+                    })[0];
+
+                    this.memory.containerConstructionId = build.id;
+                }
+
+            }
+
         }
+
 
         if (this.memory.energySourceId) {
             const source = Game.getObjectById(this.memory.energySourceId);
@@ -94,7 +115,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             return [WORK, CARRY, MOVE]
         }
 
-        const availableEnergy = workroom.energyCapacityAvailable;
+        const availableEnergy = workroom.getMaxAvailableEnergy();
 
 
         const setCost = BODYPART_COST[WORK];

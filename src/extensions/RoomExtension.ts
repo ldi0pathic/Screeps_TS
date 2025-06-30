@@ -19,6 +19,40 @@ export function extendRoom() {
         return this.memory.energySources;
     }
 
+    Room.prototype.getMaxAvailableEnergy = function (): number {
+        const room = Game.rooms[this.name];
+        if (!room.controller || !room.controller.my) {
+            return 0;
+        }
+
+        const controllerLevel = room.controller.level;
+
+        // Spawns: Level 1+ = 1 Spawn, Level 7+ = 2 Spawns, Level 8 = 3 Spawns
+        let maxSpawns = 1;
+        if (controllerLevel >= 7) maxSpawns = 2;
+        if (controllerLevel >= 8) maxSpawns = 3;
+
+        // Extensions basierend auf Controller Level
+        const maxExtensionsByLevel = [0, 0, 5, 10, 20, 30, 40, 50, 60];
+        const maxExtensions = maxExtensionsByLevel[controllerLevel] || 0;
+
+        // Aktuelle Spawns und Extensions zählen (aber maximal erlaubte)
+        const actualSpawns = room.find(FIND_MY_SPAWNS);
+        const actualExtensions = room.find(FIND_MY_STRUCTURES, {
+            filter: (structure: Structure) => structure.structureType === STRUCTURE_EXTENSION
+        });
+
+        const usableSpawns = Math.min(actualSpawns.length, maxSpawns);
+        const usableExtensions = Math.min(actualExtensions.length, maxExtensions);
+
+        if (room.memory.spawnPrioBlock) {
+            return (usableSpawns * 150) + (usableExtensions * 25)
+        }
+        
+        // Berechne verfügbare Energie
+        return (usableSpawns * 300) + (usableExtensions * 50);
+    }
+
     Room.prototype.findAllContainersNearSpawns = function (): StructureContainer[] {
         const spawns = Game.rooms[this.name].find(FIND_MY_SPAWNS);
         const containers: StructureContainer[] = [];

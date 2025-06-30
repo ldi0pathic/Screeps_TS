@@ -80,7 +80,6 @@ export class SpawnManager {
         }
     }
 
-    // Neue Methode: Zählt Creeps eines bestimmten Jobs in einem Raum
     public static getCreepCount(jobType: eJobType, roomName: string): number {
         return _.filter(Game.creeps, c =>
             c.memory.job === jobType &&
@@ -88,7 +87,6 @@ export class SpawnManager {
         ).length;
     }
 
-    // Neue Methode: Zählt Queue-Einträge für einen Job
     public static getQueuedCount(jobType: eJobType, roomName: string): number {
         return _.filter(this.queue, req =>
             req.jobKey === jobType &&
@@ -133,6 +131,7 @@ export class SpawnManager {
                     if (req.priority > 900) {
                         console.log('🚩 Spawn PrioBlock')
                         spawn.room.memory.spawnPrioBlock = true;
+                        this.cleanupQueue();
                     }
                     break;
                 }
@@ -186,7 +185,7 @@ export class SpawnManager {
                 c.memory.job === eJobType.miner && c.memory.workroom === room.name
             );
             if (miners.length === 0) {
-                return 999;
+                return 998;
             }
         }
 
@@ -195,7 +194,7 @@ export class SpawnManager {
                 c.memory.job === eJobType.transporter && c.memory.workroom === room.name
             );
             if (transporter.length === 0) {
-                return 999;
+                return 997;
             }
         }
 
@@ -207,8 +206,9 @@ export class SpawnManager {
             const room = Game.rooms[roomName];
             if (!room) continue;
 
+            //2, da Miner und Transporter existieren sollen
             const creeps = _.filter(Game.creeps, c => c.memory.workroom === roomName);
-            if (creeps.length === 0) {
+            if (creeps.length <= 2) {
                 this.queueCreep(eJobType.worker, room, [WORK, CARRY, MOVE], 999);
                 return true;
             }
@@ -249,7 +249,23 @@ export class SpawnManager {
             if (!Game.rooms[req.targetRoom]) {
                 console.log(`⚠️ Spawn-Request für nicht verfügbaren Raum entfernt: ${req.targetRoom}`);
                 return false;
+            } else {
+                let maxEnergy = Game.rooms[req.targetRoom].getMaxAvailableEnergy();
+                let cost = req.bodyParts.reduce((totalCost, part) => {
+                    return totalCost + BODYPART_COST[part];
+                }, 0);
+                
+                if (cost > maxEnergy) {
+                    console.log(`⚠️ zu teurerer Spawn-Request entfernt: ${req.jobKey}`);
+                    return false;
+                }
             }
+
+            if (req.bodyParts.length == 0) {
+                console.log(`⚠️ Spawn-Request ohne Body entfernt: ${req.jobKey}`);
+                return false;
+            }
+
 
             // Prüfe ob der Request noch benötigt wird - aber nur basierend auf Queue-Duplikaten
             const key = `${req.jobKey}|${req.targetRoom}`;

@@ -20,6 +20,10 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         this.checkHarvest();
 
         if (this.memory.state == eJobState.harvest) {
+            if (this.creep.memory.job == eJobType.transporter) {
+                this.doWithdraw(RESOURCE_ENERGY);
+                return true;
+            }
             this.doHarvest(RESOURCE_ENERGY);
             return true;
         } else if (this.creep.memory.workroom) {
@@ -52,22 +56,26 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         );
     }
 
-    protected doHarvest(resource: ResourceConstant): void {
+    protected doWithdraw(resource: ResourceConstant): boolean {
         if (this.harvestRoomDrop(resource)) {
-            return;
+            return true;
         }
 
         if (this.harvestRoomTombstone(resource)) {
-            return;
+            return true;
         }
 
         if (this.creep.room.controller?.my) {
             if (this.harvestRoomStorage(resource)) {
-                return;
+                return true;
             }
         }
 
-        if (this.harvestRoomContainer(resource)) {
+        return this.harvestRoomContainer(resource);
+    }
+
+    protected doHarvest(resource: ResourceConstant): void {
+        if (this.doWithdraw(resource)) {
             return;
         }
 

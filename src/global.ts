@@ -152,7 +152,7 @@ declare global {
         harvestTombstoneId?: Id<Tombstone>;
     }
 
-    interface TransporterCreepMemory extends CreepMemory {
+    interface TransporterCreepMemory extends HarvesterCreepMemory {
         harvestContainerId: Id<StructureContainer> | undefined;
     }
 
@@ -180,6 +180,8 @@ declare global {
         getOrFindMineralSource(): MineralSourceData[];
 
         findAllContainersNearSpawns(): StructureContainer[];
+
+        getMaxAvailableEnergy(): number;
     }
 
     interface Creep {
