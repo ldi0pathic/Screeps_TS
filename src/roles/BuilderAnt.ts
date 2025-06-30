@@ -20,6 +20,13 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
                 }
             });
             if (todos.length > 0) {
+                // Sortiere nach Priorität: Container zuerst, dann Rest
+                todos.sort((a, b) => {
+                    const priorityA = a.structureType === STRUCTURE_CONTAINER ? 0 : 1;
+                    const priorityB = b.structureType === STRUCTURE_CONTAINER ? 0 : 1;
+                    return priorityA - priorityB;
+                });
+
                 buildId = todos[0].id;
                 this.memory.constructionId = buildId;
             }

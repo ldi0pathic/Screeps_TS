@@ -19,7 +19,21 @@ export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
         if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
             this.moveTo(target);
         }
-        
+
+        if (!target) {
+            const todo = this.creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES, {
+                filter: (site: ConstructionSite) => {
+                    return site.structureType !== STRUCTURE_RAMPART;
+                }
+            });
+            if (todo) {
+                if (this.creep.build(todo) === ERR_NOT_IN_RANGE) {
+                    this.moveTo(todo);
+                }
+            }
+
+        }
+
         return true
     }
 
