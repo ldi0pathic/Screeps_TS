@@ -20,21 +20,15 @@ export class UpgraderAnt extends StationaryAnt<UpgraderCreepMemory> {
             if (this.memory.harvestContainerId) {
                 container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
             } else {
-                container = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
-                    filter: {structureType: STRUCTURE_CONTAINER}
-                })[0] as StructureContainer | undefined;
+                container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: (structure) => {
+                        return structure.structureType === STRUCTURE_CONTAINER &&
+                            (structure as StructureContainer).store[RESOURCE_ENERGY] > 0;
+                    }
+                }) as StructureContainer | undefined;
 
                 if (container && container.structureType == STRUCTURE_CONTAINER) {
                     this.memory.harvestContainerId = container.id;
-                } else {
-                    let build = this.creep.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
-                        filter: {structureType: STRUCTURE_CONTAINER}
-                    })[0];
-                    if (build) {
-                        return true;
-                    } else {
-                        console.log("🚩 Upgrader braucht Container! ");
-                    }
                 }
             }
 
