@@ -1,5 +1,6 @@
 ﻿import {EnergieSourceData} from "../records/EnergieSourceData";
 import {MineralSourceData} from "../records/MineralSourceData";
+import {RoomStorage} from "../records/RoomStorage";
 
 export function extendRoom() {
     Room.prototype.getOrFindEnergieSource = function (): EnergieSourceData[] {
@@ -48,7 +49,7 @@ export function extendRoom() {
         if (room.memory.spawnPrioBlock) {
             return (usableSpawns * 150) + (usableExtensions * 25)
         }
-        
+
         // Berechne verfügbare Energie
         return (usableSpawns * 300) + (usableExtensions * 50);
     }
@@ -74,6 +75,61 @@ export function extendRoom() {
 
         return containers;
     }
+
+    Room.prototype.findAllContainersNearController = function (): StructureContainer[] {
+
+        let room = Game.rooms[this.name];
+        if (!room.controller || !room.controller.my) {
+            return [];
+        }
+
+        const containers: StructureContainer[] = [];
+
+        const nearbyContainers = Game.rooms[this.name].controller?.pos.findInRange(FIND_STRUCTURES, 2, {
+            filter: (structure: Structure) => {
+                return structure.structureType === STRUCTURE_CONTAINER;
+            }
+        }) as StructureContainer[];
+
+        // Duplikate vermeiden
+        for (const container of nearbyContainers) {
+            if (!containers.find(c => c.id === container.id)) {
+                containers.push(container);
+            }
+        }
+
+        return containers;
+    }
+
+    Room.prototype.getOrFindRoomStorage = function (): RoomStorage | undefined {
+        const room = Game.rooms[this.name];
+
+        if (!this.memory.storage) {
+            this.memory.storage = {
+                storageContainerId: [],
+                storageId: room.storage?.id
+            };
+
+            const containers = [
+                ...room.findAllContainersNearSpawns(),
+                ...room.findAllContainersNearController()
+            ];
+
+            const uniqueContainers = containers.filter((container, index, arr) =>
+                arr.findIndex(c => c.id === container.id) === index
+            );
+
+            this.memory.storage.storageContainerId = uniqueContainers.map(c => c.id);
+        }
+
+        if (this.memory.state >= eRoomState.phase4 && !this.memory.storage.storageId) {
+            this.memory.storage.storageId = room.storage?.id;
+        }
+
+        return this.memory.storage;
+    }
+
+
     Room.prototype.getOrFindMineralSource = function (): MineralSourceData[] {
         let ids = this.memory.mineralSources;
 
@@ -121,6 +177,10 @@ export function extendRoom() {
             case 8:
                 state = eRoomState.phase8;
                 break;
+        }
+
+        if (state != Memory.rooms[this.name].state) {
+            Memory.rooms[this.name].storage = {storageId: undefined, storageContainerId: []};
         }
 
         Memory.rooms[this.name].state = state;

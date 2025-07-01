@@ -1,6 +1,7 @@
 ﻿import {Ant} from "./roles/base/Ant";
 import {EnergieSourceData} from "./records/EnergieSourceData";
 import {MineralSourceData} from "./records/MineralSourceData";
+import {RoomStorage} from "./records/RoomStorage";
 
 export {};
 
@@ -179,7 +180,11 @@ declare global {
 
         getOrFindMineralSource(): MineralSourceData[];
 
+        getOrFindRoomStorage(): RoomStorage | undefined
+
         findAllContainersNearSpawns(): StructureContainer[];
+
+        findAllContainersNearController(): StructureContainer[];
 
         getMaxAvailableEnergy(): number;
     }
@@ -238,6 +243,7 @@ declare global {
     interface RoomMemory {
         energySources: EnergieSourceData[],
         mineralSources: MineralSourceData[],
+        storage: RoomStorage | undefined,
         state: eRoomState;
         scoutState?: eRoomState;
         plannedRoads?: string[];

@@ -65,11 +65,6 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
             return;
         }
 
-        if (this.creep.room.controller?.my) {
-            if (this.harvestRoomStorage(resource)) {
-                return;
-            }
-        }
 
         let container: StructureContainer | undefined;
 
@@ -121,7 +116,6 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
                 }
             }
         }
-
     }
 
     protected doHarvest(resource: ResourceConstant): void {

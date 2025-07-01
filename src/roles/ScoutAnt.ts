@@ -97,6 +97,7 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
         Memory.rooms[room.name] = {
             energySources: [],
             mineralSources: [],
+            storage: undefined,
             state: eRoomState.neutral
         };
 

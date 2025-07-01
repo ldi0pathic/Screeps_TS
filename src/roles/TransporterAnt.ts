@@ -18,24 +18,20 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
         });
 
         if (!target) {
-            let targets = this.creep.room.controller?.pos.findInRange(FIND_STRUCTURES, 2, {
-                filter: (structure) => {
-                    return structure.structureType === STRUCTURE_CONTAINER &&
-                        (structure as StructureContainer).store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-                }
-            })
-            if (targets && targets.length > 0) {
-                target = targets[0];
-            }
-        }
+            const roomStorage = this.creep.room.getOrFindRoomStorage();
 
-        if (!target) {
-            let targets = this.creep.room.findAllContainersNearSpawns();
-            for (let t of targets) {
-                if (target && t.store.getFreeCapacity(RESOURCE_ENERGY) > target.store.getFreeCapacity(RESOURCE_ENERGY)) {
-                    target = t;
-                } else if (t.store.getFreeCapacity(RESOURCE_ENERGY) > 100) {
-                    target = t;
+            if (roomStorage) {
+
+                const availableStructures = [
+                    ...(roomStorage.storageId ? [Game.getObjectById(roomStorage.storageId) as StructureStorage] : []),
+                    ...(roomStorage.storageContainerId?.map(id => Game.getObjectById(id) as StructureContainer) || [])
+                ]
+                    .filter(structure =>
+                        structure && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                    );
+
+                if (availableStructures.length > 0) {
+                    target = this.creep.pos.findClosestByPath(availableStructures);
                 }
             }
         }
@@ -43,7 +39,7 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
         if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
             this.moveTo(target);
         }
-        
+
         return true;
     }
 
