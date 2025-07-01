@@ -327,7 +327,7 @@
         console.log(`Starte Layout-Build für Raum ${this.roomName} (RCL ${rcl})`);
 
         // Baue in sinnvoller Reihenfolge: Roads zuerst, dann wichtige Strukturen
-        const buildOrder = [STRUCTURE_ROAD, STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_CONTAINER, STRUCTURE_TOWER, STRUCTURE_TOWER, STRUCTURE_LINK,
+        const buildOrder = [STRUCTURE_ROAD, STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_CONTAINER, STRUCTURE_TOWER, STRUCTURE_STORAGE, STRUCTURE_LINK,
             STRUCTURE_TERMINAL, STRUCTURE_EXTRACTOR, STRUCTURE_LAB, STRUCTURE_FACTORY, STRUCTURE_OBSERVER, STRUCTURE_POWER_SPAWN,
             STRUCTURE_NUKER, STRUCTURE_WALL, STRUCTURE_RAMPART];
 
@@ -391,7 +391,7 @@
                         const remainingSlots = Math.max(0, maxAllowed - existing);
                         buildable = Math.min(total, remainingSlots);
                         buildableAtCurrentRCL += buildable;
-                       
+
                     }
                 }
 
