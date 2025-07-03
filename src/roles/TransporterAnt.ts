@@ -60,7 +60,7 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
             let state = this.creep.transfer(target, RESOURCE_ENERGY);
             switch (state) {
                 case ERR_NOT_IN_RANGE: {
-                    this.memory.targetId
+                    this.memory.targetId = target.id;
                     this.moveTo(target);
                     break
                 }
