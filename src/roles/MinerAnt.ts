@@ -273,7 +273,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         return {
             job: job,
-            minTicksToLive: 100,
             ticksToPos: 1,
             spawn: spawn.name,
             state: eJobState.harvest,

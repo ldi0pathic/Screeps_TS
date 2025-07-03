@@ -3,9 +3,9 @@ import {CleanUpManager} from "./CleanUpManager";
 import {Jobs} from "../records/Jobs";
 
 export class JobsManager {
-    private static bucketNorm: Array<{ creep: Creep; ant: Ant<any> }> = [];
-    private static bucketLow: Array<{ creep: Creep; ant: Ant<any> }> = [];
-    private static bucketCritical: Array<{ creep: Creep; ant: Ant<any> }> = [];
+    private static bucketNorm: Array<Ant<any>> = [];
+    private static bucketLow: Array<Ant<any>> = [];
+    private static bucketCritical: Array<Ant<any>> = [];
 
     static initializeMemory(): void {
         if (!Memory.jobOffsets) Memory.jobOffsets = {};
@@ -80,20 +80,20 @@ export class JobsManager {
 
 
     static doJobs() {
-        for (const {creep, ant} of this.bucketNorm) {
+        for (const ant of this.bucketNorm) {
             ant.doJob();
         }
     }
 
     static doLowJobs() {
 
-        for (const {creep, ant} of this.bucketLow) {
+        for (const ant of this.bucketLow) {
             ant.doJob();
         }
     }
 
     static doCriticalJobs() {
-        for (const {creep, ant} of this.bucketCritical) {
+        for (const ant of this.bucketCritical) {
             ant.doJob();
         }
     }
@@ -141,11 +141,11 @@ export class JobsManager {
             const priority = this.getDynamicPriority(creep.memory.job, creep.room);
 
             if (priority >= 25) {
-                this.bucketCritical.push({creep, ant});
+                this.bucketCritical.push(ant);
             } else if (priority >= 15) {
-                this.bucketNorm.push({creep, ant});
+                this.bucketNorm.push(ant);
             } else if (priority > 0) {
-                this.bucketLow.push({creep, ant});
+                this.bucketLow.push(ant);
             }
         }
 

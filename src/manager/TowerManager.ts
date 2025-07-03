@@ -40,7 +40,7 @@
 
                 continue;
             }
-            
+
             if (roomMemory.repairTarget) {
                 const target = Game.getObjectById(roomMemory.repairTarget) as Structure;
 
@@ -75,7 +75,7 @@
                 const type = s.structureType;
                 return (type === STRUCTURE_CONTAINER ||
                         type === STRUCTURE_ROAD) &&
-                    s.hits < s.hitsMax;
+                    s.hits < (s.hitsMax * 0.9);
             }
         });
 

@@ -123,5 +123,122 @@ export class LayoutExporter {
         return null;
     }
 
+    static planRoadNetwork(room: Room): string[] | undefined {
+        if (!room.controller?.my) {
+            return;
+        }
+
+        let sources = room.getOrFindEnergieSource();
+        let minerals = room.getOrFindMineralSource();
+        let spawns = room.find(FIND_MY_SPAWNS);
+
+        let allConnections: Array<{ spawn: StructureSpawn, target: StructureContainer | StructureController, path: RoomPosition[] }> = [];
+
+        spawns.forEach(spawn => {
+            sources.forEach(source => {
+                if (source.containerId) {
+                    let container = Game.getObjectById(source.containerId);
+                    if (container) {
+                        const path = PathFinder.search(spawn.pos, {pos: container.pos, range: 1}, {
+                            plainCost: 2,
+                            roomCallback: (roomName: string) => {
+                                if (roomName !== room.name) return false;
+
+                                const costs = new PathFinder.CostMatrix();
+                                room.find(FIND_STRUCTURES).forEach(structure => {
+                                    if (structure.structureType === STRUCTURE_ROAD) {
+                                        costs.set(structure.pos.x, structure.pos.y, 1);
+                                    }
+                                });
+                                return costs;
+                            }
+                        });
+                        allConnections.push({spawn, target: container, path: path.path});
+
+                    }
+                }
+            });
+
+            if (room.controller) {
+                const path = PathFinder.search(spawn.pos, {pos: room.controller.pos, range: 3}, {
+                    plainCost: 2,
+                    roomCallback: (roomName: string) => {
+                        if (roomName !== room.name) return false;
+
+                        const costs = new PathFinder.CostMatrix();
+                        room.find(FIND_STRUCTURES).forEach(structure => {
+                            if (structure.structureType === STRUCTURE_ROAD) {
+                                costs.set(structure.pos.x, structure.pos.y, 1);
+                            }
+                        });
+                        return costs;
+                    }
+                });
+                allConnections.push({spawn, target: room.controller, path: path.path});
+            }
+
+            if (room.memory.state >= eRoomState.phase6) { //Mineralabbau :) 
+                minerals.forEach(mineral => {
+                    if (mineral.containerId) {
+                        let container = Game.getObjectById(mineral.containerId);
+                        if (container) {
+                            const path = PathFinder.search(spawn.pos, {pos: container.pos, range: 1}, {
+                                plainCost: 2,
+                                roomCallback: (roomName: string) => {
+                                    if (roomName !== room.name) return false;
+
+                                    const costs = new PathFinder.CostMatrix();
+                                    room.find(FIND_STRUCTURES).forEach(structure => {
+                                        if (structure.structureType === STRUCTURE_ROAD) {
+                                            costs.set(structure.pos.x, structure.pos.y, 1);
+                                        }
+                                    });
+                                    return costs;
+                                }
+                            });
+                            allConnections.push({spawn, target: container, path: path.path});
+                        }
+                    }
+                })
+            }
+        });
+
+        return this.calculateOptimizedPaths(room, allConnections);
+    }
+
+
+    private static calculateOptimizedPaths(room: Room, connections: Array<{ spawn: StructureSpawn, target: StructureContainer | StructureController, path: RoomPosition[] }>): string[] {
+        let optimizedPaths: RoomPosition[] = [];
+
+        connections.forEach((connection, index) => {
+            const path = PathFinder.search(connection.spawn.pos, {
+                pos: connection.target.pos,
+                range: connection.target.structureType === STRUCTURE_CONTROLLER ? 3 : 1,
+            }, {
+                plainCost: 2,
+                roomCallback: (roomName: string) => {
+                    if (roomName !== room.name) return false;
+
+                    const costs = new PathFinder.CostMatrix();
+
+                    room.find(FIND_STRUCTURES).forEach(structure => {
+                        if (structure.structureType === STRUCTURE_ROAD) {
+                            costs.set(structure.pos.x, structure.pos.y, 1);
+                        }
+                    });
+
+                    optimizedPaths.forEach(pos => {
+                        costs.set(pos.x, pos.y, 1);
+                    });
+
+                    return costs;
+                }
+            });
+
+            optimizedPaths.push(...path.path);
+        });
+
+        return [...new Set(optimizedPaths.map(pos => `${pos.x},${pos.y}`))];
+    }
 
 }

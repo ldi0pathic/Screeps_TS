@@ -50,20 +50,7 @@
                 }
             });
         }
-
-        // Reset Job Cost Statistics (Soft Reset)
-        if (Memory.jobCosts) {
-            Object.keys(Memory.jobCosts).forEach(jobType => {
-                const stats = Memory.jobCosts![jobType];
-                if (Game.time - stats.lastReset > 1500) {
-                    stats.total = stats.avg * 10;
-                    stats.count = 10;
-                    stats.lastReset = Game.time;
-                    stats.peak = stats.avg * 1.5;
-                }
-            });
-        }
-
+        
         console.log(`🧹 Job Memory cleanup completed - ${cleanedJobs} jobs cleaned (Tick ${Game.time})`);
     }
 

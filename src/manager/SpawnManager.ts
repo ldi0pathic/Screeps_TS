@@ -189,14 +189,24 @@ export class SpawnManager {
             }
         }
 
+        if (jobType === eJobType.filler && room.memory.state >= eRoomState.phase5 && room.storage != null) {
+            const filler = _.filter(Game.creeps, c =>
+                c.memory.job === eJobType.filler && c.memory.workroom === room.name
+            );
+            if (filler.length === 0) {
+                return 997;
+            }
+        }
+
         if (jobType === eJobType.transporter && room.memory.state < eRoomState.phase7) {
             const transporter = _.filter(Game.creeps, c =>
                 c.memory.job === eJobType.transporter && c.memory.workroom === room.name
             );
             if (transporter.length === 0) {
-                return 997;
+                return 996;
             }
         }
+
 
         return Jobs.jobs[jobType].spawnPrio;
     }
@@ -254,7 +264,7 @@ export class SpawnManager {
                 let cost = req.bodyParts.reduce((totalCost, part) => {
                     return totalCost + BODYPART_COST[part];
                 }, 0);
-                
+
                 if (cost > maxEnergy) {
                     console.log(`⚠️ zu teurerer Spawn-Request entfernt: ${req.jobKey}`);
                     return false;

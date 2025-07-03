@@ -9,6 +9,7 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
         if (super.doJob()) {
             return true;
         }
+
         let target: AnyStoreStructure | undefined;
 
         if (this.memory.targetId) {
@@ -21,14 +22,14 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
                 target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: s => (s.structureType === STRUCTURE_SPAWN ||
                             s.structureType === STRUCTURE_EXTENSION ||
-                            s.structureType === STRUCTURE_TOWER) &&
+                            (s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) > 100)) &&
                         s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
                 }) as AnyStoreStructure | undefined;
             } else {
                 target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: s =>
                         s.structureType === STRUCTURE_TOWER &&
-                        s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                        s.store.getFreeCapacity(RESOURCE_ENERGY) > 100
                 }) as AnyStoreStructure | undefined;
             }
 
@@ -55,8 +56,19 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
             }
         }
 
-        if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            this.moveTo(target);
+        if (target) {
+            let state = this.creep.transfer(target, RESOURCE_ENERGY);
+            switch (state) {
+                case ERR_NOT_IN_RANGE: {
+                    this.memory.targetId
+                    this.moveTo(target);
+                    break
+                }
+                case OK: {
+                    this.memory.targetId = undefined;
+                    break
+                }
+            }
         }
 
         return true;
@@ -85,44 +97,11 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
     }
 
     public override createSpawnMemory(spawn: StructureSpawn, roomname: string): TransporterCreepMemory {
-        const workroom = Game.rooms[roomname];
-        const job = this.getJob();
-        const sources = workroom.getOrFindEnergieSource();
-        const creeps = _.filter(Game.creeps, c =>
-            c.memory.job == job &&
-            c.memory.workroom == workroom.name
-        );
-
-        let containerId: Id<StructureContainer> | undefined = undefined;
-        for (let s of sources) {
-
-            let found = false;
-
-            for (let creep of creeps) {
-                const transporterMemory = creep.memory as TransporterCreepMemory;
-                if (transporterMemory.harvestContainerId === s.containerId) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                containerId = s.containerId;
-
-                break;
-            }
-        }
+        const base = super.createSpawnMemory(spawn, roomname);
         return {
-            job: job,
-            spawn: spawn.name,
-            minTicksToLive: 100,
-            state: eJobState.harvest,
-            workroom: workroom.name,
-            harvestContainerId: containerId,
-            roundRobin: 1,
-            roundRobinOffset: undefined,
-            moving: false,
-        }
+            ...base,
+            targetId: undefined,
+        } as TransporterCreepMemory
     }
 
     public override getJob(): eJobType {

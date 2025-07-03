@@ -113,7 +113,6 @@ declare global {
         state: eJobState;
         spawn: string;
         workroom: string;
-        minTicksToLive: number;
         roundRobin: number;
         roundRobinOffset?: number;
         moving: boolean;
@@ -122,11 +121,6 @@ declare global {
             y: number;
             roomName: string;
         };
-
-        lastJobCost?: number;
-        jobEfficiency?: number;
-        emergencySkipped?: boolean;
-        priorityBoost?: number;
     }
 
     interface BuilderCreepMemory extends HarvesterCreepMemory {
@@ -213,36 +207,8 @@ declare global {
         spawnQueue: SpawnRequest[];
         cleanupQueue: string[];
         cpuHistory: number[];
-        lastCpuTick: number;
         lastTickCpu: number;
         jobOffsets?: Record<string, number>;
-        jobCosts?: Record<string, JobCostStats>;
-        jobPerformance?: JobPerformanceData;
-    }
-
-    interface JobCostStats {
-        total: number;
-        count: number;
-        avg: number;
-        lastReset: number;
-        peak: number;
-    }
-
-    interface JobPerformanceData {
-        lastTick: number;
-        ticksWithHighCPU: number;
-        totalEmergencyActivations: number;
-        lastEmergencyTick: number;
-        avgCreepsPerTick: number;
-        cpuHistory: number[];
-    }
-
-    interface EmergencyModeData {
-        active: boolean;
-        activatedTick: number;
-        reason: 'cpu_critical' | 'bucket_low' | 'manual';
-        skipCount: number;
-        criticalJobsOnly: boolean;
     }
 
     interface RoomMemory {
@@ -251,17 +217,8 @@ declare global {
         storage: RoomStorage | undefined,
         state: eRoomState;
         scoutState?: eRoomState;
-        plannedRoads?: string[];
-        plannedBuildings?: PlannedBuilding[];
         spawnPrioBlock?: boolean;
         controllerContainerId?: Id<StructureContainer> | undefined;
-    }
-
-    interface PlannedBuilding {
-        x: number;
-        y: number;
-        structureType: BuildableStructureConstant;
-        phase: eRoomState;
     }
 
     interface Position {
@@ -295,10 +252,6 @@ declare global {
 
     interface MinRoomLayout {
         buildings: BuildingPositions;
-    }
-
-    interface BuildResult {
-        success: number;
     }
 
 }

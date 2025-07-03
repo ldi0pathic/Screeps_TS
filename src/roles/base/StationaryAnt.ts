@@ -11,26 +11,12 @@ export abstract class StationaryAnt<TMemory extends StationaryCreepMemory> exten
                 this.memory.onPosition = true;
                 this.memory.moving = false;
                 this.memory.targetPos = undefined;
-                this.memory.minTicksToLive = this.memory.ticksToPos;
                 return true;
             }
 
-            if (this.moveTo(new RoomPosition(finalPos.x, finalPos.y, this.memory.workroom)) === OK) {
-                this.memory.ticksToPos = this.memory.ticksToPos + 1;
-            }
+            this.moveTo(new RoomPosition(finalPos.x, finalPos.y, this.memory.workroom))
+            
             return true;
-        } else {
-            const creeps = _.filter(Game.creeps, creep =>
-                creep.memory.job == this.creep.memory.job &&
-                creep.memory.workroom == this.creep.memory.workroom &&
-                (creep.ticksToLive && creep.ticksToLive < creep.memory.minTicksToLive)
-            );
-
-
-            if (creeps.length > 0) {
-                let mem = creeps[0].memory as StationaryCreepMemory;
-                this.memory.finalLocation = mem.finalLocation;
-            }
         }
         return false;
     }
