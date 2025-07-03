@@ -15,6 +15,7 @@ declare global {
         transporter = 'Transporter',
         scout = 'Scout',
         wallBuilder = 'WallBuilder',
+        filler = 'Filler',
     }
 
     const enum eRoomState {
@@ -154,7 +155,12 @@ declare global {
     }
 
     interface TransporterCreepMemory extends HarvesterCreepMemory {
-        harvestContainerId: Id<StructureContainer> | undefined;
+        targetId?: Id<AnyStoreStructure>;
+    }
+
+    interface FillerCreepMemory extends CreepMemory {
+        harvestContainerId?: Id<StructureContainer>;
+        harvestStorageId?: Id<StructureStorage>;
     }
 
     interface UpgraderCreepMemory extends StationaryCreepMemory {
@@ -212,7 +218,6 @@ declare global {
         jobOffsets?: Record<string, number>;
         jobCosts?: Record<string, JobCostStats>;
         jobPerformance?: JobPerformanceData;
-        emergencyMode?: EmergencyModeData;
     }
 
     interface JobCostStats {

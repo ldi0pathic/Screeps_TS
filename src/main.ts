@@ -5,6 +5,7 @@ import {JobsManager} from "./manager/JobsManager";
 import {CleanUpManager} from "./manager/CleanUpManager";
 import {CPUManager} from "./manager/CPUManager";
 import {LayoutManager} from "./manager/LayoutManager";
+import {TowerManager} from "./manager/TowerManager";
 
 loadExtensions();
 
@@ -26,6 +27,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     SpawnManager.findNeededCreeps();
     JobsManager.doPrioJobs();
     JobsManager.doCriticalJobs();
+    TowerManager.runTowers();
 
     if (!CPUManager.shouldContinue('normal')) {
         CPUManager.getStatus();

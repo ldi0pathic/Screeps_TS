@@ -6,10 +6,12 @@ import {BuilderAnt} from "../roles/BuilderAnt";
 import {Ant} from "../roles/base/Ant";
 import {ScoutAnt} from "../roles/ScoutAnt";
 import {WallBuilderAnt} from "../roles/WallBuilderAnt";
+import {FillerAnt} from "../roles/FillerAnt";
 
 export class Jobs {
     public static jobs: Record<string, JobDef> = {
         Transporter: {antClass: TransporterAnt, jobPrio: 30, spawnPrio: 50},
+        Filler: {antClass: FillerAnt, jobPrio: 30, spawnPrio: 50},
         Miner: {antClass: MinerAnt, jobPrio: 11, spawnPrio: 10},
         Upgrader: {antClass: UpgraderAnt, jobPrio: 11, spawnPrio: 10},
         Worker: {antClass: WorkerAnt, jobPrio: 11, spawnPrio: 10},

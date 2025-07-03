@@ -110,6 +110,8 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
                     case ERR_NOT_IN_RANGE:
                         this.moveTo(container);
                         return;
+                    case ERR_NOT_ENOUGH_RESOURCES:
+                    case ERR_NOT_ENOUGH_ENERGY:
                     case OK:
                         this.memory.harvestContainerId = undefined;
                         return;

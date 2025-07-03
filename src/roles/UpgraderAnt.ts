@@ -37,7 +37,7 @@ export class UpgraderAnt extends StationaryAnt<UpgraderCreepMemory> {
                 return false;
             }
 
-            if (container.store?.getUsedCapacity(RESOURCE_ENERGY) > this.creep.store.getCapacity()) {
+            if (container.store?.getUsedCapacity(RESOURCE_ENERGY) > 0) {
                 this.memory.harvestContainerId = container.id;
 
                 let state = this.creep.withdraw(container, RESOURCE_ENERGY);

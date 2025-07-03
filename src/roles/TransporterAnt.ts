@@ -9,29 +9,48 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
         if (super.doJob()) {
             return true;
         }
+        let target: AnyStoreStructure | undefined;
 
-        let target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: s => (s.structureType === STRUCTURE_SPAWN ||
-                    s.structureType === STRUCTURE_EXTENSION ||
-                    s.structureType === STRUCTURE_TOWER) &&
-                s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-        });
+        if (this.memory.targetId) {
+            target = Game.getObjectById(this.memory.targetId) as AnyStoreStructure | undefined;
+        }
 
         if (!target) {
-            const roomStorage = this.creep.room.getOrFindRoomStorage();
 
-            if (roomStorage) {
+            if (this.creep.room.memory.state >= eRoomState.phase4 && this.creep.room.storage == null) {
+                target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                    filter: s => (s.structureType === STRUCTURE_SPAWN ||
+                            s.structureType === STRUCTURE_EXTENSION ||
+                            s.structureType === STRUCTURE_TOWER) &&
+                        s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                }) as AnyStoreStructure | undefined;
+            } else {
+                target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                    filter: s =>
+                        s.structureType === STRUCTURE_TOWER &&
+                        s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                }) as AnyStoreStructure | undefined;
+            }
 
-                const availableStructures = [
-                    ...(roomStorage.storageId ? [Game.getObjectById(roomStorage.storageId) as StructureStorage] : []),
-                    ...(roomStorage.storageContainerId?.map(id => Game.getObjectById(id) as StructureContainer) || [])
-                ]
-                    .filter(structure =>
-                        structure && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+            if (!target) {
+                const roomStorage = this.creep.room.getOrFindRoomStorage();
+                if (roomStorage) {
+                    const allStructures = [
+                        ...(roomStorage.storageId ? [Game.getObjectById(roomStorage.storageId) as AnyStoreStructure] : []),
+                        ...(roomStorage.storageContainerId?.map(id => Game.getObjectById(id) as AnyStoreStructure) || [])
+                    ].filter(structure => structure && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+
+                    // Erst nach halb leeren Containern suchen
+                    const halfEmptyContainers = allStructures.filter(structure =>
+                        structure.structureType === STRUCTURE_CONTAINER &&
+                        (structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY)) < 0.55
                     );
 
-                if (availableStructures.length > 0) {
-                    target = this.creep.pos.findClosestByPath(availableStructures);
+                    if (halfEmptyContainers.length > 0) {
+                        target = this.creep.pos.findClosestByPath(halfEmptyContainers) as AnyStoreStructure;
+                    } else {
+                        target = this.creep.pos.findClosestByPath(allStructures) as AnyStoreStructure;
+                    }
                 }
             }
         }
