@@ -1,13 +1,8 @@
-﻿import _ from "lodash";
-import {Ant} from "./base/Ant";
+﻿import {Ant} from "./base/Ant";
 import {Movement} from "../utils/Movement";
 
 export class FillerAnt extends Ant<FillerCreepMemory> {
     doJob(): boolean {
-
-        if (this.creep.fatigue > 0) {
-            return true;
-        }
 
         if (Movement.shouldContinueMoving(this.creep)) {
             Movement.continueMoving(this.creep);
@@ -16,7 +11,36 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
         this.checkHarvest();
 
         if (this.memory.state == eJobState.harvest) {
+
             if (this.creep.room.controller?.my) {
+
+                if (this.creep.room.memory.state >= eRoomState.phase4) {
+                    let link: StructureLink | undefined;
+
+                    if (this.memory.harvestLinkId) {
+                        link = Game.getObjectById(this.memory.harvestLinkId) as StructureLink | undefined;
+                    } else {
+                        let links = this.creep.room.findAllLinksNearSpawns();
+
+                        if (links.length >= 1) {
+                            link = links[0];
+                        }
+                        this.memory.harvestLinkId = link?.id;
+                    }
+
+                    if (link && link.store[RESOURCE_ENERGY] > 0) {
+                        let state = this.creep.withdraw(link, RESOURCE_ENERGY)
+                        switch (state) {
+                            case ERR_NOT_IN_RANGE:
+                                this.moveTo(link);
+                                return true;
+                            case OK:
+                                this.memory.harvestFromLink = true;
+                                return true;
+                        }
+                    }
+                }
+
                 let storage: StructureStorage | undefined;
 
                 if (this.memory.harvestStorageId) {
@@ -77,15 +101,40 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
             return true;
         }
 
-
         let target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
             filter: s => (s.structureType === STRUCTURE_SPAWN ||
                     s.structureType === STRUCTURE_EXTENSION) &&
                 s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
         });
 
-        if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            this.moveTo(target);
+        if (target) {
+            let state = this.creep.transfer(target, RESOURCE_ENERGY);
+            switch (state) {
+                case ERR_NOT_IN_RANGE:
+                    this.moveTo(target);
+                    return true;
+                case OK:
+                    this.memory.harvestFromLink = false;
+                    return true;
+            }
+        }
+
+        if (this.memory.harvestLinkId) {
+
+            let link = Game.getObjectById(this.memory.harvestLinkId) as StructureLink | undefined;
+
+            if ((link && link.store[RESOURCE_ENERGY] > 0) && this.creep.room.storage) {
+                
+                let state = this.creep.transfer(this.creep.room.storage, RESOURCE_ENERGY);
+                switch (state) {
+                    case ERR_NOT_IN_RANGE:
+                        this.moveTo(this.creep.room.storage);
+                        return true;
+                    case OK:
+                        this.memory.harvestFromLink = false;
+                        return true;
+                }
+            }
         }
 
         return true;
@@ -120,6 +169,8 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
             ...base,
             harvestContainerId: undefined,
             harvestStorageId: undefined,
+            harvestLinkId: undefined,
+            harvestFromLink: false
         } as FillerCreepMemory
     }
 

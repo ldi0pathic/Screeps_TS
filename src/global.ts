@@ -155,10 +155,12 @@ declare global {
     interface FillerCreepMemory extends CreepMemory {
         harvestContainerId?: Id<StructureContainer>;
         harvestStorageId?: Id<StructureStorage>;
+        harvestLinkId?: Id<StructureLink>;
+        harvestFromLink: boolean;
     }
 
-    interface UpgraderCreepMemory extends StationaryCreepMemory {
-        harvestContainerId: Id<StructureContainer> | undefined;
+    interface UpgraderCreepMemory extends CreepMemory {
+        harvestId: Id<AnyStoreStructure> | undefined;
     }
 
     interface ScoutCreepMemory extends CreepMemory {

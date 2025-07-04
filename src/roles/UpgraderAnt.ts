@@ -1,66 +1,48 @@
 ﻿import {roomConfig} from "../config";
 import {StationaryAnt} from "./base/StationaryAnt";
 import _ from "lodash";
+import {Ant} from "./base/Ant";
+import {Movement} from "../utils/Movement";
 
 
-export class UpgraderAnt extends StationaryAnt<UpgraderCreepMemory> {
+export class UpgraderAnt extends Ant<UpgraderCreepMemory> {
 
     doJob(): boolean {
 
-        if (!this.isOnPosition()) {
-            if (!this.goToFinalPos()) {
-                return true;
-            }
+        if (Movement.shouldContinueMoving(this.creep)) {
+            Movement.continueMoving(this.creep);
+            return true;
         }
 
         this.checkHarvest();
         if (this.memory.state == eJobState.harvest) {
 
-            let container: StructureContainer | undefined;
-            if (this.memory.harvestContainerId) {
-                container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
+            let harvest: AnyStoreStructure | undefined;
+            if (this.memory.harvestId) {
+                harvest = Game.getObjectById(this.memory.harvestId) as AnyStoreStructure;
             } else {
-                container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                harvest = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
                     filter: (structure) => {
-                        return structure.structureType === STRUCTURE_CONTAINER &&
-                            (structure as StructureContainer).store[RESOURCE_ENERGY] > 0;
+                        return (structure.structureType === STRUCTURE_CONTAINER ||
+                                structure.structureType == STRUCTURE_STORAGE) &&
+                            (structure as AnyStoreStructure).store[RESOURCE_ENERGY] > 0;
                     }
-                }) as StructureContainer | undefined;
+                }) as AnyStoreStructure | undefined;
 
-                if (container && container.structureType == STRUCTURE_CONTAINER) {
-                    this.memory.harvestContainerId = container.id;
-                }
+                this.memory.harvestId = harvest?.id;
             }
 
-            if (!container) {
-                this.memory.harvestContainerId = undefined;
-                return false;
-            }
-
-            if (container.store?.getUsedCapacity(RESOURCE_ENERGY) > 0) {
-                this.memory.harvestContainerId = container.id;
-
-                let state = this.creep.withdraw(container, RESOURCE_ENERGY);
+            if (harvest) {
+                let state = this.creep.withdraw(harvest, RESOURCE_ENERGY);
                 switch (state) {
                     case ERR_NOT_IN_RANGE:
-                        this.moveTo(container);
+                        this.moveTo(harvest);
                         return true;
                 }
-            } else {
-                this.creep.say("😴")
             }
+
         } else {
-            if (this.memory.harvestContainerId) {
-
-                let container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
-
-                if (container.hits < (container.hitsMax * 0.75)) {
-                    this.creep.repair(container);
-                    this.creep.say('🛠️');
-                    return true;
-                }
-            }
-
+            this.memory.harvestId = undefined;
             const controller = this.creep.room.controller
             if (controller) {
                 if (this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
@@ -73,30 +55,10 @@ export class UpgraderAnt extends StationaryAnt<UpgraderCreepMemory> {
     }
 
     public createSpawnMemory(spawn: StructureSpawn, workroom: string): UpgraderCreepMemory {
-        let room = Game.rooms[workroom];
-        let finalLocation: RoomPosition | undefined;
-        let containerId: Id<StructureContainer> | undefined = undefined;
-
-        let targets = room.controller?.pos.findInRange(FIND_STRUCTURES, 2, {
-            filter: (structure) => {
-                return structure.structureType === STRUCTURE_CONTAINER;
-            }
-        }) as StructureContainer[] | undefined;
-
-        if (targets && targets.length > 0) {
-            finalLocation = targets[0].pos;
-            containerId = targets[0].id;
-        } else {
-            finalLocation = room.controller?.pos;
-        }
 
         let base = super.createSpawnMemory(spawn, workroom);
         return {
             ...base,
-            onPosition: false,
-            ticksToPos: 0,
-            finalLocation: finalLocation,
-            harvestContainerId: containerId,
         } as UpgraderCreepMemory;
     }
 
@@ -130,7 +92,19 @@ export class UpgraderAnt extends StationaryAnt<UpgraderCreepMemory> {
     }
 
     public override getMaxCreeps(workroom: Room): number {
-        return roomConfig[workroom.name].upgraderCount || 0;
+        let max = roomConfig[workroom.name].upgraderCount || 0;
+
+        if (workroom.memory.state < eRoomState.phase8 && workroom.memory.state > eRoomState.phase4 && workroom.storage) {
+
+            if (workroom.storage.store[RESOURCE_ENERGY] > 5000) {
+                max++;
+            }
+            if (workroom.storage.store[RESOURCE_ENERGY] > 7500) {
+                max++;
+            }
+        }
+
+        return max;
     }
 
     protected shouldSpawn(workroom: Room): boolean {

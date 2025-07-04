@@ -7,10 +7,6 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
 
     doJob(): boolean {
 
-        if (this.creep.fatigue > 0) {
-            return true;
-        }
-        
         if (super.doJob()) {
             return true;
         }

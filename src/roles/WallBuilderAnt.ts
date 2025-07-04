@@ -1,55 +1,58 @@
 ﻿import {HarvesterAnt} from "./base/HarvesterAnt";
+import {roomConfig} from "../config";
 
 export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
 
     doJob(): boolean {
 
         if (super.doJob()) {
-            this.memory.constructionId = undefined;
-            this.memory.repairId = undefined;
+            if (this.memory.state == eJobState.harvest) {
+                this.memory.repairId = undefined;
+                this.memory.constructionId = undefined;
+            }
             return true;
         }
-
 
         let Repair: Structure | undefined;
         let ConstructionSite: ConstructionSite | undefined;
 
-        if (!this.memory.repairId) {
+        if (this.memory.repairId) {
+            Repair = Game.getObjectById(this.memory.repairId) as Structure;
+        } else {
             if (this.memory.constructionId) {
                 ConstructionSite = Game.getObjectById(this.memory.constructionId) as ConstructionSite;
             } else {
                 ConstructionSite = this.findBuildTarget() as ConstructionSite | undefined;
             }
+            this.memory.constructionId = ConstructionSite?.id;
 
-            if (ConstructionSite) {
-                this.creep.say('🪚');
-                let status = this.creep.build(ConstructionSite);
-                switch (status) {
-                    case ERR_NOT_IN_RANGE: {
-                        this.moveTo(ConstructionSite);
-                        break;
-                    }
-                    case OK: {
-                        const found = this.creep.pos.findInRange(FIND_STRUCTURES, 3, {
-                            filter: (structure: Structure) => {
-                                return structure.structureType === STRUCTURE_RAMPART && structure.hits < 100;
-                            }
-                        });
-                        if (found.length > 0) {
-                            this.memory.repairId = found[0].id;
-                            this.memory.constructionId = undefined;
-                        }
-                    }
-                }
-                return true;
+            if (!ConstructionSite) {
+                Repair = this.findRepairTarget();
+                this.memory.repairId = Repair?.id;
             }
         }
 
-        if (this.memory.repairId) {
-            Repair = Game.getObjectById(this.memory.repairId) as Structure;
-        } else {
-            Repair = this.findRepairTarget();
-            this.memory.repairId = Repair?.id;
+        if (ConstructionSite) {
+            this.creep.say('🪚');
+            let status = this.creep.build(ConstructionSite);
+            switch (status) {
+                case ERR_NOT_IN_RANGE: {
+                    this.moveTo(ConstructionSite);
+                    break;
+                }
+                case OK: {
+                    const found = this.creep.pos.findInRange(FIND_STRUCTURES, 3, {
+                        filter: (structure: Structure) => {
+                            return structure.structureType === STRUCTURE_RAMPART && structure.hits < 100;
+                        }
+                    });
+                    if (found.length > 0) {
+                        this.memory.repairId = found[0].id;
+                        this.memory.constructionId = undefined;
+                    }
+                }
+            }
+            return true;
         }
 
         if (Repair) {
@@ -57,10 +60,7 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
                 this.moveTo(Repair);
             }
             return true;
-        } else {
-            this.memory.constructionId = undefined;
         }
-
 
         return true;
     }
@@ -131,10 +131,10 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
         const movePerSet = 2;
         const setCost = workPerSet * BODYPART_COST[WORK] + carryPerSet * BODYPART_COST[CARRY] + movePerSet * BODYPART_COST[MOVE];
 
-        const maxSets = Math.floor(availableEnergy / setCost);
+        const maxSets = Math.floor((availableEnergy - BODYPART_COST[MOVE]) / setCost);
         const numberOfSets = Math.min(7, maxSets);
 
-        const body = [];
+        const body = [MOVE];
         for (let i = 0; i < numberOfSets; i++) {
             body.push(...Array(workPerSet).fill(WORK));
             body.push(...Array(carryPerSet).fill(CARRY));
@@ -149,7 +149,19 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
     }
 
     public override getMaxCreeps(workroom: Room): number {
-        return 1;
+        let max = roomConfig[workroom.name].wallbuilderCount || 0;
+
+        if (workroom.memory.state < eRoomState.phase8 && workroom.memory.state > eRoomState.phase4 && workroom.storage) {
+
+            if (workroom.storage.store[RESOURCE_ENERGY] > 5000) {
+                max++;
+            }
+            if (workroom.storage.store[RESOURCE_ENERGY] > 7500) {
+                max++;
+            }
+        }
+
+        return max;
     }
 
     protected shouldSpawn(workroom: Room): boolean {
