@@ -63,11 +63,10 @@ export class UpgraderAnt extends StationaryAnt<UpgraderCreepMemory> {
 
             const controller = this.creep.room.controller
             if (controller) {
-                controller.room.setRoomState(controller);
                 if (this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
                     this.moveTo(controller);
                 }
-
+                controller.room.setRoomState(controller);
             }
         }
         return true;

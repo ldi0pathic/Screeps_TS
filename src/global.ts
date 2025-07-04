@@ -182,9 +182,15 @@ declare global {
 
         getOrFindRoomStorage(): RoomStorage | undefined
 
+        getOrFindTargetLinks(): Id<StructureLink>[]
+
         findAllContainersNearSpawns(): StructureContainer[];
 
+        findAllLinksNearSpawns(): StructureLink[];
+
         findAllContainersNearController(): StructureContainer[];
+
+        findAllLinksNearController(): StructureLink[];
 
         getMaxAvailableEnergy(): number;
     }
@@ -219,6 +225,7 @@ declare global {
         scoutState?: eRoomState;
         spawnPrioBlock?: boolean;
         controllerContainerId?: Id<StructureContainer> | undefined;
+        targetLinkIds?: Id<StructureLink>[];
     }
 
     interface Position {

@@ -10,102 +10,124 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                 return true;
             }
         }
-
-        if (this.memory.containerConstructionId) {
-            this.checkHarvest();
-            const build = Game.getObjectById(this.memory.containerConstructionId);
-            if (build) {
-                if (this.memory.state == eJobState.work && build.progressTotal > build.progress) {
-                    this.creep.say('🪚');
-                    this.creep.build(build)
-                    return true;
-
-                }
-            } else if (!build) {
-                this.memory.containerConstructionId = undefined;
-                let container = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
-                    filter: {structureType: STRUCTURE_CONTAINER}
-                })[0];
-                if (container && container.structureType == STRUCTURE_CONTAINER) {
-                    this.memory.containerId = container.id;
-                }
-            }
-        } else if (this.memory.containerId) {
-            const container = Game.getObjectById(this.memory.containerId);
-
-            if (container) {
-
-                if (container.hits < (container.hitsMax * 0.75)) {
-                    if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > (this.creep.store.getCapacity() * 0.95)) {
-                        this.creep.repair(container);
-                        this.creep.say('🛠️');
-                        return true;
-                    }
-                }
-
-                if (container.store.getFreeCapacity() == 0 && this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
-                    if (container.hits < container.hitsMax) {
-                        this.creep.repair(container);
-                        this.creep.say('🚯🛠️');
-                        return true;
-                    }
-                    this.creep.say('🚯');
-                    return true;
-                }
-            } else {
-                this.memory.containerId = undefined;
-
-                let container = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
-                    filter: {structureType: STRUCTURE_CONTAINER}
-                })[0];
-
-                if (container && container.structureType == STRUCTURE_CONTAINER) {
-                    this.memory.containerId = container.id;
-                } else {
-                    let build = this.creep.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
-                        filter: {structureType: STRUCTURE_CONTAINER}
-                    })[0];
-                    if (build) {
-                        this.memory.containerConstructionId = build.id;
-                    } else {
-                        console.log("🚩 Miner braucht Container! ");
-                    }
-                }
-            }
-        } else if (this.memory.energySourceId) {
-            const source = Game.getObjectById(this.memory.energySourceId);
-            if (source) {
-                let container = source.pos.findInRange(FIND_STRUCTURES, 1, {
-                    filter: {structureType: STRUCTURE_CONTAINER}
-                })[0] as StructureContainer | undefined;
-
-                if (container) {
-                    this.memory.containerId = container.id;
-                } else {
-
-                    let build = source.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
-                        filter: {structureType: STRUCTURE_CONTAINER}
-                    })[0];
-
-                    this.memory.containerConstructionId = build.id;
-                }
-
-            }
-
-        }
-
+        let container: StructureContainer | undefined;
+        let constructionSite: ConstructionSite | undefined;
+        let link: StructureLink | undefined;
+        let targetLinkIds: Id<StructureLink>[] | undefined
+        let source: Source | undefined;
 
         if (this.memory.energySourceId) {
-            const source = Game.getObjectById(this.memory.energySourceId);
-            if (source) {
-                switch (this.creep.harvest(source)) {
-                    case ERR_TIRED:
-                    case ERR_NOT_ENOUGH_ENERGY: {
-                        this.creep.say('😴');
+            source = Game.getObjectById(this.memory.energySourceId) as Source | undefined;
+            if (!source) {
+                this.memory.energySourceId = undefined;
+            }
+        } else {
+            this.creep.say('🚩')
+            return false;
+        }
+
+        if (this.creep.room.memory.state >= eRoomState.phase5) {
+            if (this.memory.linkId) {
+                link = Game.getObjectById(this.memory.linkId) as StructureLink | undefined;
+                targetLinkIds = this.creep.room.getOrFindTargetLinks();
+            } else {
+                link = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
+                    filter: {structureType: STRUCTURE_LINK}
+                })[0] as StructureLink | undefined;
+                this.memory.linkId = link?.id;
+            }
+        }
+
+        if (this.memory.containerId) {
+            container = Game.getObjectById(this.memory.containerId) as StructureContainer | undefined;
+        } else if (this.memory.containerConstructionId) {
+            constructionSite = Game.getObjectById(this.memory.containerConstructionId) as ConstructionSite | undefined;
+        }
+
+        if (!container && !constructionSite && source) {
+            let container = source.pos.findInRange(FIND_STRUCTURES, 1, {
+                filter: {structureType: STRUCTURE_CONTAINER}
+            })[0] as StructureContainer | undefined;
+
+            if (container) {
+                this.memory.containerId = container.id;
+            } else {
+                let build = source.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
+                    filter: {structureType: STRUCTURE_CONTAINER}
+                })[0];
+
+                if (build) {
+                    this.memory.containerConstructionId = build.id;
+                } else {
+                    this.creep.say("🚩")
+                }
+            }
+        }
+
+        const energyStore = this.creep.store[RESOURCE_ENERGY];
+        if (energyStore > 0) {
+            if (constructionSite) {
+                this.creep.say('🪚');
+                this.creep.build(constructionSite)
+                return true;
+            }
+
+            if (container && container.hits < (container.hitsMax * 0.25)) {
+                this.creep.repair(container);
+                this.creep.say('🛠️');
+                return true;
+            }
+
+            if (energyStore >= this.creep.store.getCapacity(RESOURCE_ENERGY)) {
+
+                if (link && targetLinkIds && link.cooldown < 1) {
+                    let state = this.creep.transfer(link, RESOURCE_ENERGY)
+                    switch (state) {
+                        case ERR_FULL: {
+                            let target: StructureLink | undefined = undefined;
+                            for (let targetLinkId of targetLinkIds) {
+                                if (!target) {
+                                    target = Game.getObjectById(targetLinkId) as StructureLink | undefined;
+                                } else {
+
+                                    let newTarget = Game.getObjectById(targetLinkId) as StructureLink | undefined;
+
+                                    if (newTarget && newTarget?.store.getFreeCapacity(RESOURCE_ENERGY) < target.store.getFreeCapacity(RESOURCE_ENERGY)) {
+                                        target = newTarget;
+                                    }
+                                }
+                            }
+                            if (target) {
+                                link.transferEnergy(target)
+                            }
+                        }
+                    }
+                    return true;
+                }
+
+                if (container) {
+                    if (container.store.getFreeCapacity() == 0) {
+                        if (container.hits < container.hitsMax) {
+                            this.creep.repair(container);
+                            this.creep.say('🚯🛠️');
+                            return true;
+                        }
+                        this.creep.say('🚯');
+                        return true;
                     }
                 }
             }
         }
+
+        if (source) {
+            switch (this.creep.harvest(source)) {
+                case ERR_TIRED:
+                case ERR_NOT_ENOUGH_ENERGY: {
+                    this.creep.say('😴');
+                }
+            }
+        }
+
         return true;
     }
 

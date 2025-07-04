@@ -44,7 +44,7 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
                     // Erst nach halb leeren Containern suchen
                     const halfEmptyContainers = allStructures.filter(structure =>
                         structure.structureType === STRUCTURE_CONTAINER &&
-                        (structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY)) < 0.55
+                        (structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY)) < 0.65
                     );
 
                     if (halfEmptyContainers.length > 0) {

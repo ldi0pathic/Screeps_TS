@@ -102,7 +102,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
 
         if (container) {
 
-            if (container.store?.getUsedCapacity(RESOURCE_ENERGY) > this.creep.store.getCapacity() * 0.5) {
+            if (container.store[RESOURCE_ENERGY] > this.creep.store.getCapacity() * 0.5) {
                 this.memory.harvestContainerId = container.id;
 
                 let state = this.creep.withdraw(container, RESOURCE_ENERGY);
@@ -116,6 +116,8 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
                         this.memory.harvestContainerId = undefined;
                         return;
                 }
+            } else {
+                this.memory.harvestContainerId = undefined;
             }
         }
     }

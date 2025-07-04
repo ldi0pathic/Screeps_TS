@@ -101,6 +101,52 @@ export function extendRoom() {
         return containers;
     }
 
+    Room.prototype.findAllLinksNearController = function (): StructureLink[] {
+        let room = Game.rooms[this.name];
+        if (!room.controller || !room.controller.my) {
+            return [];
+        }
+
+        const links: StructureLink[] = [];
+
+        const nearby = Game.rooms[this.name].controller?.pos.findInRange(FIND_STRUCTURES, 3, {
+            filter: (structure: Structure) => {
+                return structure.structureType === STRUCTURE_LINK;
+            }
+        }) as StructureLink[];
+
+        // Duplikate vermeiden
+        for (const link of nearby) {
+            if (!links.find(c => c.id === link.id)) {
+                links.push(link);
+            }
+        }
+
+        return links;
+    }
+
+    Room.prototype.findAllLinksNearSpawns = function (): StructureLink[] {
+        const spawns = Game.rooms[this.name].find(FIND_MY_SPAWNS);
+        const links: StructureLink[] = [];
+
+        for (const spawn of spawns) {
+            const nearby = spawn.pos.findInRange(FIND_STRUCTURES, 3, {
+                filter: (structure: Structure) => {
+                    return structure.structureType === STRUCTURE_LINK;
+                }
+            }) as StructureLink[];
+
+            // Duplikate vermeiden
+            for (const link of nearby) {
+                if (!links.find(c => c.id === link.id)) {
+                    links.push(link);
+                }
+            }
+        }
+
+        return links;
+    }
+
     Room.prototype.getOrFindRoomStorage = function (): RoomStorage | undefined {
         const room = Game.rooms[this.name];
 
@@ -127,6 +173,29 @@ export function extendRoom() {
         }
 
         return this.memory.storage;
+    }
+    Room.prototype.getOrFindTargetLinks = function (): Id<StructureLink>[] {
+        if (this.memory.state < eRoomState.phase5) {
+            return [];
+        }
+        const room = Game.rooms[this.name];
+
+        if (!this.memory.targetLinkIds) {
+            this.memory.targetLinkIds = [];
+
+            const links = [
+                ...room.findAllLinksNearSpawns(),
+                ...room.findAllLinksNearController()
+            ];
+
+            const unique = links.filter((link, index, arr) =>
+                arr.findIndex(c => c.id === link.id) === index
+            );
+
+            this.memory.targetLinkIds = unique.map(c => c.id);
+        }
+
+        return this.memory.targetLinkIds;
     }
 
 
@@ -179,11 +248,11 @@ export function extendRoom() {
                 break;
         }
 
-        if (state != Memory.rooms[this.name].state) {
-            Memory.rooms[this.name].storage = {storageId: undefined, storageContainerId: []};
+        if (state != this.memory.state) { //bei jedem wechsel wird alles zurückgesetzt
+            this.memory.storage = {storageId: undefined, storageContainerId: []};
+            this.memory.targetLinkIds = [];
+            this.memory.state = state;
         }
-
-        Memory.rooms[this.name].state = state;
     };
 }
 
