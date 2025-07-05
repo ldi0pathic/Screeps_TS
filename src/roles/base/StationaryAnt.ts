@@ -5,7 +5,7 @@ export abstract class StationaryAnt<TMemory extends StationaryCreepMemory> exten
     protected goToFinalPos(): boolean {
         const finalPos = this.memory.finalLocation;
         if (finalPos) {
-            if (this.creep.room.name === this.memory.homeRoom &&
+            if (this.creep.room.name === this.memory.workRoom &&
                 this.creep.pos.x === finalPos.x &&
                 this.creep.pos.y === finalPos.y) {
                 this.memory.onPosition = true;
@@ -14,7 +14,7 @@ export abstract class StationaryAnt<TMemory extends StationaryCreepMemory> exten
                 return true;
             }
 
-            this.moveTo(new RoomPosition(finalPos.x, finalPos.y, this.memory.homeRoom))
+            this.moveTo(new RoomPosition(finalPos.x, finalPos.y, this.memory.workRoom))
             
             return true;
         }

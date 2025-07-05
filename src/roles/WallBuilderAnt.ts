@@ -148,30 +148,36 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
         return eJobType.wallBuilder;
     }
 
-    public override getMaxCreeps(workroom: Room): number {
-        let max = roomConfig[workroom.name].wallbuilderCount || 0;
+    public override getMaxCreeps(workroom: string): number {
+        let max = roomConfig[workroom].wallbuilderCount || 0;
 
-        if (workroom.storage) {
-            if (workroom.memory.state < eRoomState.phase8 && workroom.memory.state > eRoomState.phase4) {
+        const room = Game.rooms[workroom];
 
-                if (workroom.storage.store[RESOURCE_ENERGY] > 5000) {
+        if (room && room.storage) {
+            if (room.memory.state < eRoomState.phase8 && room.memory.state > eRoomState.phase4) {
+
+                if (room.storage.store[RESOURCE_ENERGY] > 5000) {
                     max++;
                 }
-                if (workroom.storage.store[RESOURCE_ENERGY] > 7500) {
+                if (room.storage.store[RESOURCE_ENERGY] > 7500) {
                     max++;
                 }
             }
 
-            if (workroom.storage.store[RESOURCE_ENERGY] < 10000) {
+            if (room.storage.store[RESOURCE_ENERGY] < 10000) {
                 max = 0;
             }
         }
-        
+
         return max;
     }
 
-    protected shouldSpawn(workroom: Room): boolean {
-        const todos = workroom.find(FIND_STRUCTURES, {
+    protected shouldSpawn(workroom: string): boolean {
+        const room = Game.rooms[workroom];
+        if (!room) {
+            return false;
+        }
+        const todos = room.find(FIND_STRUCTURES, {
             filter: (structure: Structure) => {
                 return (structure.structureType === STRUCTURE_RAMPART ||
                         structure.structureType === STRUCTURE_WALL) &&

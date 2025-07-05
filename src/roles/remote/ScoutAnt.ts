@@ -43,14 +43,14 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
         return eJobType.scout;
     }
 
-    public override getMaxCreeps(workroom: Room): number {
+    public override getMaxCreeps(workroom: string): number {
         return 1;
     }
 
-    protected shouldSpawn(workroom: Room): boolean {
+    protected shouldSpawn(workroom: string): boolean {
 
-        const roomState = Memory.rooms[workroom.name]?.state;
-        const scoutState = Memory.rooms[workroom.name]?.scoutState;
+        const roomState = Memory.rooms[workroom]?.state;
+        const scoutState = Memory.rooms[workroom]?.scoutState;
         if (!roomState || roomState < eRoomState.phase2) {
             return false; // Erst ab Phase 1
         }
@@ -61,10 +61,10 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
         }
 
         const scoutRadius = this.getScoutRadius(roomState);
-        const unexploredRooms = this.findUnexploredRooms(workroom.name, scoutRadius);
+        const unexploredRooms = this.findUnexploredRooms(workroom, scoutRadius);
 
         if (unexploredRooms.length == 0) {
-            Memory.rooms[workroom.name].scoutState = roomState;
+            Memory.rooms[workroom].scoutState = roomState;
         }
 
         return unexploredRooms.length > 0;
@@ -72,7 +72,7 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
     }
 
     private assignNextTarget(): void {
-        const workroom = Game.rooms[this.memory.homeRoom];
+        const workroom = Game.rooms[this.memory.workRoom];
         if (!workroom) return;
 
         const roomState = Memory.rooms[workroom.name]?.state;

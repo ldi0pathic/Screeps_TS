@@ -116,7 +116,8 @@ declare global {
         job: eJobType;
         state: eJobState;
         spawn: string;
-        homeRoom: string;
+        workRoom: string;
+        spawnRoom: string;
         roundRobin: number;
         roundRobinOffset?: number;
         moving: boolean;
@@ -169,7 +170,6 @@ declare global {
     interface RemoteHarvesterMemory extends CreepMemory {
         energySourceId: Id<Source> | undefined;
         targetId?: Id<AnyStoreStructure>;
-        remoteRoom: string;
     }
 
     interface ScoutCreepMemory extends CreepMemory {
@@ -214,7 +214,8 @@ declare global {
 
     interface SpawnRequest {
         jobKey: eJobType;
-        targetRoom: string;
+        workroom: string;
+        spawnRoom: string;
         bodyParts: BodyPartConstant[];
         priority: number;
         timestamp: number;

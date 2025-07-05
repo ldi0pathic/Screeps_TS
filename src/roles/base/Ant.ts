@@ -1,6 +1,7 @@
 ﻿import _ from "lodash";
 import {SpawnManager} from "../../manager/SpawnManager";
 import {Movement} from "../../utils/Movement";
+import {conditionalLog} from "../../extensions/GlobalExtensions";
 
 export abstract class Ant<TMemory extends CreepMemory> {
     protected creep: Creep;
@@ -30,14 +31,14 @@ export abstract class Ant<TMemory extends CreepMemory> {
         }
     }
 
-    spawn(workroom: Room): boolean {
+    spawn(spawnRoom: Room, workroom: string): boolean {
 
         const max = this.getMaxCreeps(workroom);
         const job = this.getJob();
 
         const countOfAnts = _.filter(Game.creeps, (c) =>
             c.memory.job == job &&
-            c.memory.homeRoom == workroom.name
+            c.memory.workRoom == workroom
         ).length;
 
         if (countOfAnts >= max) {
@@ -49,7 +50,7 @@ export abstract class Ant<TMemory extends CreepMemory> {
         }
 
         const dynamicPriority = SpawnManager.getSpawnPriority(job, workroom);
-        SpawnManager.addToJobQueue(job, workroom, this.getProfil(workroom), dynamicPriority);
+        SpawnManager.addToJobQueue(job, spawnRoom, workroom, this.getProfil(spawnRoom), dynamicPriority);
 
         return false;
     }
@@ -62,7 +63,7 @@ export abstract class Ant<TMemory extends CreepMemory> {
             job: job,
             state: eJobState.harvest,
             spawn: spawn.name,
-            homeRoom: workroom,
+            workRoom: workroom,
             roundRobin: 1,
             moving: false,
         } as CreepMemory;
@@ -70,9 +71,9 @@ export abstract class Ant<TMemory extends CreepMemory> {
 
     public abstract getJob(): eJobType;
 
-    public abstract getMaxCreeps(workroom: Room): number;
+    public abstract getMaxCreeps(workroom: string): number;
 
-    protected abstract shouldSpawn(workroom: Room): boolean;
+    protected abstract shouldSpawn(workroom: string): boolean;
 
     protected moveTo(target: RoomPosition | _HasRoomPosition, opts?: MoveToOpts): ScreepsReturnCode {
         return Movement.moveTo(this.creep, target, opts);

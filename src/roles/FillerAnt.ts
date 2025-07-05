@@ -182,12 +182,15 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
         return eJobType.filler;
     }
 
-    public override getMaxCreeps(workroom: Room): number {
+    public override getMaxCreeps(workroom: string): number {
         return 1;
     }
 
-    protected shouldSpawn(workroom: Room): boolean {
-        return workroom.memory.state >= eRoomState.phase5 && workroom.storage != null;
+    protected shouldSpawn(workroom: string): boolean {
+
+        const room = Game.rooms[workroom];
+
+        return room && Memory.rooms[workroom].state >= eRoomState.phase5 && room.storage != null;
     }
 
 }

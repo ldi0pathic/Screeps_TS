@@ -160,7 +160,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         const sources = workroom.getOrFindEnergieSource();
         const creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == job &&
-            creep.memory.homeRoom == workroom.name
+            creep.memory.workRoom == workroom.name
         );
 
         let sourceId: Id<Source> | undefined = undefined;
@@ -296,7 +296,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             ticksToPos: 1,
             spawn: spawn.name,
             state: eJobState.harvest,
-            homeRoom: workroom.name,
+            workRoom: workroom.name,
             energySourceId: sourceId,
             containerId: containerId,
             linkId: linkId,
@@ -314,23 +314,33 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         return eJobType.miner;
     }
 
-    public override getMaxCreeps(workroom: Room): number {
-        return workroom.getOrFindEnergieSource().length || 0;
+    public override getMaxCreeps(workroom: string): number {
+        const room = Game.rooms[workroom];
+        if (!room) {
+            return 0;
+        }
+        return room.getOrFindEnergieSource().length || 0;
     }
 
-    protected shouldSpawn(workroom: Room): boolean {
+    protected shouldSpawn(workroom: string): boolean {
 
-        if (!roomConfig[workroom.name].sendMiner) {
+        if (!roomConfig[workroom].sendMiner) {
             return false;
         }
 
-        const ids = workroom.getOrFindEnergieSource();
+        let room = Game.rooms[workroom];
+        let max = 0;
+        if (room) {
+            max = room.getOrFindEnergieSource().length
+        } else {
+            max = Memory.rooms[workroom].energySources.length
+        }
 
         let creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
-            creep.memory.homeRoom == workroom.name);
+            creep.memory.workRoom == workroom);
 
-        return ids.length > creeps.length;
+        return max > creeps.length;
     }
 
 }

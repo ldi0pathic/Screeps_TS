@@ -187,13 +187,17 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
         return eJobType.transporter;
     }
 
-    public override getMaxCreeps(workroom: Room): number {
-        return workroom.getOrFindEnergieSource().length || 0;
+    public override getMaxCreeps(workroom: string): number {
+        const room = Game.rooms[workroom];
+        if (!room) {
+            return 0;
+        }
+        return room.getOrFindEnergieSource().length || 0;
     }
 
-    protected shouldSpawn(workroom: Room): boolean {
+    protected shouldSpawn(workroom: string): boolean {
 
-        return workroom.memory.state > eRoomState.phase1;
+        return Memory.rooms[workroom].state > eRoomState.phase1;
 
     }
 

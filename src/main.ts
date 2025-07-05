@@ -60,9 +60,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     LayoutManager.run();
-
-    SpawnManager.getStatus()
-
+    
 
     // CPU für nächsten Tick speichern
     Memory.lastTickCpu = Game.cpu.getUsed();

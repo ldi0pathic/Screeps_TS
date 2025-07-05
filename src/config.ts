@@ -7,6 +7,7 @@
     buildRoads: boolean;
     buildBase: boolean;
     sendRemoteMiner: boolean;
+    spawnRoom?: string;
 }
 
 export const roomConfig: { [roomName: string]: RoomConfig } = {
@@ -20,4 +21,15 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         buildBase: true,
         sendRemoteMiner: false,
     },
+    "W4N8": {
+        builderCount: 0,
+        upgraderCount: 0,
+        workerCount: 0,
+        wallbuilderCount: 0,
+        sendMiner: false,
+        buildRoads: false,
+        buildBase: false,
+        sendRemoteMiner: true,
+        spawnRoom: "W5N8"
+    }
 };

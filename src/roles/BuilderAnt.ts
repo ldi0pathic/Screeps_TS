@@ -95,21 +95,26 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
         return eJobType.builder;
     }
 
-    public override getMaxCreeps(workroom: Room): number {
-        return roomConfig[workroom.name].builderCount || 0;
+    public override getMaxCreeps(workroom: string): number {
+        return roomConfig[workroom].builderCount || 0;
     }
 
-    protected shouldSpawn(workroom: Room): boolean {
+    protected shouldSpawn(workroom: string): boolean {
         const creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
-            creep.memory.homeRoom == workroom.name
+            creep.memory.workRoom == workroom
         );
 
         if (creeps.length >= this.getMaxCreeps(workroom)) {
             return false;
         }
 
-        const todos = workroom.find(FIND_CONSTRUCTION_SITES);
+        const room = Game.rooms[workroom];
+        if (!room) {
+            return false;
+        }
+
+        const todos = room.find(FIND_CONSTRUCTION_SITES);
         return todos.length > 0;
     }
 }

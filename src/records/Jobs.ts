@@ -7,6 +7,7 @@ import {Ant} from "../roles/base/Ant";
 import {ScoutAnt} from "../roles/remote/ScoutAnt";
 import {WallBuilderAnt} from "../roles/WallBuilderAnt";
 import {FillerAnt} from "../roles/FillerAnt";
+import {RemoteHarvester} from "../roles/remote/RemoteHarvester";
 
 export class Jobs {
     public static jobs: Record<string, JobDef> = {
@@ -18,6 +19,7 @@ export class Jobs {
         Builder: {antClass: BuilderAnt, jobPrio: 11, spawnPrio: 10},
         Scout: {antClass: ScoutAnt, jobPrio: 1, spawnPrio: 1},
         WallBuilder: {antClass: WallBuilderAnt, jobPrio: 1, spawnPrio: 1},
+        RemoteHarvester: {antClass: RemoteHarvester, jobPrio: 1, spawnPrio: 1},
     };
 
     public static createAnt(jobType: eJobType, creep: Creep): Ant<any> | null {
