@@ -54,7 +54,7 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
                     return false;
                 }
 
-                if (storage.store?.getUsedCapacity(RESOURCE_ENERGY) > this.creep.store.getCapacity() * 0.5) {
+                if (storage.store[RESOURCE_ENERGY] > 100) {
                     this.memory.harvestStorageId = storage.id;
 
                     let state = this.creep.withdraw(storage, RESOURCE_ENERGY);
@@ -68,7 +68,6 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
                     }
                 }
                 this.memory.harvestStorageId = undefined;
-                return false;
             }
 
             let container: StructureContainer | undefined;
@@ -98,6 +97,11 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
 
             }
 
+
+            if (this.creep.store[RESOURCE_ENERGY] > 100) {
+                this.memory.state = eJobState.work;
+            }
+
             return true;
         }
 
@@ -124,7 +128,7 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
             let link = Game.getObjectById(this.memory.harvestLinkId) as StructureLink | undefined;
 
             if ((link && link.store[RESOURCE_ENERGY] > 0) && this.creep.room.storage) {
-                
+
                 let state = this.creep.transfer(this.creep.room.storage, RESOURCE_ENERGY);
                 switch (state) {
                     case ERR_NOT_IN_RANGE:

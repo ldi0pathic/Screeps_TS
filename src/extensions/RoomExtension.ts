@@ -180,7 +180,7 @@ export function extendRoom() {
         }
         const room = Game.rooms[this.name];
 
-        if (!this.memory.targetLinkIds) {
+        if (!this.memory.targetLinkIds || this.memory.targetLinkIds.length == 0) {
             this.memory.targetLinkIds = [];
 
             const links = [

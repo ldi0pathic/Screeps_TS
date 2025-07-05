@@ -12,9 +12,9 @@ export class Jobs {
     public static jobs: Record<string, JobDef> = {
         Transporter: {antClass: TransporterAnt, jobPrio: 30, spawnPrio: 50},
         Filler: {antClass: FillerAnt, jobPrio: 30, spawnPrio: 50},
-        Miner: {antClass: MinerAnt, jobPrio: 11, spawnPrio: 10},
-        Upgrader: {antClass: UpgraderAnt, jobPrio: 11, spawnPrio: 10},
-        Worker: {antClass: WorkerAnt, jobPrio: 11, spawnPrio: 10},
+        Miner: {antClass: MinerAnt, jobPrio: 11, spawnPrio: 15},
+        Upgrader: {antClass: UpgraderAnt, jobPrio: 11, spawnPrio: 11},
+        Worker: {antClass: WorkerAnt, jobPrio: 11, spawnPrio: 12},
         Builder: {antClass: BuilderAnt, jobPrio: 11, spawnPrio: 10},
         Scout: {antClass: ScoutAnt, jobPrio: 1, spawnPrio: 1},
         WallBuilder: {antClass: WallBuilderAnt, jobPrio: 1, spawnPrio: 1},
