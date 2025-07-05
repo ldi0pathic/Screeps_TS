@@ -50,7 +50,7 @@
                 }
             });
         }
-        
+
         console.log(`🧹 Job Memory cleanup completed - ${cleanedJobs} jobs cleaned (Tick ${Game.time})`);
     }
 
@@ -61,25 +61,24 @@
     }
 
     private static cleanCreep(creep: Creep): boolean {
-        if (creep.store.getUsedCapacity() > 0) {
+        const resourceType = Object.keys(creep.store)[0] as ResourceConstant;
+        if (creep.store[resourceType] > 0) {
             const target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
                 filter: structure => {
                     return (structure.structureType === STRUCTURE_CONTAINER ||
                             structure.structureType === STRUCTURE_STORAGE) &&
-                        structure.store.getFreeCapacity() > 0;
+                        structure.store.getFreeCapacity() > creep.store[resourceType];
                 }
             });
 
             if (target) {
-                const resourceType = Object.keys(creep.store)[0] as ResourceConstant;
                 const transferResult = creep.transfer(target, resourceType);
-
                 if (transferResult === ERR_NOT_IN_RANGE) {
                     creep.moveTo(target, {visualizePathStyle: {stroke: '#ff0000'}});
                     return false;
                 } else if (transferResult === OK) {
                     console.log(`📦 ${creep.name} dropped off ${resourceType} to ${target.structureType}`);
-                    return creep.store.getUsedCapacity() === 0;
+                    return creep.store[resourceType] == 0;
                 }
             }
 

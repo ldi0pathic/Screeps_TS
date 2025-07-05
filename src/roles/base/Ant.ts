@@ -37,7 +37,7 @@ export abstract class Ant<TMemory extends CreepMemory> {
 
         const countOfAnts = _.filter(Game.creeps, (c) =>
             c.memory.job == job &&
-            c.memory.workroom == workroom.name
+            c.memory.homeRoom == workroom.name
         ).length;
 
         if (countOfAnts >= max) {
@@ -62,7 +62,7 @@ export abstract class Ant<TMemory extends CreepMemory> {
             job: job,
             state: eJobState.harvest,
             spawn: spawn.name,
-            workroom: workroom,
+            homeRoom: workroom,
             roundRobin: 1,
             moving: false,
         } as CreepMemory;

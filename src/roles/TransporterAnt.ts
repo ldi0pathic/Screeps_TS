@@ -18,22 +18,34 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
 
         if (!target) {
 
-            if (this.creep.room.memory.state >= eRoomState.phase4 && this.creep.room.storage == null) {
+            //Wenn storage keine Energie hat, Filler unterstützen
+            if (this.creep.room.storage && this.creep.room.storage.store[RESOURCE_ENERGY] < 10000) {
                 target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: s => (s.structureType === STRUCTURE_SPAWN ||
-                            s.structureType === STRUCTURE_EXTENSION ||
-                            (s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) > 100)) &&
+                            s.structureType === STRUCTURE_EXTENSION) &&
                         s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                }) as AnyStoreStructure | undefined;
-            } else {
-                target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
-                    filter: s =>
-                        s.structureType === STRUCTURE_TOWER &&
-                        s.store.getFreeCapacity(RESOURCE_ENERGY) > 100
                 }) as AnyStoreStructure | undefined;
             }
 
             if (!target) {
+                //Wenn kein Storage existiert tower befüllen & Filler unterstützen
+                if (this.creep.room.storage == null) {
+                    target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                        filter: s => (s.structureType === STRUCTURE_SPAWN ||
+                                s.structureType === STRUCTURE_EXTENSION ||
+                                (s.structureType === STRUCTURE_TOWER && s.store[RESOURCE_ENERGY] < 900)) &&
+                            s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                    }) as AnyStoreStructure | undefined;
+                } else { //ansonsten nur Tower befüllen
+                    target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                        filter: s =>
+                            s.structureType === STRUCTURE_TOWER &&
+                            s.store[RESOURCE_ENERGY] < 900
+                    }) as AnyStoreStructure | undefined;
+                }
+            }
+
+            if (!target) { //ansonsten Energie einlagern
                 const roomStorage = this.creep.room.getOrFindRoomStorage();
                 if (roomStorage) {
                     const allStructures = [
@@ -64,6 +76,7 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
                     this.moveTo(target);
                     break
                 }
+                case ERR_FULL:
                 case OK: {
                     this.memory.targetId = undefined;
                     break
@@ -72,6 +85,72 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
         }
 
         return true;
+    }
+
+    protected override doHarvest(resource: ResourceConstant): void {
+        if (this.harvestRoomDrop(resource)) {
+            return;
+        }
+
+        if (this.harvestRoomTombstone(resource)) {
+            return;
+        }
+
+
+        let container: StructureContainer | undefined;
+
+        let sources = this.creep.room.getOrFindEnergieSource();
+
+        if (!this.memory.harvestContainerId && sources.length > 0) {
+            sources.forEach(source => {
+                if (source.containerId) {
+
+                    if (!container) {
+                        container = Game.getObjectById(source.containerId) as StructureContainer;
+                    } else {
+                        let newContainer = Game.getObjectById(source.containerId) as StructureContainer;
+                        if (newContainer && container.store[RESOURCE_ENERGY] < newContainer.store[RESOURCE_ENERGY]) {
+                            container = newContainer;
+                        }
+                    }
+                }
+            })
+            this.memory.harvestContainerId = container?.id;
+        }
+
+        if (!container) {
+            if (this.memory.harvestContainerId) {
+                container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
+            } else {
+                container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: (structure) => {
+                        return structure.structureType === STRUCTURE_CONTAINER &&
+                            (structure as StructureContainer).store[RESOURCE_ENERGY] > 0;
+                    }
+                }) as StructureContainer | undefined;
+            }
+        }
+
+        if (container) {
+
+            if (container.store[RESOURCE_ENERGY] > this.creep.store.getCapacity() * 0.5) {
+                this.memory.harvestContainerId = container.id;
+
+                let state = this.creep.withdraw(container, RESOURCE_ENERGY);
+                switch (state) {
+                    case ERR_NOT_IN_RANGE:
+                        this.moveTo(container);
+                        return;
+                    case ERR_NOT_ENOUGH_RESOURCES:
+                    case ERR_NOT_ENOUGH_ENERGY:
+                    case OK:
+                        this.memory.harvestContainerId = undefined;
+                        return;
+                }
+            } else {
+                this.memory.harvestContainerId = undefined;
+            }
+        }
     }
 
     public override getProfil(workroom: Room): BodyPartConstant[] {

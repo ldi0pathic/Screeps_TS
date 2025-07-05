@@ -151,16 +151,22 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
     public override getMaxCreeps(workroom: Room): number {
         let max = roomConfig[workroom.name].wallbuilderCount || 0;
 
-        if (workroom.memory.state < eRoomState.phase8 && workroom.memory.state > eRoomState.phase4 && workroom.storage) {
+        if (workroom.storage) {
+            if (workroom.memory.state < eRoomState.phase8 && workroom.memory.state > eRoomState.phase4) {
 
-            if (workroom.storage.store[RESOURCE_ENERGY] > 5000) {
-                max++;
+                if (workroom.storage.store[RESOURCE_ENERGY] > 5000) {
+                    max++;
+                }
+                if (workroom.storage.store[RESOURCE_ENERGY] > 7500) {
+                    max++;
+                }
             }
-            if (workroom.storage.store[RESOURCE_ENERGY] > 7500) {
-                max++;
+
+            if (workroom.storage.store[RESOURCE_ENERGY] < 10000) {
+                max = 0;
             }
         }
-
+        
         return max;
     }
 

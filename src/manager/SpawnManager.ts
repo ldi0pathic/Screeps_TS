@@ -83,7 +83,7 @@ export class SpawnManager {
     public static getCreepCount(jobType: eJobType, roomName: string): number {
         return _.filter(Game.creeps, c =>
             c.memory.job === jobType &&
-            c.memory.workroom === roomName
+            c.memory.homeRoom === roomName
         ).length;
     }
 
@@ -182,7 +182,7 @@ export class SpawnManager {
     static getSpawnPriority(jobType: eJobType, room: Room): number {
         if (jobType === eJobType.miner) {
             const miners = _.filter(Game.creeps, c =>
-                c.memory.job === eJobType.miner && c.memory.workroom === room.name
+                c.memory.job === eJobType.miner && c.memory.homeRoom === room.name
             );
             if (miners.length === 0) {
                 return 998;
@@ -191,7 +191,7 @@ export class SpawnManager {
 
         if (jobType === eJobType.transporter && room.memory.state < eRoomState.phase7) {
             const transporter = _.filter(Game.creeps, c =>
-                c.memory.job === eJobType.transporter && c.memory.workroom === room.name
+                c.memory.job === eJobType.transporter && c.memory.homeRoom === room.name
             );
             if (transporter.length === 0) {
                 return 997;
@@ -200,7 +200,7 @@ export class SpawnManager {
 
         if (jobType === eJobType.filler && room.memory.state >= eRoomState.phase5 && room.storage != null) {
             const filler = _.filter(Game.creeps, c =>
-                c.memory.job === eJobType.filler && c.memory.workroom === room.name
+                c.memory.job === eJobType.filler && c.memory.homeRoom === room.name
             );
             if (filler.length === 0) {
                 return 996;
@@ -217,9 +217,10 @@ export class SpawnManager {
             if (!room) continue;
 
             //2, da Miner und Transporter existieren sollen
-            const creeps = _.filter(Game.creeps, c => c.memory.workroom === roomName);
+            const creeps = _.filter(Game.creeps, c => c.memory.homeRoom === roomName);
             let max = room.memory.state >= eRoomState.phase5 ? 4 : 2;
-            if (creeps.length <= max) {
+            console.log(room.name, creeps.length, max);
+            if (creeps.length < max) {
                 this.queueCreep(eJobType.worker, room, [WORK, CARRY, MOVE], 999);
                 return true;
             }
@@ -232,7 +233,7 @@ export class SpawnManager {
         if (!def) return null;
 
         const mockCreep = {
-            memory: {job: jobType, workroom: room.name},
+            memory: {job: jobType, homeRoom: room.name},
             room: room
         } as Creep;
 
@@ -364,7 +365,7 @@ export class SpawnManager {
                 if (creepCount > 0 || queuedCount > 0 || maxCreeps > 0) {
                     const spawningCount = _.filter(Game.creeps, c =>
                         c.memory.job === jobType &&
-                        c.memory.workroom === roomName &&
+                        c.memory.homeRoom === roomName &&
                         c.spawning
                     ).length;
 

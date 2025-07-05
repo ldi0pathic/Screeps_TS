@@ -4,7 +4,7 @@ import {UpgraderAnt} from "../roles/UpgraderAnt";
 import {WorkerAnt} from "../roles/WorkerAnt";
 import {BuilderAnt} from "../roles/BuilderAnt";
 import {Ant} from "../roles/base/Ant";
-import {ScoutAnt} from "../roles/ScoutAnt";
+import {ScoutAnt} from "../roles/remote/ScoutAnt";
 import {WallBuilderAnt} from "../roles/WallBuilderAnt";
 import {FillerAnt} from "../roles/FillerAnt";
 

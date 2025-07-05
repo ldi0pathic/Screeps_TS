@@ -91,7 +91,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
                                     let newTarget = Game.getObjectById(targetLinkId) as StructureLink | undefined;
 
-                                    if (newTarget && newTarget?.store.getFreeCapacity(RESOURCE_ENERGY) < target.store.getFreeCapacity(RESOURCE_ENERGY)) {
+                                    if (newTarget && newTarget.store[RESOURCE_ENERGY] < target.store[RESOURCE_ENERGY]) {
                                         target = newTarget;
                                     }
                                 }
@@ -138,7 +138,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         const availableEnergy = workroom.getMaxAvailableEnergy();
 
-
         const setCost = BODYPART_COST[WORK];
 
         const moveCost = 2 * BODYPART_COST[MOVE] + BODYPART_COST[CARRY];
@@ -161,7 +160,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         const sources = workroom.getOrFindEnergieSource();
         const creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == job &&
-            creep.memory.workroom == workroom.name
+            creep.memory.homeRoom == workroom.name
         );
 
         let sourceId: Id<Source> | undefined = undefined;
@@ -297,7 +296,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             ticksToPos: 1,
             spawn: spawn.name,
             state: eJobState.harvest,
-            workroom: workroom.name,
+            homeRoom: workroom.name,
             energySourceId: sourceId,
             containerId: containerId,
             linkId: linkId,
@@ -329,7 +328,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         let creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
-            creep.memory.workroom == workroom.name);
+            creep.memory.homeRoom == workroom.name);
 
         return ids.length > creeps.length;
     }

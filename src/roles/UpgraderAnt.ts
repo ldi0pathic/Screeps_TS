@@ -1,57 +1,50 @@
 ﻿import {roomConfig} from "../config";
-import {StationaryAnt} from "./base/StationaryAnt";
 import _ from "lodash";
-import {Ant} from "./base/Ant";
-import {Movement} from "../utils/Movement";
+import {HarvesterAnt} from "./base/HarvesterAnt";
 
 
-export class UpgraderAnt extends Ant<UpgraderCreepMemory> {
+export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
 
     doJob(): boolean {
 
-        if (Movement.shouldContinueMoving(this.creep)) {
-            Movement.continueMoving(this.creep);
+        if (super.doJob()) {
             return true;
         }
 
-        this.checkHarvest();
-        if (this.memory.state == eJobState.harvest) {
-
-            let harvest: AnyStoreStructure | undefined;
-            if (this.memory.harvestId) {
-                harvest = Game.getObjectById(this.memory.harvestId) as AnyStoreStructure;
-            } else {
-                harvest = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
-                    filter: (structure) => {
-                        return (structure.structureType === STRUCTURE_CONTAINER ||
-                                structure.structureType == STRUCTURE_STORAGE) &&
-                            (structure as AnyStoreStructure).store[RESOURCE_ENERGY] > 0;
-                    }
-                }) as AnyStoreStructure | undefined;
-
-                this.memory.harvestId = harvest?.id;
+        const controller = this.creep.room.controller
+        if (controller) {
+            if (this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+                this.moveTo(controller);
             }
+            controller.room.setRoomState(controller);
+        }
 
-            if (harvest) {
-                let state = this.creep.withdraw(harvest, RESOURCE_ENERGY);
-                switch (state) {
-                    case ERR_NOT_IN_RANGE:
-                        this.moveTo(harvest);
-                        return true;
-                }
-            }
+        return true;
+    }
 
-        } else {
-            this.memory.harvestId = undefined;
-            const controller = this.creep.room.controller
-            if (controller) {
-                if (this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-                    this.moveTo(controller);
-                }
-                controller.room.setRoomState(controller);
+    protected override doHarvest(resource: ResourceConstant): void {
+
+        if (this.harvestRoomContainer(resource)) {
+            return;
+        }
+
+        if (this.harvestRoomDrop(resource)) {
+            return;
+        }
+
+        if (this.harvestRoomTombstone(resource)) {
+            return;
+        }
+
+        if (this.creep.room.controller?.my) {
+            if (this.harvestRoomStorage(resource)) {
+                return;
             }
         }
-        return true;
+
+        if (resource == RESOURCE_ENERGY) {
+            this.harvestEnergySource()
+        }
     }
 
     public createSpawnMemory(spawn: StructureSpawn, workroom: string): UpgraderCreepMemory {
@@ -94,13 +87,19 @@ export class UpgraderAnt extends Ant<UpgraderCreepMemory> {
     public override getMaxCreeps(workroom: Room): number {
         let max = roomConfig[workroom.name].upgraderCount || 0;
 
-        if (workroom.memory.state < eRoomState.phase8 && workroom.memory.state > eRoomState.phase4 && workroom.storage) {
+        if (workroom.storage) {
+            if (workroom.memory.state < eRoomState.phase8 && workroom.memory.state > eRoomState.phase4) {
 
-            if (workroom.storage.store[RESOURCE_ENERGY] > 5000) {
-                max++;
+                if (workroom.storage.store[RESOURCE_ENERGY] > 5000) {
+                    max++;
+                }
+                if (workroom.storage.store[RESOURCE_ENERGY] > 7500) {
+                    max++;
+                }
             }
-            if (workroom.storage.store[RESOURCE_ENERGY] > 7500) {
-                max++;
+
+            if (workroom.storage.store[RESOURCE_ENERGY] < 10000) {
+                max = 1;
             }
         }
 
@@ -111,7 +110,7 @@ export class UpgraderAnt extends Ant<UpgraderCreepMemory> {
 
         let creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
-            creep.memory.workroom == workroom.name);
+            creep.memory.homeRoom == workroom.name);
 
         return roomConfig[workroom.name].upgraderCount > creeps.length;
     }

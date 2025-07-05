@@ -1,4 +1,5 @@
 import {loadExtensions} from "./extensions/loader";
+import {conditionalLog} from "./extensions/GlobalExtensions";
 import {ErrorMapper} from "utils/ErrorMapper";
 import {SpawnManager} from "./manager/SpawnManager";
 import {JobsManager} from "./manager/JobsManager";
@@ -11,13 +12,18 @@ loadExtensions();
 
 let exportDone = false;
 export const loop = ErrorMapper.wrapLoop(() => {
-    //console.log("--Loop--");
-    /*
-        if (!exportDone) {
-            LayoutExporter.exportRoomToConsole("W5N8")
-            exportDone = true;
-        }
-     */
+
+
+    /* for (let creep in Game.creeps) {
+         Game.creeps[creep].suicide();
+     }
+     //console.log("--Loop--");
+     /*
+         if (!exportDone) {
+             LayoutExporter.exportRoomToConsole("W5N8")
+             exportDone = true;
+         }
+      */
 
     // CPU History am Tick-Start updaten
     CPUManager.updateHistory();

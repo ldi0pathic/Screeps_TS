@@ -1,4 +1,6 @@
-﻿export class LayoutBuilder {
+﻿import {conditionalLog} from "../extensions/GlobalExtensions";
+
+export class LayoutBuilder {
     private layout: MinRoomLayout;
     private readonly roomName: string;
     private readonly maxConstructionSites = 25;
@@ -187,7 +189,7 @@
         const terrain = new Room.Terrain(this.roomName);
         const terrainType = terrain.get(x, y);
 
-        if ((terrainType & TERRAIN_MASK_WALL) && structureType !== STRUCTURE_ROAD) {
+        if ((terrainType & TERRAIN_MASK_WALL) && structureType !== STRUCTURE_ROAD && structureType !== STRUCTURE_EXTRACTOR) {
             return false;
         }
 

@@ -1,7 +1,7 @@
-﻿import {Ant} from "./base/Ant";
-import {Movement} from "../utils/Movement";
-import {EnergieSourceData} from "../records/EnergieSourceData";
-import {MineralSourceData} from "../records/MineralSourceData";
+﻿import {Ant} from "../base/Ant";
+import {Movement} from "../../utils/Movement";
+import {EnergieSourceData} from "../../records/EnergieSourceData";
+import {MineralSourceData} from "../../records/MineralSourceData";
 
 
 export class ScoutAnt extends Ant<ScoutCreepMemory> {
@@ -72,7 +72,7 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
     }
 
     private assignNextTarget(): void {
-        const workroom = Game.rooms[this.memory.workroom];
+        const workroom = Game.rooms[this.memory.homeRoom];
         if (!workroom) return;
 
         const roomState = Memory.rooms[workroom.name]?.state;

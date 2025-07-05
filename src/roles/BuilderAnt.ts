@@ -102,7 +102,7 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
     protected shouldSpawn(workroom: Room): boolean {
         const creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
-            creep.memory.workroom == workroom.name
+            creep.memory.homeRoom == workroom.name
         );
 
         if (creeps.length >= this.getMaxCreeps(workroom)) {

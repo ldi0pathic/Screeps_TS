@@ -7,6 +7,8 @@ export {};
 
 
 declare global {
+    function conditionalLog(condition: boolean | (() => boolean), message: string): void;
+
     const enum eJobType {
         miner = 'Miner',
         worker = 'Worker',
@@ -16,7 +18,9 @@ declare global {
         scout = 'Scout',
         wallBuilder = 'WallBuilder',
         filler = 'Filler',
+        remoteHarvester = 'RemoteHarvester',
     }
+
 
     const enum eRoomState {
         neutral,
@@ -112,7 +116,7 @@ declare global {
         job: eJobType;
         state: eJobState;
         spawn: string;
-        workroom: string;
+        homeRoom: string;
         roundRobin: number;
         roundRobinOffset?: number;
         moving: boolean;
@@ -159,8 +163,13 @@ declare global {
         harvestFromLink: boolean;
     }
 
-    interface UpgraderCreepMemory extends CreepMemory {
-        harvestId: Id<AnyStoreStructure> | undefined;
+    interface UpgraderCreepMemory extends HarvesterCreepMemory {
+    }
+
+    interface RemoteHarvesterMemory extends CreepMemory {
+        energySourceId: Id<Source> | undefined;
+        targetId?: Id<AnyStoreStructure>;
+        remoteRoom: string;
     }
 
     interface ScoutCreepMemory extends CreepMemory {
