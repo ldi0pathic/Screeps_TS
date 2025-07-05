@@ -218,7 +218,8 @@ export class SpawnManager {
 
             //2, da Miner und Transporter existieren sollen
             const creeps = _.filter(Game.creeps, c => c.memory.workroom === roomName);
-            if (creeps.length <= 2) {
+            let max = room.memory.state >= eRoomState.phase5 ? 4 : 2;
+            if (creeps.length <= max) {
                 this.queueCreep(eJobType.worker, room, [WORK, CARRY, MOVE], 999);
                 return true;
             }

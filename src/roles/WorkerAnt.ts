@@ -16,8 +16,15 @@ export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
                 s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
         });
 
-        if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            this.moveTo(target);
+        if (target) {
+            let state = this.creep.transfer(target, RESOURCE_ENERGY);
+            switch (state) {
+                case ERR_NOT_IN_RANGE: {
+                    this.moveTo(target);
+                    return true;
+                }
+            }
+
         }
 
         if (!target) {
@@ -30,8 +37,14 @@ export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
                 if (this.creep.build(todo) === ERR_NOT_IN_RANGE) {
                     this.moveTo(todo);
                 }
+                return true;
+            } else {
+                const controller = this.creep.room.controller;
+                if (controller && this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+                    this.moveTo(controller);
+                    return true;
+                }
             }
-
         }
 
         return true

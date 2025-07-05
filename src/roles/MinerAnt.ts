@@ -79,8 +79,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             }
 
             if (energyStore >= this.creep.store.getCapacity(RESOURCE_ENERGY)) {
-
-                if (link && targetLinkIds && link.cooldown < 1) {
+                if (link && (targetLinkIds && targetLinkIds.length > 0) && link.cooldown < 1) {
                     let state = this.creep.transfer(link, RESOURCE_ENERGY)
                     switch (state) {
                         case ERR_FULL: {
