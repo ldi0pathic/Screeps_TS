@@ -100,6 +100,11 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
     }
 
     protected shouldSpawn(workroom: string): boolean {
+
+        if (roomConfig[workroom].spawnRoom != undefined) {
+            return false;
+        }
+
         const creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
             creep.memory.workRoom == workroom
@@ -114,7 +119,10 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
             return false;
         }
 
-        const todos = room.find(FIND_CONSTRUCTION_SITES);
+        const todos = room.find(FIND_CONSTRUCTION_SITES, {
+            filter: s => s.structureType != STRUCTURE_RAMPART
+        });
+        
         return todos.length > 0;
     }
 }

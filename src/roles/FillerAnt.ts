@@ -1,5 +1,6 @@
 ﻿import {Ant} from "./base/Ant";
 import {Movement} from "../utils/Movement";
+import {roomConfig} from "../config";
 
 export class FillerAnt extends Ant<FillerCreepMemory> {
     doJob(): boolean {
@@ -187,6 +188,10 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
     }
 
     protected shouldSpawn(workroom: string): boolean {
+
+        if (roomConfig[workroom].spawnRoom != undefined) {
+            return false;
+        }
 
         const room = Game.rooms[workroom];
 

@@ -7,6 +7,7 @@ import {CleanUpManager} from "./manager/CleanUpManager";
 import {CPUManager} from "./manager/CPUManager";
 import {LayoutManager} from "./manager/LayoutManager";
 import {TowerManager} from "./manager/TowerManager";
+import {LayoutExporter} from "./utils/LayoutExporter";
 
 loadExtensions();
 
@@ -16,14 +17,14 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
     /* for (let creep in Game.creeps) {
          Game.creeps[creep].suicide();
-     }
-     //console.log("--Loop--");
-     /*
-         if (!exportDone) {
-             LayoutExporter.exportRoomToConsole("W5N8")
-             exportDone = true;
-         }
-      */
+     }*/
+    //console.log("--Loop--");
+
+    /*if (!exportDone) {
+        LayoutExporter.exportRoomToConsole("W5N8")
+        exportDone = true;
+    }*/
+
 
     // CPU History am Tick-Start updaten
     CPUManager.updateHistory();
@@ -60,7 +61,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     LayoutManager.run();
-    
+
 
     // CPU für nächsten Tick speichern
     Memory.lastTickCpu = Game.cpu.getUsed();

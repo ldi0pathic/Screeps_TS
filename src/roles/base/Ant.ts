@@ -64,7 +64,9 @@ export abstract class Ant<TMemory extends CreepMemory> {
             state: eJobState.harvest,
             spawn: spawn.name,
             workRoom: workroom,
+            spawnRoom: spawn.room.name,
             roundRobin: 1,
+            roundRobinOffset: 0,
             moving: false,
         } as CreepMemory;
     }

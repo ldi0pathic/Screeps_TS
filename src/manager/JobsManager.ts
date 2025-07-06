@@ -19,8 +19,7 @@ export class JobsManager {
         switch (jobType) {
             case eJobType.miner:
                 return room.energyAvailable < 300
-                    ? 30
-                    : 15;
+                    ? 30 : 15;
             case eJobType.upgrader:
                 return room.controller != null
                     ? room.controller.ticksToDowngrade < 5000
@@ -39,14 +38,16 @@ export class JobsManager {
     static getJobOffset(creep: Creep, jobType: eJobType): number {
         if (!Memory.jobOffsets) Memory.jobOffsets = {};
         const key = `${creep.name}_${jobType}`;
+        const max = creep.memory.roundRobin || 1;
 
         if (!Memory.jobOffsets[key]) {
             let hash = 0;
             for (let i = 0; i < key.length; i += 2) {
                 hash = (hash << 5) + key.charCodeAt(i);
             }
-
-            Memory.jobOffsets[key] = Math.abs(hash) % 10;
+            
+            const seed = Math.abs(hash);
+            Memory.jobOffsets[key] = (seed % max) + 1;
         }
 
         return Memory.jobOffsets[key];
@@ -54,18 +55,11 @@ export class JobsManager {
 
 
     static assignRoundRobin(creep: Creep, room: Room): void {
-        const priority = this.getDynamicPriority(creep.memory.job, room);
 
-
-        if (priority >= 25) {
-            creep.memory.roundRobin = 1;
-        } else if (priority >= 15) {
-            creep.memory.roundRobin = 2;
-        } else if (priority >= 10) {
-            creep.memory.roundRobin = 3;
-        } else {
-            creep.memory.roundRobin = 5;
+        if (creep.memory.job == eJobType.miner) {
+            creep.memory.roundRobin = room.getOrFindEnergieSource().length || 0;
         }
+
         if (creep.memory.roundRobinOffset === undefined) {
             creep.memory.roundRobinOffset = this.getJobOffset(creep, creep.memory.job);
         }

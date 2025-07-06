@@ -109,7 +109,9 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
     }
 
     protected shouldSpawn(workroom: string): boolean {
-
+        if (roomConfig[workroom].spawnRoom != undefined) {
+            return false;
+        }
         let creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
             creep.memory.workRoom == workroom);

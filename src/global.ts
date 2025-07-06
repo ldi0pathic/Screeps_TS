@@ -153,6 +153,10 @@ declare global {
         harvestTombstoneId?: Id<Tombstone>;
     }
 
+    interface WorkerCreepMemory extends HarvesterCreepMemory {
+        harvestLinkId?: Id<StructureLink>;
+    }
+
     interface TransporterCreepMemory extends HarvesterCreepMemory {
         targetId?: Id<AnyStoreStructure>;
     }
@@ -169,6 +173,8 @@ declare global {
 
     interface RemoteHarvesterMemory extends CreepMemory {
         energySourceId: Id<Source> | undefined;
+        harvestDroppedId?: Id<Resource>;
+        harvestTombstoneId?: Id<Tombstone>;
         targetId?: Id<AnyStoreStructure>;
     }
 

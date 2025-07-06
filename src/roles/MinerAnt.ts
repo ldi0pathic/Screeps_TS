@@ -9,7 +9,10 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             if (!this.goToFinalPos()) {
                 return true;
             }
+            this.creep.say('🚌')
+            return true;
         }
+
         let container: StructureContainer | undefined;
         let constructionSite: ConstructionSite | undefined;
         let link: StructureLink | undefined;
@@ -28,6 +31,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         if (this.creep.room.memory.state >= eRoomState.phase5) {
             if (this.memory.linkId) {
+
                 link = Game.getObjectById(this.memory.linkId) as StructureLink | undefined;
                 targetLinkIds = this.creep.room.getOrFindTargetLinks();
             } else {
@@ -42,9 +46,11 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             container = Game.getObjectById(this.memory.containerId) as StructureContainer | undefined;
         } else if (this.memory.containerConstructionId) {
             constructionSite = Game.getObjectById(this.memory.containerConstructionId) as ConstructionSite | undefined;
+
         }
 
         if (!container && !constructionSite && source) {
+
             let container = source.pos.findInRange(FIND_STRUCTURES, 1, {
                 filter: {structureType: STRUCTURE_CONTAINER}
             })[0] as StructureContainer | undefined;
@@ -63,7 +69,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                 }
             }
         }
-
         const energyStore = this.creep.store[RESOURCE_ENERGY];
         if (energyStore > 0) {
             if (constructionSite) {
@@ -79,8 +84,11 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             }
 
             if (energyStore >= this.creep.store.getCapacity(RESOURCE_ENERGY)) {
+
                 if (link && (targetLinkIds && targetLinkIds.length > 0) && link.cooldown < 1) {
+
                     let state = this.creep.transfer(link, RESOURCE_ENERGY)
+
                     switch (state) {
                         case ERR_FULL: {
                             let target: StructureLink | undefined = undefined;
@@ -99,6 +107,11 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                             if (target) {
                                 link.transferEnergy(target)
                             }
+                            break;
+                        }
+                        case ERR_NOT_IN_RANGE: {
+                            this.memory.linkId = undefined;
+                            break;
                         }
                     }
                     return true;

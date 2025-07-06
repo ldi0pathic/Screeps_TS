@@ -1,8 +1,7 @@
 ﻿import {roomConfig} from "../config";
-import {Movement} from "../utils/Movement";
 import {HarvesterAnt} from "./base/HarvesterAnt";
 
-export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
+export class WorkerAnt extends HarvesterAnt<WorkerCreepMemory> {
 
     doJob(): boolean {
 
@@ -50,9 +49,40 @@ export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
         return true
     }
 
-    public createSpawnMemory(spawn: StructureSpawn, workroom: string): HarvesterCreepMemory {
-        return super.createSpawnMemory(spawn, workroom);
+    protected override doHarvest(resource: ResourceConstant): void {
+        if (this.harvestRoomDrop(resource)) {
+            return;
+        }
 
+        if (this.harvestRoomTombstone(resource)) {
+            return;
+        }
+
+        if (this.creep.room.controller?.my) {
+            if (this.harvestRoomStorage(resource)) {
+                return;
+            }
+        }
+
+        if (this.harvestRoomContainer(resource)) {
+            return;
+        }
+
+        if (this.harvestLinks(resource)) {
+            return;
+        }
+
+        if (resource == RESOURCE_ENERGY) {
+            this.harvestEnergySource()
+        }
+    }
+
+    public createSpawnMemory(spawn: StructureSpawn, workroom: string): WorkerCreepMemory {
+        const base = super.createSpawnMemory(spawn, workroom);
+
+        return {
+            ...base
+        } as WorkerCreepMemory;
     }
 
     public override getProfil(workroom: Room): BodyPartConstant[] {
@@ -68,8 +98,54 @@ export class WorkerAnt extends HarvesterAnt<HarvesterCreepMemory> {
     }
 
     protected shouldSpawn(workroom: string): boolean {
+        if (roomConfig[workroom].spawnRoom != undefined) {
+            return false;
+        }
         return Memory.rooms[workroom].state <= eRoomState.phase1;
 
     }
 
+    override hasHarvestTarget(): boolean {
+        return !!(
+            this.memory.harvestContainerId ||
+            this.memory.harvestStorageId ||
+            this.memory.havestSourceId ||
+            this.memory.havestLinkId ||
+            this.memory.harvestDroppedId ||
+            this.memory.harvestLinkId
+        );
+    }
+
+    private harvestLinks(resource: ResourceConstant) {
+        let link: StructureLink | undefined;
+
+        if (this.memory.harvestLinkId) {
+            link = Game.getObjectById(this.memory.harvestLinkId) as StructureLink | undefined;
+        } else if (!this.hasHarvestTarget()) {
+            link = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                filter: s => s.structureType == STRUCTURE_LINK && s.store[resource] > 0
+            }) as StructureLink | undefined;
+        }
+
+        if (!link) {
+            this.memory.harvestLinkId = undefined;
+            return false;
+        }
+
+        if (link.store[resource] > 0) {
+            this.memory.harvestLinkId = link.id;
+
+            let state = this.creep.withdraw(link, resource);
+            switch (state) {
+                case ERR_NOT_IN_RANGE:
+                    this.moveTo(link);
+                    return true;
+                case OK:
+                    this.memory.harvestLinkId = undefined;
+                    return true;
+            }
+        }
+        this.memory.harvestLinkId = undefined;
+        return false;
+    }
 }

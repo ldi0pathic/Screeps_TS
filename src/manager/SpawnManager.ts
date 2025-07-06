@@ -72,6 +72,7 @@ export class SpawnManager {
             } else {
                 spawnRoom = Game.rooms[name];
             }
+
             if (!spawnRoom) continue;
 
             for (let jobName in Jobs.jobs) {
@@ -86,7 +87,6 @@ export class SpawnManager {
             }
         }
     }
-
 
     public static processSpawns() {
         this.cleanupQueue();
@@ -104,55 +104,51 @@ export class SpawnManager {
 
         if (availableSpawns.length === 0) return;
 
-        const scoreMatrix: number[][] = [];
         const validCombinations: { spawnIdx: number, reqIdx: number, score: number }[] = [];
 
         for (let spawnIdx = 0; spawnIdx < availableSpawns.length; spawnIdx++) {
             const spawn = availableSpawns[spawnIdx];
-            scoreMatrix[spawnIdx] = [];
+            let hasPrio = false;
 
             for (let reqIdx = 0; reqIdx < this.queue.length; reqIdx++) {
-                const req = this.queue[reqIdx];
 
-                if (req.spawnRoom != spawn.room.name) {
+                const req = this.queue[reqIdx];
+                if (req.spawnRoom !== spawn.room.name) continue;
+
+                if (hasPrio) {
                     continue;
+                }
+
+                if (req.priority > 900) {
+                    hasPrio = true;
                 }
 
                 const cost = _.sum(req.bodyParts, part => BODYPART_COST[part]);
 
                 if (spawn.room.energyAvailable < cost) {
-                    scoreMatrix[spawnIdx][reqIdx] = Infinity;
                     if (req.priority > 900) {
-                        console.log('🚩 Spawn PrioBlock')
+                        console.log(`🚩 Spawn PrioBlock für ${req.jobKey} kosten: ${spawn.room.energyAvailable}/${cost}`)
                         spawn.room.memory.spawnPrioBlock = true;
-                        this.cleanupQueue();
                     }
-                    break;
+                    continue;
                 }
 
                 spawn.room.memory.spawnPrioBlock = false;
 
-                const score = req.priority
-
-                scoreMatrix[spawnIdx][reqIdx] = score;
-
                 validCombinations.push({
                     spawnIdx,
                     reqIdx,
-                    score
+                    score: req.priority
                 });
             }
         }
-
-        validCombinations.sort((a, b) => a.score - b.score);
 
         const usedSpawns = new Set<number>();
         const usedRequests = new Set<number>();
         let spawnedCount = 0;
 
         for (const combo of validCombinations) {
-            if (usedSpawns.has(combo.spawnIdx) || usedRequests.has(combo.reqIdx) ||
-                combo.score === Infinity) {
+            if (usedSpawns.has(combo.spawnIdx) || usedRequests.has(combo.reqIdx)) {
                 continue;
             }
 
@@ -204,7 +200,6 @@ export class SpawnManager {
             }
         }
 
-
         return Jobs.jobs[jobType].spawnPrio;
     }
 
@@ -221,7 +216,7 @@ export class SpawnManager {
             let max = room.memory.state >= eRoomState.phase5 ? 4 : 2;
 
             if (creeps.length < max) {
-                this.queueCreep(eJobType.worker, room, room.name, [WORK, CARRY, MOVE], 999);
+                this.queueCreep(eJobType.worker, room, room.name, [WORK, CARRY, CARRY, MOVE, MOVE], 999);
                 return true;
             }
         }

@@ -164,7 +164,7 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
                 }
             }
 
-            if (room.storage.store[RESOURCE_ENERGY] < 10000) {
+            if (room.storage.store[RESOURCE_ENERGY] < 1000) {
                 max = 0;
             }
         }
@@ -173,6 +173,9 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
     }
 
     protected shouldSpawn(workroom: string): boolean {
+        if (roomConfig[workroom].spawnRoom != undefined) {
+            return false;
+        }
         const room = Game.rooms[workroom];
         if (!room) {
             return false;

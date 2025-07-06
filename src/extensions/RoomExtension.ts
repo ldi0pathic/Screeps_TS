@@ -45,13 +45,19 @@ export function extendRoom() {
 
         const usableSpawns = Math.min(actualSpawns.length, maxSpawns);
         const usableExtensions = Math.min(actualExtensions.length, maxExtensions);
+        let total = (usableSpawns * 300) + (usableExtensions * 50);
 
         if (room.memory.spawnPrioBlock) {
-            return (usableSpawns * 150) + (usableExtensions * 25)
+            if (controllerLevel > 4 && controllerLevel < 6) {
+                return total / 2
+            }
+            if (controllerLevel > 5) {
+                return total / 3
+            }
         }
 
         // Berechne verfügbare Energie
-        return (usableSpawns * 300) + (usableExtensions * 50);
+        return total
     }
 
     Room.prototype.findAllContainersNearSpawns = function (): StructureContainer[] {

@@ -24,16 +24,25 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
             return true;
         } else if (this.creep.memory.workRoom) {
             let room = Game.rooms[this.creep.memory.workRoom];
-            if (room.memory.spawnPrioBlock) {
+            if (room && room.memory.spawnPrioBlock) {
                 this.creep.say('🚩🚩🚩')
-                const target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                const target = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
                     filter: s => (s.structureType === STRUCTURE_SPAWN ||
                             s.structureType === STRUCTURE_EXTENSION) &&
                         s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
                 });
 
-                if (target && this.creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    this.moveTo(target);
+                if (target) {
+                    let state = this.creep.transfer(target, RESOURCE_ENERGY);
+                    switch (state) {
+                        case ERR_NOT_IN_RANGE:
+                            this.moveTo(target);
+                            return true;
+                        case ERR_FULL:
+                            return true;
+
+                    }
+
                 }
                 return true;
             }
@@ -48,6 +57,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
             this.memory.harvestStorageId ||
             this.memory.havestSourceId ||
             this.memory.havestLinkId ||
+            this.memory.harvestTombstoneId ||
             this.memory.harvestDroppedId
         );
     }
@@ -130,7 +140,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         let state = this.creep.withdraw(container, resourceType);
         switch (state) {
             case ERR_NOT_IN_RANGE:
-                if (container.store?.getUsedCapacity(resourceType) > this.creep.store.getCapacity() * 0.5) {
+                if (container.store[resourceType] > this.creep.store.getCapacity() * 0.5) {
                     this.moveTo(container);
                     return true;
                 } else {

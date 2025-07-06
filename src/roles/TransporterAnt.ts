@@ -1,6 +1,7 @@
 ﻿import _ from "lodash";
 
 import {HarvesterAnt} from "./base/HarvesterAnt";
+import {roomConfig} from "../config";
 
 
 export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
@@ -196,7 +197,9 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
     }
 
     protected shouldSpawn(workroom: string): boolean {
-
+        if (roomConfig[workroom].spawnRoom != undefined) {
+            return false;
+        }
         return Memory.rooms[workroom].state > eRoomState.phase1;
 
     }

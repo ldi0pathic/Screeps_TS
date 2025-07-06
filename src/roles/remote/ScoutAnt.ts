@@ -2,6 +2,7 @@
 import {Movement} from "../../utils/Movement";
 import {EnergieSourceData} from "../../records/EnergieSourceData";
 import {MineralSourceData} from "../../records/MineralSourceData";
+import {roomConfig} from "../../config";
 
 
 export class ScoutAnt extends Ant<ScoutCreepMemory> {
@@ -48,6 +49,10 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
     }
 
     protected shouldSpawn(workroom: string): boolean {
+
+        if (roomConfig[workroom].spawnRoom != undefined) {
+            return false;
+        }
 
         const roomState = Memory.rooms[workroom]?.state;
         const scoutState = Memory.rooms[workroom]?.scoutState;
