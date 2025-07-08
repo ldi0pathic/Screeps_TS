@@ -157,7 +157,11 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
         if (!roomConfig[workroom].sendRemoteMiner) {
             return 0;
         }
-        return Memory.rooms[workroom].energySources.length || 0
+        let max = Memory.rooms[workroom].energySources.length || 0;
+        if (max > 0) {
+            max *= roomConfig[workroom].remoteMinerPerSource
+        }
+        return max;
     }
 
     getProfil(spawnRoom: Room): BodyPartConstant[] {
@@ -170,7 +174,7 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
         const setCost = BODYPART_COST[WORK] + BODYPART_COST[CARRY] + 2 * BODYPART_COST[MOVE];
 
         const maxSets = Math.floor((availableEnergy) / setCost);
-        const numberOfSets = Math.min(6, maxSets);
+        const numberOfSets = Math.min(12, maxSets);
 
         const body: BodyPartConstant[] = [];
         for (let i = 0; i < numberOfSets; i++) {
@@ -185,9 +189,15 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
 
     protected shouldSpawn(workroom: string): boolean {
 
-        if (!roomConfig[workroom].sendRemoteMiner) {
+        if (!roomConfig[workroom].sendRemoteMiner || roomConfig[workroom].remoteMinerPerSource == 0) {
             return false;
         }
+
+        if (Memory.rooms[workroom].needDefence ||
+            Memory.rooms[workroom].invaderCore) {
+            return false;
+        }
+
 
         let room = Game.rooms[workroom];
         let max = 0;
@@ -196,6 +206,11 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
         } else {
             max = Memory.rooms[workroom].energySources.length
         }
+
+        if (max > 0) {
+            max *= roomConfig[workroom].remoteMinerPerSource
+        }
+
         let creeps = _.filter(Game.creeps, creep =>
             creep.memory.job == this.getJob() &&
             creep.memory.workRoom == workroom);

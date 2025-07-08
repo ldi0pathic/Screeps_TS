@@ -19,8 +19,8 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
 
         if (!target) {
 
-            //Wenn storage keine Energie hat, Filler unterstützen
-            if (this.creep.room.storage && this.creep.room.storage.store[RESOURCE_ENERGY] < 10000) {
+            if (this.creep.room.memory.spawnPrioBlock || //Wenn Prioblock
+                (this.creep.room.storage && this.creep.room.storage.store[RESOURCE_ENERGY] < 3000)) { //oder wenn Storage keine Energie hat, Filler unterstützen
                 target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: s => (s.structureType === STRUCTURE_SPAWN ||
                             s.structureType === STRUCTURE_EXTENSION) &&
@@ -165,7 +165,7 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
         const setCost = BODYPART_COST[CARRY] + BODYPART_COST[MOVE];
 
         const maxSets = Math.floor(availableEnergy / setCost);
-        const numberOfSets = Math.min(13, maxSets);
+        const numberOfSets = Math.min(25, maxSets);
 
         const body: BodyPartConstant[] = [];
         for (let i = 0; i < numberOfSets; i++) {

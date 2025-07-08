@@ -156,15 +156,15 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
         if (room && room.storage) {
             if (room.memory.state < eRoomState.phase8 && room.memory.state > eRoomState.phase4) {
 
-                if (room.storage.store[RESOURCE_ENERGY] > 5000) {
+                if (room.storage.store[RESOURCE_ENERGY] > 500_000) {
                     max++;
                 }
-                if (room.storage.store[RESOURCE_ENERGY] > 7500) {
+                if (room.storage.store[RESOURCE_ENERGY] > 750_000) {
                     max++;
                 }
             }
 
-            if (room.storage.store[RESOURCE_ENERGY] < 1000) {
+            if (room.storage.store[RESOURCE_ENERGY] < 1_000) {
                 max = 0;
             }
         }

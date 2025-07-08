@@ -111,6 +111,10 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
                 case OK:
                     this.memory.harvestStorageId = undefined;
                     return true;
+                default: {
+                    console.log("🚩 harvestRoomStorage unhandled state: " + state + " for creep: " + this.creep.name + " in room: " + this.creep.room.name + "")
+                    return false;
+                }
             }
         }
         this.memory.harvestStorageId = undefined;
@@ -151,6 +155,10 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
             case OK:
                 this.memory.harvestContainerId = undefined;
                 return true;
+            default: {
+                console.log("🚩 harvestRoomContainer unhandled state: " + state + " for creep: " + this.creep.name + " in room: " + this.creep.room.name + "")
+                return false;
+            }
         }
 
 
@@ -165,7 +173,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         } else if (!this.hasHarvestTarget()) {
             drop = this.creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
                 filter: (resource) => {
-                    return resource.resourceType == resourceType && resource.amount > 100;
+                    return resource.resourceType == resourceType && resource.amount > 50;
                 }
             }) as Resource | undefined;
         }
@@ -181,7 +189,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
             let state = this.creep.pickup(drop);
             switch (state) {
                 case ERR_NOT_IN_RANGE:
-                    if (drop.amount > 100) {
+                    if (drop.amount > 50) {
                         this.moveTo(drop);
                         return true;
                     }
@@ -190,6 +198,10 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
                 case OK:
                     this.memory.harvestDroppedId = undefined;
                     return true;
+                default: {
+                    console.log("🚩 harvestRoomDrop unhandled state: " + state + " for creep: " + this.creep.name + " in room: " + this.creep.room.name + "")
+                    return false;
+                }
             }
         }
 
@@ -204,7 +216,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         } else if (!this.hasHarvestTarget()) {
             tombstone = this.creep.pos.findClosestByPath(FIND_TOMBSTONES, {
                 filter: (tombstone) => {
-                    return tombstone.store.getUsedCapacity(resourceType) > 100;
+                    return tombstone.store.getUsedCapacity(resourceType) > 50;
                 }
             }) as Tombstone | undefined;
 
@@ -219,7 +231,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         let state = this.creep.withdraw(tombstone, resourceType);
         switch (state) {
             case ERR_NOT_IN_RANGE:
-                if (tombstone.store.getUsedCapacity(resourceType) > 100) {
+                if (tombstone.store.getUsedCapacity(resourceType) > 50) {
                     this.moveTo(tombstone);
                     return true;
                 }
@@ -227,8 +239,14 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
                 break;
 
             case OK:
+            case ERR_NOT_ENOUGH_ENERGY:
                 this.memory.harvestTombstoneId = undefined;
                 return true;
+
+            default: {
+                console.warn("🚩 harvestRoomTombstone unhandled state: " + state + " for creep: " + this.creep.name + " in room: " + this.creep.room.name + "")
+                return false;
+            }
         }
 
         return false;
@@ -245,7 +263,8 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         }
 
         if (source) {
-            switch (this.creep.harvest(source)) {
+            let state = this.creep.harvest(source)
+            switch (state) {
                 case ERR_TIRED:
                 case ERR_NOT_ENOUGH_ENERGY: {
                     this.creep.say('😴');
@@ -254,7 +273,11 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
                 case ERR_NOT_IN_RANGE:
                     this.moveTo(source);
                     return;
+                case OK:
+                    return;
+
                 default: {
+                    console.log("🚩 harvestEnergySource unhandled state: " + state + " for creep: " + this.creep.name + " in room: " + this.creep.room.name + "")
                     return;
                 }
             }

@@ -3,6 +3,7 @@
     upgraderCount: number;
     workerCount: number;
     wallbuilderCount: number;
+    remoteMinerPerSource: number;
     sendMiner: boolean;
     buildRoads: boolean;
     buildBase: boolean;
@@ -12,10 +13,11 @@
 
 export const roomConfig: { [roomName: string]: RoomConfig } = {
     "W5N8": {
-        builderCount: 2,
+        builderCount: 1,
         upgraderCount: 1,
         workerCount: 1,
         wallbuilderCount: 1,
+        remoteMinerPerSource: 1,
         sendMiner: true,
         buildRoads: true,
         buildBase: true,
@@ -26,6 +28,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         upgraderCount: 0,
         workerCount: 0,
         wallbuilderCount: 0,
+        remoteMinerPerSource: 2,
         sendMiner: false,
         buildRoads: false,
         buildBase: false,
@@ -37,6 +40,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         upgraderCount: 0,
         workerCount: 0,
         wallbuilderCount: 0,
+        remoteMinerPerSource: 1.5,
         sendMiner: false,
         buildRoads: false,
         buildBase: false,
@@ -48,6 +52,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         upgraderCount: 0,
         workerCount: 0,
         wallbuilderCount: 0,
+        remoteMinerPerSource: 1,
         sendMiner: false,
         buildRoads: false,
         buildBase: false,
@@ -59,6 +64,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         upgraderCount: 0,
         workerCount: 0,
         wallbuilderCount: 0,
+        remoteMinerPerSource: 2,
         sendMiner: false,
         buildRoads: false,
         buildBase: false,

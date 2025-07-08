@@ -8,6 +8,8 @@ import {CPUManager} from "./manager/CPUManager";
 import {LayoutManager} from "./manager/LayoutManager";
 import {TowerManager} from "./manager/TowerManager";
 import {LayoutExporter} from "./utils/LayoutExporter";
+import {roomConfig} from "./config";
+import {RoomManager} from "./manager/RoomManager";
 
 loadExtensions();
 
@@ -35,13 +37,14 @@ export const loop = ErrorMapper.wrapLoop(() => {
     JobsManager.doPrioJobs();
     JobsManager.doCriticalJobs();
     TowerManager.runTowers();
-
+   
     if (!CPUManager.shouldContinue('normal')) {
         CPUManager.getStatus();
         Memory.lastTickCpu = Game.cpu.getUsed();
         return;
     }
 
+    RoomManager.checkRooms();
     JobsManager.doJobs();
 
     if (!CPUManager.shouldContinue('low')) {

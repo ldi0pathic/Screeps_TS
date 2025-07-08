@@ -156,7 +156,7 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
         const setCost = BODYPART_COST[CARRY] + BODYPART_COST[MOVE];
 
         const maxSets = Math.floor(availableEnergy / setCost);
-        const numberOfSets = Math.min(13, maxSets);
+        const numberOfSets = Math.min(20, maxSets);
 
         const body: BodyPartConstant[] = [];
         for (let i = 0; i < numberOfSets; i++) {

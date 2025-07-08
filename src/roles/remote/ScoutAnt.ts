@@ -103,7 +103,9 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
             energySources: [],
             mineralSources: [],
             storage: undefined,
-            state: eRoomState.neutral
+            state: eRoomState.neutral,
+            invaderCore: false,
+            needDefence: false,
         };
 
         if (room.controller?.owner?.username == "Invader") {

@@ -85,7 +85,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
             if (energyStore >= this.creep.store.getCapacity(RESOURCE_ENERGY)) {
 
-                if (link && (targetLinkIds && targetLinkIds.length > 0) && link.cooldown < 1) {
+                if (link && (targetLinkIds && targetLinkIds.length > 0)) {
 
                     let state = this.creep.transfer(link, RESOURCE_ENERGY)
 
@@ -136,6 +136,15 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                 case ERR_TIRED:
                 case ERR_NOT_ENOUGH_ENERGY: {
                     this.creep.say('😴');
+
+                    if (container) {
+                        this.creep.withdraw(container, RESOURCE_ENERGY)
+                    }
+
+                    break;
+                }
+                case OK: {
+                    return true;
                 }
             }
         }

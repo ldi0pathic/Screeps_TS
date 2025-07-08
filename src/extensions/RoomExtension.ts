@@ -47,7 +47,7 @@ export function extendRoom() {
         const usableExtensions = Math.min(actualExtensions.length, maxExtensions);
         let total = (usableSpawns * 300) + (usableExtensions * 50);
 
-        if (room.memory.spawnPrioBlock) {
+        if (room.memory.spawnPrioBlock && ((room.storage && room.storage?.store[RESOURCE_ENERGY] < total) || !room.storage)) {
             if (controllerLevel > 4 && controllerLevel < 6) {
                 return total / 2
             }

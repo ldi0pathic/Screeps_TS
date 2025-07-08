@@ -244,6 +244,9 @@ declare global {
         spawnPrioBlock?: boolean;
         controllerContainerId?: Id<StructureContainer> | undefined;
         targetLinkIds?: Id<StructureLink>[];
+        invaderCoreEndTick?: number;
+        invaderCore: boolean;
+        needDefence: boolean;
     }
 
     interface Position {
