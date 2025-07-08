@@ -247,6 +247,8 @@ declare global {
         invaderCoreEndTick?: number;
         invaderCore: boolean;
         needDefence: boolean;
+        towers: Id<StructureTower>[];
+        repairTarget: Id<Structure> | undefined
     }
 
     interface Position {

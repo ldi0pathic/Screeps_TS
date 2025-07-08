@@ -1,6 +1,7 @@
 ﻿import {roomConfig} from "../config";
 import _ from "lodash";
 import {HarvesterAnt} from "./base/HarvesterAnt";
+import {CreepManager} from "../mngtest/CreepManager";
 
 
 export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
@@ -112,10 +113,10 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
         if (roomConfig[workroom].spawnRoom != undefined) {
             return false;
         }
-        let creeps = _.filter(Game.creeps, creep =>
-            creep.memory.job == this.getJob() &&
-            creep.memory.workRoom == workroom);
+        const job = this.getJob();
+        const creepManager = CreepManager.getInstance();
+        const countOfCreeps = creepManager.getCreepCountByJobAndRoom(job, workroom);
 
-        return roomConfig[workroom].upgraderCount > creeps.length;
+        return roomConfig[workroom].upgraderCount > countOfCreeps;
     }
 }

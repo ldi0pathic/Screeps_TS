@@ -26,7 +26,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
             let room = Game.rooms[this.creep.memory.workRoom];
             if (room && room.memory.spawnPrioBlock) {
                 this.creep.say('🚩🚩🚩')
-                const target = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                const target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: s => (s.structureType === STRUCTURE_SPAWN ||
                             s.structureType === STRUCTURE_EXTENSION) &&
                         s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
@@ -127,7 +127,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         if (this.memory.harvestContainerId) {
             container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
         } else if (!this.hasHarvestTarget()) {
-            container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+            container = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: (structure) => {
                     return structure.structureType === STRUCTURE_CONTAINER &&
                         (structure as StructureContainer).store[resourceType] > 0;
@@ -171,7 +171,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         if (this.memory.harvestDroppedId) {
             drop = Game.getObjectById(this.memory.harvestDroppedId) as Resource;
         } else if (!this.hasHarvestTarget()) {
-            drop = this.creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+            drop = this.creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {
                 filter: (resource) => {
                     return resource.resourceType == resourceType && resource.amount > 50;
                 }
@@ -214,7 +214,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         if (this.memory.harvestTombstoneId) {
             tombstone = Game.getObjectById(this.memory.harvestTombstoneId) as Tombstone;
         } else if (!this.hasHarvestTarget()) {
-            tombstone = this.creep.pos.findClosestByPath(FIND_TOMBSTONES, {
+            tombstone = this.creep.pos.findClosestByRange(FIND_TOMBSTONES, {
                 filter: (tombstone) => {
                     return tombstone.store.getUsedCapacity(resourceType) > 50;
                 }
@@ -259,7 +259,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         if (this.memory.havestSourceId) {
             source = Game.getObjectById(this.memory.havestSourceId) as Source;
         } else {
-            source = this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source | undefined;
+            source = this.creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE) as Source | undefined;
         }
 
         if (source) {

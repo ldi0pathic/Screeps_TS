@@ -1,6 +1,7 @@
 ﻿import {roomConfig} from "../config";
 import _ from "lodash";
 import {StationaryAnt} from "./base/StationaryAnt";
+import {CreepManager} from "../mngtest/CreepManager";
 
 export class MinerAnt extends StationaryAnt<MinerMemory> {
 
@@ -180,10 +181,9 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         const job = this.getJob();
         const sources = workroom.getOrFindEnergieSource();
-        const creeps = _.filter(Game.creeps, creep =>
-            creep.memory.job == job &&
-            creep.memory.workRoom == workroom.name
-        );
+
+        const creepManager = CreepManager.getInstance();
+        const creeps = creepManager.getCreepsByJobAndRoom(job, roomname);
 
         let sourceId: Id<Source> | undefined = undefined;
         let containerId: Id<StructureContainer> | undefined = undefined;
@@ -357,12 +357,11 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         } else {
             max = Memory.rooms[workroom].energySources.length
         }
+        const job = this.getJob();
+        const creepManager = CreepManager.getInstance();
+        const countOfCreeps = creepManager.getCreepCountByJobAndRoom(job, workroom);
 
-        let creeps = _.filter(Game.creeps, creep =>
-            creep.memory.job == this.getJob() &&
-            creep.memory.workRoom == workroom);
-
-        return max > creeps.length;
+        return max > countOfCreeps;
     }
 
 }

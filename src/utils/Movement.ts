@@ -16,6 +16,10 @@
             };
         }
 
+        if (!opts) {
+            opts = {reusePath: 10}
+        }
+
         return creep.moveTo(target, opts);
     }
 
@@ -36,7 +40,7 @@
             return ERR_NO_PATH;
         }
 
-        const exitPos = creep.pos.findClosestByPath(exit);
+        const exitPos = creep.pos.findClosestByRange(exit);
         if (!exitPos) {
             return ERR_NO_PATH;
         }
@@ -75,6 +79,6 @@
             creep.memory.targetPos.roomName
         );
 
-        return creep.moveTo(targetPos);
+        return creep.moveTo(targetPos, {reusePath: 10});
     }
 }

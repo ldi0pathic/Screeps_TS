@@ -1,6 +1,7 @@
 ﻿import {Ant} from "../base/Ant";
 import {Movement} from "../../utils/Movement";
 import {roomConfig} from "../../config";
+import {CreepManager} from "../../mngtest/CreepManager";
 
 
 export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
@@ -110,7 +111,7 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
 
                 if (!target) {
 
-                    target = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                         filter: structure => (structure.structureType === STRUCTURE_CONTAINER ||
                                 structure.structureType == STRUCTURE_STORAGE ||
                                 structure.structureType == STRUCTURE_LINK ||
@@ -211,11 +212,11 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
             max *= roomConfig[workroom].remoteMinerPerSource
         }
 
-        let creeps = _.filter(Game.creeps, creep =>
-            creep.memory.job == this.getJob() &&
-            creep.memory.workRoom == workroom);
+        const job = this.getJob();
+        const creepManager = CreepManager.getInstance();
+        const countOfAnts = creepManager.getCreepCountByJobAndRoom(job, workroom);
 
-        return max > creeps.length;
+        return max > countOfAnts;
     }
 
     protected harvestRoomDrop(resourceType: ResourceConstant): boolean {
@@ -224,7 +225,7 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
         if (this.memory.harvestDroppedId) {
             drop = Game.getObjectById(this.memory.harvestDroppedId) as Resource;
         } else if (!this.hasHarvestTarget()) {
-            drop = this.creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+            drop = this.creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {
                 filter: (resource) => {
                     return resource.resourceType == resourceType && resource.amount > 100;
                 }
@@ -263,7 +264,7 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
         if (this.memory.harvestTombstoneId) {
             tombstone = Game.getObjectById(this.memory.harvestTombstoneId) as Tombstone;
         } else if (!this.hasHarvestTarget()) {
-            tombstone = this.creep.pos.findClosestByPath(FIND_TOMBSTONES, {
+            tombstone = this.creep.pos.findClosestByRange(FIND_TOMBSTONES, {
                 filter: (tombstone) => {
                     return tombstone.store.getUsedCapacity(resourceType) > 100;
                 }

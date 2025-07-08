@@ -1,7 +1,9 @@
 ﻿import {roomConfig} from "../config";
 
 export class RoomManager {
+
     static checkRooms() {
+        if (Game.time % 10 !== 0) return;
         for (let name in roomConfig) {
             if ((Game.time + 10) > (Memory.rooms[name].invaderCoreEndTick || 0)) {
                 Memory.rooms[name].invaderCore = false;

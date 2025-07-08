@@ -1,4 +1,6 @@
-﻿export class CleanUpManager {
+﻿import {CreepManager} from "../mngtest/CreepManager";
+
+export class CleanUpManager {
 
     static addToCleanupQueue(creepName: string): void {
         if (!Memory.cleanupQueue) Memory.cleanupQueue = [];
@@ -27,12 +29,14 @@
     }
 
     public static cleanMemory(): void {
-
-        for (const name in Memory.creeps) {
-            if (!(name in Game.creeps)) {
-                delete Memory.creeps[name];
+        const creepManager = CreepManager.getInstance();
+        Object.keys(Memory.creeps).forEach(creepName => {
+            if (!Game.creeps[creepName]) {
+                const deadCreepMemory = Memory.creeps[creepName];
+                creepManager.onCreepDied(deadCreepMemory);
+                delete Memory.creeps[creepName];
             }
-        }
+        });
     }
 
     static cleanupJobMemory(): void {
@@ -58,12 +62,22 @@
         this.cleanMemory();
         this.processCleanupQueue();
         this.cleanupJobMemory();
+        this.cleanUpManagers()
     }
+
+    static cleanUpManagers(): void {
+        if (Game.time % 50 !== 0) {
+            return;
+        }
+        const manager = CreepManager.getInstance();
+        manager.cleanupCache();
+    }
+
 
     private static cleanCreep(creep: Creep): boolean {
         const resourceType = Object.keys(creep.store)[0] as ResourceConstant;
         if (creep.store[resourceType] > 0) {
-            const target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+            const target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: structure => {
                     return (structure.structureType === STRUCTURE_CONTAINER ||
                             structure.structureType === STRUCTURE_STORAGE) &&

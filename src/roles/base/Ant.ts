@@ -1,7 +1,6 @@
-﻿import _ from "lodash";
-import {SpawnManager} from "../../manager/SpawnManager";
+﻿import {SpawnManager} from "../../manager/SpawnManager";
 import {Movement} from "../../utils/Movement";
-import {conditionalLog} from "../../extensions/GlobalExtensions";
+import {CreepManager} from "../../mngtest/CreepManager";
 
 export abstract class Ant<TMemory extends CreepMemory> {
     protected creep: Creep;
@@ -36,10 +35,8 @@ export abstract class Ant<TMemory extends CreepMemory> {
         const max = this.getMaxCreeps(workroom);
         const job = this.getJob();
 
-        const countOfAnts = _.filter(Game.creeps, (c) =>
-            c.memory.job == job &&
-            c.memory.workRoom == workroom
-        ).length;
+        const creepManager = CreepManager.getInstance();
+        const countOfAnts = creepManager.getCreepCountByJobAndRoom(job, workroom);
 
         if (countOfAnts >= max) {
             return false;

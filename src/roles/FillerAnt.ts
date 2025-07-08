@@ -80,7 +80,7 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
                     container = containers[0];
                 } else {
                     container = this.creep.pos.findClosestByPath(containers, {
-                        filter: c => c.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+                        filter: c => c.store[RESOURCE_ENERGY] > 0
                     }) as StructureContainer | undefined;
                 }
             }

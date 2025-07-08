@@ -61,9 +61,9 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
                     );
 
                     if (halfEmptyContainers.length > 0) {
-                        target = this.creep.pos.findClosestByPath(halfEmptyContainers) as AnyStoreStructure;
+                        target = this.creep.pos.findClosestByRange(halfEmptyContainers) as AnyStoreStructure;
                     } else {
-                        target = this.creep.pos.findClosestByPath(allStructures) as AnyStoreStructure;
+                        target = this.creep.pos.findClosestByRange(allStructures) as AnyStoreStructure;
                     }
                 }
             }
@@ -123,7 +123,7 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
             if (this.memory.harvestContainerId) {
                 container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
             } else {
-                container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                container = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: (structure) => {
                         return structure.structureType === STRUCTURE_CONTAINER &&
                             (structure as StructureContainer).store[RESOURCE_ENERGY] > 0;

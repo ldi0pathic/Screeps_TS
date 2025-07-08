@@ -1,6 +1,7 @@
 ﻿import {roomConfig} from "../config";
 import {Ant} from "../roles/base/Ant";
 import {Jobs} from "../records/Jobs";
+import {CreepManager} from "../mngtest/CreepManager";
 
 export class SpawnManager {
 
@@ -99,6 +100,12 @@ export class SpawnManager {
             const spawn = Game.spawns[spawnName];
             if (!spawn.spawning) {
                 availableSpawns.push(spawn);
+            } else if (spawn.spawning.remainingTime == 1) {
+                const creepManager = CreepManager.getInstance();
+                const newCreep = Game.creeps[spawn.spawning.name];
+                if (newCreep) {
+                    creepManager.onCreepSpawned(newCreep);
+                }
             }
         }
 
@@ -170,20 +177,19 @@ export class SpawnManager {
     }
 
     static getSpawnPriority(jobType: eJobType, workRoom: string): number {
+
+        const creepManager = CreepManager.getInstance();
+
         if (jobType === eJobType.miner) {
-            const miners = _.filter(Game.creeps, c =>
-                c.memory.job === eJobType.miner && c.memory.workRoom === workRoom
-            );
-            if (miners.length === 0) {
+            const countOfAnts = creepManager.getCreepCountByJobAndRoom(jobType, workRoom);
+            if (countOfAnts === 0) {
                 return 998;
             }
         }
 
         if (jobType === eJobType.transporter && Memory.rooms[workRoom].state < eRoomState.phase7) {
-            const transporter = _.filter(Game.creeps, c =>
-                c.memory.job === eJobType.transporter && c.memory.workRoom === workRoom
-            );
-            if (transporter.length === 0) {
+            const countOfAnts = creepManager.getCreepCountByJobAndRoom(jobType, workRoom);
+            if (countOfAnts === 0) {
                 return 997;
             }
         }
@@ -191,10 +197,8 @@ export class SpawnManager {
         let room = Game.rooms[workRoom];
         if (room) {
             if (jobType === eJobType.filler && room.memory.state >= eRoomState.phase5 && room.storage != null) {
-                const filler = _.filter(Game.creeps, c =>
-                    c.memory.job === eJobType.filler && c.memory.workRoom === workRoom
-                );
-                if (filler.length === 0) {
+                const countOfAnts = creepManager.getCreepCountByJobAndRoom(jobType, workRoom);
+                if (countOfAnts === 0) {
                     return 996;
                 }
             }
@@ -211,11 +215,11 @@ export class SpawnManager {
             const room = Game.rooms[roomName];
             if (!room) continue;
 
-            //2, da Miner und Transporter existieren sollen
-            const creeps = _.filter(Game.creeps, c => c.memory.workRoom === roomName);
+            const creepManager = CreepManager.getInstance();
+            const countOfCreeps = creepManager.getCreepCountByRoom(roomName);
             let max = room.memory.state >= eRoomState.phase5 ? 4 : 2;
 
-            if (creeps.length < max) {
+            if (countOfCreeps < max) {
                 this.queueCreep(eJobType.worker, room, room.name, [WORK, CARRY, CARRY, MOVE, MOVE], 999);
                 return true;
             }
@@ -303,6 +307,11 @@ export class SpawnManager {
         if (spawn.spawnCreep(request.bodyParts, name, {dryRun: true}) === OK) {
             if (spawn.spawnCreep(request.bodyParts, name, {memory: memory}) === OK) {
                 console.log(`✅ Gespawned ${name} in ${spawn.room.name} → ${request.workroom} (Priorität: ${request.priority})`);
+                const creepManager = CreepManager.getInstance();
+                creepManager.onCreepSpawning(
+                    memory.job,
+                    memory.workRoom
+                );
                 return true;
             }
         }

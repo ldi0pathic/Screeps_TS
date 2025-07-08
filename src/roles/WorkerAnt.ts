@@ -27,7 +27,7 @@ export class WorkerAnt extends HarvesterAnt<WorkerCreepMemory> {
         }
 
         if (!target) {
-            const todo = this.creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES, {
+            const todo = this.creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES, {
                 filter: (site: ConstructionSite) => {
                     return site.structureType !== STRUCTURE_RAMPART;
                 }
@@ -122,7 +122,7 @@ export class WorkerAnt extends HarvesterAnt<WorkerCreepMemory> {
         if (this.memory.harvestLinkId) {
             link = Game.getObjectById(this.memory.harvestLinkId) as StructureLink | undefined;
         } else if (!this.hasHarvestTarget()) {
-            link = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+            link = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: s => s.structureType == STRUCTURE_LINK && s.store[resource] > 0
             }) as StructureLink | undefined;
         }

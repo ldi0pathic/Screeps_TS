@@ -2,6 +2,7 @@
 import {Movement} from "../utils/Movement";
 import {HarvesterAnt} from "./base/HarvesterAnt";
 import _ from "lodash";
+import {CreepManager} from "../mngtest/CreepManager";
 
 export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
 
@@ -105,12 +106,11 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
             return false;
         }
 
-        const creeps = _.filter(Game.creeps, creep =>
-            creep.memory.job == this.getJob() &&
-            creep.memory.workRoom == workroom
-        );
+        const job = this.getJob();
+        const creepManager = CreepManager.getInstance();
+        const countOfAnts = creepManager.getCreepCountByJobAndRoom(job, workroom);
 
-        if (creeps.length >= this.getMaxCreeps(workroom)) {
+        if (countOfAnts >= this.getMaxCreeps(workroom)) {
             return false;
         }
 
@@ -122,7 +122,7 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
         const todos = room.find(FIND_CONSTRUCTION_SITES, {
             filter: s => s.structureType != STRUCTURE_RAMPART
         });
-        
+
         return todos.length > 0;
     }
 }

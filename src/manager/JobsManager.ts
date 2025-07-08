@@ -31,10 +31,6 @@ export class JobsManager {
         }
     }
 
-    static isCriticalJob(jobType: eJobType, room: Room): boolean {
-        return this.getDynamicPriority(jobType, room) >= 25;
-    }
-
     static getJobOffset(creep: Creep, jobType: eJobType): number {
         if (!Memory.jobOffsets) Memory.jobOffsets = {};
         const key = `${creep.name}_${jobType}`;
@@ -45,7 +41,7 @@ export class JobsManager {
             for (let i = 0; i < key.length; i += 2) {
                 hash = (hash << 5) + key.charCodeAt(i);
             }
-            
+
             const seed = Math.abs(hash);
             Memory.jobOffsets[key] = (seed % max) + 1;
         }

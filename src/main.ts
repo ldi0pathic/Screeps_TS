@@ -1,5 +1,4 @@
 import {loadExtensions} from "./extensions/loader";
-import {conditionalLog} from "./extensions/GlobalExtensions";
 import {ErrorMapper} from "utils/ErrorMapper";
 import {SpawnManager} from "./manager/SpawnManager";
 import {JobsManager} from "./manager/JobsManager";
@@ -7,14 +6,14 @@ import {CleanUpManager} from "./manager/CleanUpManager";
 import {CPUManager} from "./manager/CPUManager";
 import {LayoutManager} from "./manager/LayoutManager";
 import {TowerManager} from "./manager/TowerManager";
-import {LayoutExporter} from "./utils/LayoutExporter";
-import {roomConfig} from "./config";
 import {RoomManager} from "./manager/RoomManager";
+
 
 loadExtensions();
 
 let exportDone = false;
 export const loop = ErrorMapper.wrapLoop(() => {
+    console.log("---Loop---");
 
 
     /* for (let creep in Game.creeps) {
@@ -31,13 +30,13 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // CPU History am Tick-Start updaten
     CPUManager.updateHistory();
 
-    SpawnManager.processEmergencySpawns();
+    SpawnManager.processEmergencySpawns(); //muss immer am anfang stehen, da cacheaufbau!!!
     SpawnManager.processSpawns();
     SpawnManager.findNeededCreeps();
     JobsManager.doPrioJobs();
     JobsManager.doCriticalJobs();
     TowerManager.runTowers();
-   
+
     if (!CPUManager.shouldContinue('normal')) {
         CPUManager.getStatus();
         Memory.lastTickCpu = Game.cpu.getUsed();
