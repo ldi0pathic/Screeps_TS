@@ -3,11 +3,17 @@
 export class RoomManager {
 
     static checkRooms() {
-        if (Game.time % 10 !== 0) return;
+        const time = Game.time;
+        if (time % 10 !== 0) return;
         for (let name in roomConfig) {
-            if ((Game.time + 10) > (Memory.rooms[name].invaderCoreEndTick || 0)) {
+
+            if ((time + 10) > (Memory.rooms[name].invaderCoreEndTick || 0)) {
                 Memory.rooms[name].invaderCore = false;
             }
+            if ((time + 10) > (Memory.rooms[name].needDefenceEndTick || 0)) {
+                Memory.rooms[name].needDefence = false;
+            }
+
 
             const room = Game.rooms[name];
 
@@ -30,7 +36,18 @@ export class RoomManager {
                         }
                     }
                 }
-                Memory.rooms[name].invaderCoreEndTick = Game.time + timeRemaining;
+                Memory.rooms[name].invaderCoreEndTick = time + timeRemaining;
+            }
+
+            if (hostiles.length > 0) {
+                let timeRemaining = 0;
+                for (let hostile of hostiles) {
+                    let remainingTicks = hostile.ticksToLive || 0;
+                    if (remainingTicks > timeRemaining) {
+                        timeRemaining = remainingTicks;
+                    }
+                }
+                Memory.rooms[name].needDefenceEndTick = time + timeRemaining;
             }
         }
     }

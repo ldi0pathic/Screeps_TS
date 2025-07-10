@@ -245,6 +245,7 @@ declare global {
         controllerContainerId?: Id<StructureContainer> | undefined;
         targetLinkIds?: Id<StructureLink>[];
         invaderCoreEndTick?: number;
+        needDefenceEndTick?: number;
         invaderCore: boolean;
         needDefence: boolean;
         towers: Id<StructureTower>[];
