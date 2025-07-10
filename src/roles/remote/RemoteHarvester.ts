@@ -83,8 +83,11 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
                 switch (state) {
                     case ERR_TIRED:
                     case ERR_NOT_ENOUGH_ENERGY: {
-                        this.creep.say('😴');
-                        this.memory.energySourceId = undefined;
+                        if (this.creep.pos.isNearTo(Source)) {
+                            this.creep.say('😴');
+                        } else {
+                            this.moveTo(Source);
+                        }
                         return true;
                     }
                     case ERR_NOT_IN_RANGE:
