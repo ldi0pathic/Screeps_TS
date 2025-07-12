@@ -13,7 +13,7 @@ loadExtensions();
 
 let exportDone = false;
 export const loop = ErrorMapper.wrapLoop(() => {
-    console.log("---Loop---");
+    //console.log("---Loop---");
 
 
     /* for (let creep in Game.creeps) {
