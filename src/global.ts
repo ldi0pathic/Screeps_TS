@@ -113,6 +113,8 @@ declare global {
     }
 
     interface CreepMemory {
+        cachedDirections?: DirectionConstant[];
+        pathIndex?: number;
         job: eJobType;
         state: eJobState;
         spawn: string;
