@@ -1,7 +1,7 @@
 ﻿import {roomConfig} from "../config";
 import _ from "lodash";
 import {StationaryAnt} from "./base/StationaryAnt";
-import {CreepManager} from "../mngtest/CreepManager";
+import {CreepStorage} from "../storage/CreepStorage";
 
 export class MinerAnt extends StationaryAnt<MinerMemory> {
 
@@ -182,8 +182,8 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         const job = this.getJob();
         const sources = workroom.getOrFindEnergieSource();
 
-        const creepManager = CreepManager.getInstance();
-        const creeps = creepManager.getCreepsByJobAndRoom(job, roomname);
+        const creepStorage = CreepStorage.getInstance();
+        const creeps = creepStorage.getCreepsByJobAndRoom(job, roomname);
 
         let sourceId: Id<Source> | undefined = undefined;
         let containerId: Id<StructureContainer> | undefined = undefined;
@@ -358,8 +358,8 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             max = Memory.rooms[workroom].energySources.length
         }
         const job = this.getJob();
-        const creepManager = CreepManager.getInstance();
-        const countOfCreeps = creepManager.getCreepCountByJobAndRoom(job, workroom);
+        const creepStorage = CreepStorage.getInstance();
+        const countOfCreeps = creepStorage.getCreepCountByJobAndRoom(job, workroom);
 
         return max > countOfCreeps;
     }

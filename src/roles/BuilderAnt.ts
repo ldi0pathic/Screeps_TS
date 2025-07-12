@@ -1,8 +1,6 @@
 ﻿import {roomConfig} from "../config";
-import {Movement} from "../utils/Movement";
 import {HarvesterAnt} from "./base/HarvesterAnt";
-import _ from "lodash";
-import {CreepManager} from "../mngtest/CreepManager";
+import {CreepStorage} from "../storage/CreepStorage";
 
 export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
 
@@ -107,8 +105,8 @@ export class BuilderAnt extends HarvesterAnt<BuilderCreepMemory> {
         }
 
         const job = this.getJob();
-        const creepManager = CreepManager.getInstance();
-        const countOfAnts = creepManager.getCreepCountByJobAndRoom(job, workroom);
+        const creepStorage = CreepStorage.getInstance();
+        const countOfAnts = creepStorage.getCreepCountByJobAndRoom(job, workroom);
 
         if (countOfAnts >= this.getMaxCreeps(workroom)) {
             return false;

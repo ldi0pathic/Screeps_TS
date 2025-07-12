@@ -1,5 +1,4 @@
 ﻿import {Ant} from "./Ant";
-import _ from "lodash";
 
 export abstract class StationaryAnt<TMemory extends StationaryCreepMemory> extends Ant<TMemory> {
     protected goToFinalPos(): boolean {
@@ -15,7 +14,7 @@ export abstract class StationaryAnt<TMemory extends StationaryCreepMemory> exten
             }
 
             this.moveTo(new RoomPosition(finalPos.x, finalPos.y, this.memory.workRoom))
-            
+
             return true;
         }
         return false;

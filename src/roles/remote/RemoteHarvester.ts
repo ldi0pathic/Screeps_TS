@@ -1,7 +1,7 @@
 ﻿import {Ant} from "../base/Ant";
 import {Movement} from "../../utils/Movement";
 import {roomConfig} from "../../config";
-import {CreepManager} from "../../mngtest/CreepManager";
+import {CreepStorage} from "../../storage/CreepStorage";
 
 
 export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
@@ -216,8 +216,8 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
         }
 
         const job = this.getJob();
-        const creepManager = CreepManager.getInstance();
-        const countOfAnts = creepManager.getCreepCountByJobAndRoom(job, workroom);
+        const creepStorage = CreepStorage.getInstance();
+        const countOfAnts = creepStorage.getCreepCountByJobAndRoom(job, workroom);
 
         return max > countOfAnts;
     }

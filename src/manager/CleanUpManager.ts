@@ -1,4 +1,4 @@
-﻿import {CreepManager} from "../mngtest/CreepManager";
+﻿import {CreepStorage} from "../storage/CreepStorage";
 
 export class CleanUpManager {
 
@@ -29,11 +29,11 @@ export class CleanUpManager {
     }
 
     public static cleanMemory(): void {
-        const creepManager = CreepManager.getInstance();
+        const creepStorage = CreepStorage.getInstance();
         Object.keys(Memory.creeps).forEach(creepName => {
             if (!Game.creeps[creepName]) {
                 const deadCreepMemory = Memory.creeps[creepName];
-                creepManager.onCreepDied(deadCreepMemory);
+                creepStorage.onCreepDied(deadCreepMemory);
                 delete Memory.creeps[creepName];
             }
         });
@@ -69,8 +69,8 @@ export class CleanUpManager {
         if (Game.time % 50 !== 0) {
             return;
         }
-        const manager = CreepManager.getInstance();
-        manager.cleanupCache();
+        const creepStorage = CreepStorage.getInstance();
+        creepStorage.cleanupCache();
     }
 
 

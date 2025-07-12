@@ -1,14 +1,14 @@
-﻿export class CreepManager {
-    private static instance: CreepManager;
+﻿export class CreepStorage {
+    private static instance: CreepStorage;
     private creepCache: Map<string, { creeps: Creep[], lastUpdate: number }> = new Map();
     private readonly CACHE_TTL = 5;
 
     private constructor() {
     }
 
-    static getInstance(): CreepManager {
+    static getInstance(): CreepStorage {
         if (!this.instance) {
-            this.instance = new CreepManager();
+            this.instance = new CreepStorage();
         }
         return this.instance;
     }

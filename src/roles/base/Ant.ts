@@ -1,6 +1,6 @@
 ﻿import {SpawnManager} from "../../manager/SpawnManager";
 import {Movement} from "../../utils/Movement";
-import {CreepManager} from "../../mngtest/CreepManager";
+import {CreepStorage} from "../../storage/CreepStorage";
 
 export abstract class Ant<TMemory extends CreepMemory> {
     protected creep: Creep;
@@ -35,8 +35,8 @@ export abstract class Ant<TMemory extends CreepMemory> {
         const max = this.getMaxCreeps(workroom);
         const job = this.getJob();
 
-        const creepManager = CreepManager.getInstance();
-        const countOfAnts = creepManager.getCreepCountByJobAndRoom(job, workroom);
+        const creepStorage = CreepStorage.getInstance();
+        const countOfAnts = creepStorage.getCreepCountByJobAndRoom(job, workroom);
 
         if (countOfAnts >= max) {
             return false;

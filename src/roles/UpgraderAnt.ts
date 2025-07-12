@@ -1,7 +1,6 @@
 ﻿import {roomConfig} from "../config";
-import _ from "lodash";
 import {HarvesterAnt} from "./base/HarvesterAnt";
-import {CreepManager} from "../mngtest/CreepManager";
+import {CreepStorage} from "../storage/CreepStorage";
 
 
 export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
@@ -114,8 +113,8 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
             return false;
         }
         const job = this.getJob();
-        const creepManager = CreepManager.getInstance();
-        const countOfCreeps = creepManager.getCreepCountByJobAndRoom(job, workroom);
+        const creepStorage = CreepStorage.getInstance();
+        const countOfCreeps = creepStorage.getCreepCountByJobAndRoom(job, workroom);
 
         return roomConfig[workroom].upgraderCount > countOfCreeps;
     }

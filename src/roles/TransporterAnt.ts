@@ -1,6 +1,4 @@
-﻿import _ from "lodash";
-
-import {HarvesterAnt} from "./base/HarvesterAnt";
+﻿import {HarvesterAnt} from "./base/HarvesterAnt";
 import {roomConfig} from "../config";
 
 

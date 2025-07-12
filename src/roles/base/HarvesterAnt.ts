@@ -20,6 +20,15 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         this.checkHarvest();
 
         if (this.memory.state == eJobState.harvest) {
+            if (this.creep.memory.workRoom) {
+                let room = Game.rooms[this.creep.memory.workRoom];
+                if (room && room.memory.spawnPrioBlock && room.storage) {
+                    this.memory.harvestStorageId = room.storage?.id;
+                    if (this.harvestRoomStorage(RESOURCE_ENERGY)) {
+                        return true;
+                    }
+                }
+            }
             this.doHarvest(RESOURCE_ENERGY);
             return true;
         } else if (this.creep.memory.workRoom) {
