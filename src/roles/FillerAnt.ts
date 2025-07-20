@@ -1,6 +1,7 @@
 ﻿import {Ant} from "./base/Ant";
 import {Movement} from "../utils/Movement";
 import {roomConfig} from "../config";
+import {LinkStorage} from "../storage/LinkStorage";
 
 export class FillerAnt extends Ant<FillerCreepMemory> {
     doJob(): boolean {
@@ -21,12 +22,10 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
                     if (this.memory.harvestLinkId) {
                         link = Game.getObjectById(this.memory.harvestLinkId) as StructureLink | undefined;
                     } else {
-                        let links = this.creep.room.findAllLinksNearSpawns();
-
-                        if (links.length >= 1) {
-                            link = links[0];
+                        let links = LinkStorage.getInstance().getLinksByType(this.creep.room.name, "storage")
+                        if (links.length >= 0) {
+                            this.memory.harvestLinkId = links[0].linkId;
                         }
-                        this.memory.harvestLinkId = link?.id;
                     }
 
                     if (link && link.store[RESOURCE_ENERGY] > 0) {

@@ -17,7 +17,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         let container: StructureContainer | undefined;
         let constructionSite: ConstructionSite | undefined;
         let link: StructureLink | undefined;
-        let targetLinkIds: Id<StructureLink>[] | undefined
         let source: Source | undefined;
 
         if (this.memory.energySourceId) {
@@ -32,9 +31,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         if (this.creep.room.memory.state >= eRoomState.phase5) {
             if (this.memory.linkId) {
-
                 link = Game.getObjectById(this.memory.linkId) as StructureLink | undefined;
-                targetLinkIds = this.creep.room.getOrFindTargetLinks();
             } else {
                 link = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
                     filter: {structureType: STRUCTURE_LINK}
@@ -86,30 +83,9 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
             if (energyStore >= this.creep.store.getCapacity(RESOURCE_ENERGY)) {
 
-                if (link && (targetLinkIds && targetLinkIds.length > 0)) {
-
+                if (link) {
                     let state = this.creep.transfer(link, RESOURCE_ENERGY)
-
                     switch (state) {
-                        case ERR_FULL: {
-                            let target: StructureLink | undefined = undefined;
-                            for (let targetLinkId of targetLinkIds) {
-                                if (!target) {
-                                    target = Game.getObjectById(targetLinkId) as StructureLink | undefined;
-                                } else {
-
-                                    let newTarget = Game.getObjectById(targetLinkId) as StructureLink | undefined;
-
-                                    if (newTarget && newTarget.store[RESOURCE_ENERGY] < target.store[RESOURCE_ENERGY]) {
-                                        target = newTarget;
-                                    }
-                                }
-                            }
-                            if (target) {
-                                link.transferEnergy(target)
-                            }
-                            break;
-                        }
                         case ERR_NOT_IN_RANGE: {
                             this.memory.linkId = undefined;
                             break;

@@ -15,10 +15,10 @@ let exportDone = false;
 export const loop = ErrorMapper.wrapLoop(() => {
     //console.log("---Loop---");
 
-
-    /* for (let creep in Game.creeps) {
-         Game.creeps[creep].suicide();
-     }*/
+    /*
+        for (let creep in Game.creeps) {
+            Game.creeps[creep].suicide();
+        }*/
     //console.log("--Loop--");
 
     /*if (!exportDone) {
@@ -43,7 +43,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
         return;
     }
 
-    RoomManager.checkRooms();
+    RoomManager.run();
     JobsManager.doJobs();
 
     if (!CPUManager.shouldContinue('low')) {

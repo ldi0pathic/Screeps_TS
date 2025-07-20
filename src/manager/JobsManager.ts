@@ -89,9 +89,9 @@ export class JobsManager {
     }
 
     static shouldSkipCreep(creep: Creep): boolean {
-
         if (creep.spawning) return true;
         if (creep.fatigue > 0) return true;
+
 
         return creep.ticksToLive !== undefined && creep.ticksToLive < 3;
     }

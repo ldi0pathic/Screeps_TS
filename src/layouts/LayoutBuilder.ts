@@ -264,10 +264,12 @@ export class LayoutBuilder {
         }
 
         const sortedPositions = this.sortPositionsByPriority(positions, structureType);
+        let cSides = this.getConstructionSiteCount(room);
+
 
         for (const pos of sortedPositions) {
 
-            if (this.getConstructionSiteCount(room) >= this.maxConstructionSites) {
+            if ((cSides + success) >= this.maxConstructionSites) {
                 break;
             }
 
@@ -275,6 +277,7 @@ export class LayoutBuilder {
 
             if (buildResult === OK) {
                 success++;
+
             } else if (buildResult === ERR_FULL) {
                 break;
             }
@@ -287,29 +290,82 @@ export class LayoutBuilder {
      * Sortiert Positionen nach Build-Priorität
      */
     private sortPositionsByPriority(positions: Position[], structureType: BuildableStructureConstant): Position[] {
-        if (structureType !== STRUCTURE_EXTENSION) {
-            return positions;
+
+        if (structureType == STRUCTURE_EXTENSION) { // Extensions: Nähe zu Spawns priorisieren
+            return positions.sort((a, b) => {
+                const room = Game.rooms[this.roomName];
+                if (!room) return 0;
+
+                const spawns = room.find(FIND_MY_SPAWNS);
+                if (spawns.length === 0) return 0;
+
+                // Finde nächsten Spawn für beide Positionen
+                const distanceA = Math.min(...spawns.map(spawn =>
+                    Math.max(Math.abs(a.x - spawn.pos.x), Math.abs(a.y - spawn.pos.y))
+                ));
+                const distanceB = Math.min(...spawns.map(spawn =>
+                    Math.max(Math.abs(b.x - spawn.pos.x), Math.abs(b.y - spawn.pos.y))
+                ));
+
+                // Nähere Extensions haben Priorität
+                return distanceA - distanceB;
+            });
         }
 
-        // Extensions: Nähe zu Spawns priorisieren
-        return positions.sort((a, b) => {
-            const room = Game.rooms[this.roomName];
-            if (!room) return 0;
+        if (structureType == STRUCTURE_LINK) {
+            return positions.sort((a, b) => {
+                const room = Game.rooms[this.roomName];
+                if (!room) return 0;
 
-            const spawns = room.find(FIND_MY_SPAWNS);
-            if (spawns.length === 0) return 0;
+                const spawn = room.find(FIND_MY_SPAWNS)[0];
+                const storage = room.storage;
+                const controller = room.controller;
+                const sources = room.find(FIND_SOURCES);
 
-            // Finde nächsten Spawn für beide Positionen
-            const distanceA = Math.min(...spawns.map(spawn =>
-                Math.max(Math.abs(a.x - spawn.pos.x), Math.abs(a.y - spawn.pos.y))
-            ));
-            const distanceB = Math.min(...spawns.map(spawn =>
-                Math.max(Math.abs(b.x - spawn.pos.x), Math.abs(b.y - spawn.pos.y))
-            ));
+                // Prioritätswerte bestimmen (niedriger = höhere Priorität)
+                const getPriority = (pos: Position): number => {
+                    // 1. Storage/Spawn Link (höchste Priorität)
+                    if (storage) {
+                        const storageDistance = Math.max(Math.abs(pos.x - storage.pos.x), Math.abs(pos.y - storage.pos.y));
+                        if (storageDistance <= 2) return 1;
+                    }
+                    if (spawn) {
+                        const spawnDistance = Math.max(Math.abs(pos.x - spawn.pos.x), Math.abs(pos.y - spawn.pos.y));
+                        if (spawnDistance <= 2) return 1;
+                    }
 
-            // Nähere Extensions haben Priorität
-            return distanceA - distanceB;
-        });
+                    // 2. Source Links
+                    const nearSource = sources.some(source =>
+                        Math.max(Math.abs(pos.x - source.pos.x), Math.abs(pos.y - source.pos.y)) <= 2
+                    );
+                    if (nearSource) return 2;
+
+                    // 3. Controller/Upgrader Link
+                    if (controller) {
+                        const controllerDistance = Math.max(Math.abs(pos.x - controller.pos.x), Math.abs(pos.y - controller.pos.y));
+                        if (controllerDistance <= 3) return 3; // Etwas größerer Radius für Upgrader-Bereich
+                    }
+
+                    // 4. Remote Links (alle anderen)
+                    return 4;
+                };
+
+                const priorityA = getPriority(a);
+                const priorityB = getPriority(b);
+
+                // Bei gleicher Priorität: näher zum Spawn bevorzugen
+                if (priorityA === priorityB && spawn) {
+                    const distanceA = Math.max(Math.abs(a.x - spawn.pos.x), Math.abs(a.y - spawn.pos.y));
+                    const distanceB = Math.max(Math.abs(b.x - spawn.pos.x), Math.abs(b.y - spawn.pos.y));
+                    return distanceA - distanceB;
+                }
+
+                return priorityA - priorityB;
+            });
+        }
+
+
+        return positions;
     }
 
     /**
@@ -333,12 +389,18 @@ export class LayoutBuilder {
             STRUCTURE_TERMINAL, STRUCTURE_EXTRACTOR, STRUCTURE_LAB, STRUCTURE_FACTORY, STRUCTURE_OBSERVER, STRUCTURE_POWER_SPAWN,
             STRUCTURE_NUKER, STRUCTURE_WALL, STRUCTURE_RAMPART];
 
+        let constSides = this.getConstructionSiteCount(room);
+
+        if (constSides >= this.maxConstructionSites) {
+            return success;
+        }
+
         for (const structureType of buildOrder) {
             const positions = this.layout.buildings[structureType];
             if (positions && positions.length > 0) {
                 const result = this.buildStructureType(structureType, positions);
                 success += result;
-                if (this.getConstructionSiteCount(room) >= this.maxConstructionSites) {
+                if ((constSides + success) >= this.maxConstructionSites) {
                     break;
                 }
             }

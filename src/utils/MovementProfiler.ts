@@ -16,15 +16,12 @@
 
         this.measurements[operation].push(cpuUsed);
 
-        // Nur die letzten 100 Messungen behalten
-        if (this.measurements[operation].length > 100) {
-            this.measurements[operation].shift();
-        }
-
         // Automatisches Logging alle X Ticks
         if (Game.time - this.lastStatsOutput >= this.statsInterval) {
             this.outputStats();
             this.lastStatsOutput = Game.time;
+            // Reset arrays nach Ausgabe
+            this.measurements = {};
         }
     }
 

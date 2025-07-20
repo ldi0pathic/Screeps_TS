@@ -1,6 +1,7 @@
 ﻿import {roomConfig} from "../config";
 import {HarvesterAnt} from "./base/HarvesterAnt";
 import {CreepStorage} from "../storage/CreepStorage";
+import {LinkStorage} from "../storage/LinkStorage";
 
 
 export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
@@ -23,6 +24,30 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
     }
 
     protected override doHarvest(resource: ResourceConstant): void {
+
+        if (this.creep.room.memory.state >= eRoomState.phase4) {
+            let link: StructureLink | undefined;
+
+            if (this.memory.havestLinkId) {
+                link = Game.getObjectById(this.memory.havestLinkId) as StructureLink | undefined;
+            } else {
+                let links = LinkStorage.getInstance().getLinksByType(this.creep.room.name, "upgrader")
+                if (links.length >= 0) {
+                    this.memory.havestLinkId = links[0].linkId;
+                }
+            }
+
+            if (link && link.store[RESOURCE_ENERGY] > 0) {
+                let state = this.creep.withdraw(link, RESOURCE_ENERGY)
+                switch (state) {
+                    case ERR_NOT_IN_RANGE:
+                        this.moveTo(link);
+                        return;
+                    case OK:
+                        return;
+                }
+            }
+        }
 
         if (this.harvestRoomContainer(resource)) {
             return;

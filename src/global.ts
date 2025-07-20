@@ -113,8 +113,12 @@ declare global {
     }
 
     interface CreepMemory {
-        cachedDirections?: DirectionConstant[];
-        pathIndex?: number;
+        moving?: boolean;
+        targetPos?: {
+            x: number;
+            y: number;
+            roomName: string;
+        };
         job: eJobType;
         state: eJobState;
         spawn: string;
@@ -122,12 +126,9 @@ declare global {
         spawnRoom: string;
         roundRobin: number;
         roundRobinOffset?: number;
-        moving: boolean;
-        targetPos?: {
-            x: number;
-            y: number;
-            roomName: string;
-        };
+        path?: string;
+        dontMove?: number;
+        lastPos?: { x: number; y: number };
     }
 
     interface BuilderCreepMemory extends HarvesterCreepMemory {
@@ -287,4 +288,9 @@ declare global {
         buildings: BuildingPositions;
     }
 
+    interface TargetLink {
+        linkId: Id<StructureLink>;
+        priority: number;
+        type: 'source' | 'upgrader' | 'storage' | 'remote';
+    }
 }
