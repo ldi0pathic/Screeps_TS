@@ -17,6 +17,10 @@ export class LayoutManager {
     }
 
     static run() {
+        // Layout-Planung ist teuer, nur alle 20 Ticks ausführen (oder 50 in Phase 8)
+        const checkInterval = Game.cpu.limit <= 20 ? 40 : 20;
+        if (Game.time % checkInterval !== 0) return;
+
         for (const name in roomConfig) {
             if (roomConfig[name].buildBase) {
                 const room = Game.rooms[name];

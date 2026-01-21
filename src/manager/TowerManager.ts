@@ -81,7 +81,7 @@
         }
     }
 
-    private static getHostiles(room: Room): Creep[] {
+    public static getHostiles(room: Room): Creep[] {
         const cached = this.hostilesCache.get(room.name);
         if (cached && (Game.time - cached.lastUpdate) < this.CACHE_TTL) {
             return cached.ids.map(id => Game.getObjectById(id)).filter(h => h !== null) as Creep[];

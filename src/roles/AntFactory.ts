@@ -1,5 +1,4 @@
-﻿import {Jobs} from "../records/Jobs";
-import {Ant} from "./base/Ant";
+﻿import {Ant} from "./base/Ant";
 
 export class AntFactory {
     private static instanceCache: Map<string, Ant<any>> = new Map();
@@ -15,6 +14,7 @@ export class AntFactory {
             return this.instanceCache.get(cacheKey)!;
         }
 
+        const {Jobs} = require("../records/Jobs");
         const def = Jobs.jobs[jobType];
         if (!def) return null;
 
@@ -34,6 +34,7 @@ export class AntFactory {
      * Diese wird i.d.R. im JobsManager pro Creep pro Tick aufgerufen.
      */
     public static createAntForCreep(creep: Creep): Ant<any> | null {
+        const {Jobs} = require("../records/Jobs");
         return Jobs.createAnt(creep.memory.job, creep);
     }
 

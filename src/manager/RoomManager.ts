@@ -8,18 +8,32 @@ export class RoomManager {
         const skip = time % 10 !== 0;
 
         for (let name in roomConfig) {
-            if (Memory.rooms[name].state >= eRoomState.phase5 && Memory.rooms[name].state <= eRoomState.phase8) {
-                console.log("run " + name);
-                new LinkManager(name).run();
+            const room = Game.rooms[name];
+            if (room && room.controller?.my) {
+                if (Memory.rooms[name] && Memory.rooms[name].state >= eRoomState.phase5 && Memory.rooms[name].state <= eRoomState.phase8) {
+                    console.log("run " + name);
+                    new LinkManager(name).run();
+                }
             }
-            if (!skip) {
-                this.checkRoom(name, time);
-            }
+            this.checkRoom(name, time);
         }
 
     }
 
     static checkRoom(name: string, time: number) {
+        if (!Memory.rooms[name]) {
+            Memory.rooms[name] = {
+                energySources: [],
+                mineralSources: [],
+                storage: undefined,
+                state: eRoomState.neutral,
+                invaderCore: false,
+                needDefence: false,
+                towers: [],
+                repairTarget: undefined,
+            };
+        }
+
         if ((time + 10) > (Memory.rooms[name].invaderCoreEndTick || 0)) {
             Memory.rooms[name].invaderCore = false;
         }
@@ -32,7 +46,9 @@ export class RoomManager {
         if (!room)
             return;
 
-        let hostiles = room.find(FIND_HOSTILE_CREEPS);
+        // Nutze TowerManager.getHostiles für Caching der Feind-Suche
+        const {TowerManager} = require("./TowerManager");
+        let hostiles = TowerManager.getHostiles(room);
         let cores = room.find(FIND_HOSTILE_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_INVADER_CORE});
 
         Memory.rooms[name].needDefence = hostiles.length > 0;
