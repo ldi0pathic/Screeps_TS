@@ -112,7 +112,7 @@ export class WorkerAnt extends HarvesterAnt<WorkerCreepMemory> {
             this.memory.havestSourceId ||
             this.memory.havestLinkId ||
             this.memory.harvestDroppedId ||
-            this.memory.harvestLinkId
+            this.memory.harvestTombstoneId
         );
     }
 
@@ -121,6 +121,7 @@ export class WorkerAnt extends HarvesterAnt<WorkerCreepMemory> {
 
         if (this.memory.harvestLinkId) {
             link = Game.getObjectById(this.memory.harvestLinkId) as StructureLink | undefined;
+            if (!link) this.memory.harvestLinkId = undefined;
         } else if (!this.hasHarvestTarget()) {
             link = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: s => s.structureType == STRUCTURE_LINK && s.store[resource] > 0

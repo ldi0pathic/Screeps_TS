@@ -100,6 +100,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
 
         if (this.memory.harvestStorageId) {
             storage = Game.getObjectById(this.memory.harvestStorageId) as StructureStorage;
+            if (!storage) this.memory.harvestStorageId = undefined;
         } else if (!this.hasHarvestTarget()) {
             storage = this.creep.room.storage;
         }
@@ -135,6 +136,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
 
         if (this.memory.harvestContainerId) {
             container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
+            if (!container) this.memory.harvestContainerId = undefined;
         } else if (!this.hasHarvestTarget()) {
             container = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: (structure) => {
@@ -179,6 +181,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
 
         if (this.memory.harvestDroppedId) {
             drop = Game.getObjectById(this.memory.harvestDroppedId) as Resource;
+            if (!drop) this.memory.harvestDroppedId = undefined;
         } else if (!this.hasHarvestTarget()) {
             drop = this.creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {
                 filter: (resource) => {
@@ -222,6 +225,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
 
         if (this.memory.harvestTombstoneId) {
             tombstone = Game.getObjectById(this.memory.harvestTombstoneId) as Tombstone;
+            if (!tombstone) this.memory.harvestTombstoneId = undefined;
         } else if (!this.hasHarvestTarget()) {
             tombstone = this.creep.pos.findClosestByRange(FIND_TOMBSTONES, {
                 filter: (tombstone) => {
@@ -267,6 +271,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
 
         if (this.memory.havestSourceId) {
             source = Game.getObjectById(this.memory.havestSourceId) as Source;
+            if (!source) this.memory.havestSourceId = undefined;
         } else {
             source = this.creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE) as Source | undefined;
         }

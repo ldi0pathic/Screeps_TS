@@ -2,6 +2,8 @@
 import {Ant} from "../roles/base/Ant";
 import {Jobs} from "../records/Jobs";
 import {CreepStorage} from "../storage/CreepStorage";
+import {AntFactory} from "../roles/AntFactory";
+
 
 export class SpawnManager {
 
@@ -79,11 +81,10 @@ export class SpawnManager {
             for (let jobName in Jobs.jobs) {
                 const jobType = jobName as eJobType;
 
-                // Erstelle temporäre Ant-Instanz für spawn() Aufruf
-                const tempAnt = this.createTempAnt(jobType, spawnRoom, name);
-                if (tempAnt) {
-
-                    tempAnt.spawn(spawnRoom, name);
+                // Nutze Factory für Bedarfs-Check
+                const ant = AntFactory.getAntForSpawnCheck(jobType, spawnRoom, name);
+                if (ant) {
+                    ant.spawn(spawnRoom, name);
                 }
             }
         }
@@ -227,18 +228,6 @@ export class SpawnManager {
         return false;
     }
 
-    private static createTempAnt(jobType: eJobType, spawnRoom: Room, workRoom: string): Ant<any> | null {
-        const def = Jobs.jobs[jobType];
-        if (!def) return null;
-
-        const mockCreep = {
-            memory: {job: jobType, workRoom: workRoom, spawnRoom: spawnRoom.name},
-            room: spawnRoom
-        } as Creep;
-
-        return new def.antClass(mockCreep);
-    }
-
     private static sortQueue(): void {
         this.queue.sort((a, b) => {
             if (a.priority !== b.priority) {
@@ -298,11 +287,12 @@ export class SpawnManager {
         const cost = _.sum(request.bodyParts, part => BODYPART_COST[part]);
         if (spawn.room.energyAvailable < cost) return false;
 
-        const tempAnt = this.createTempAnt(request.jobKey, spawn.room, request.workroom);
-        if (!tempAnt) return false;
+        const ant = AntFactory.getAntForSpawnCheck(request.jobKey, spawn.room, request.workroom);
+        if (!ant) return false;
 
         const name = this.getName(request);
-        const memory = tempAnt.createSpawnMemory(spawn, request.workroom);
+        const memory = ant.createSpawnMemory(spawn, request.workroom);
+        if (!memory) return false;
 
         if (spawn.spawnCreep(request.bodyParts, name, {dryRun: true}) === OK) {
             if (spawn.spawnCreep(request.bodyParts, name, {memory: memory}) === OK) {

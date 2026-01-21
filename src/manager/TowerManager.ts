@@ -28,9 +28,14 @@
                         ? current : closest
                 );
 
-                for (const towerId of roomMemory.towers) {
+                for (let i = roomMemory.towers.length - 1; i >= 0; i--) {
+                    const towerId = roomMemory.towers[i];
                     const tower = Game.getObjectById(towerId) as StructureTower;
-                    if (tower?.store.energy > 0) tower.attack(target);
+                    if (!tower) {
+                        roomMemory.towers.splice(i, 1);
+                        continue;
+                    }
+                    if (tower.store.energy > 0) tower.attack(target);
                 }
 
                 continue;
@@ -47,9 +52,15 @@
                 let bestTower: StructureTower | null = null;
                 let maxEnergy = TOWER_CAPACITY * 0.7;
 
-                for (const towerId of roomMemory.towers) {
+                for (let i = roomMemory.towers.length - 1; i >= 0; i--) {
+                    const towerId = roomMemory.towers[i];
                     const tower = Game.getObjectById(towerId) as StructureTower;
-                    if (tower?.store.energy > maxEnergy) {
+                    if (!tower) {
+                        roomMemory.towers.splice(i, 1);
+                        continue;
+                    }
+
+                    if (tower.store.energy > maxEnergy) {
                         maxEnergy = tower.store.energy;
                         bestTower = tower;
                     }

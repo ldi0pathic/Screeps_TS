@@ -153,8 +153,7 @@ export class LayoutExporter {
                                 return costs;
                             }
                         });
-                        allConnections.push({spawn, target: container, path: path.path});
-
+                        allConnections.push({spawn, target: container as StructureContainer, path: path.path});
                     }
                 }
             });
@@ -196,7 +195,7 @@ export class LayoutExporter {
                                     return costs;
                                 }
                             });
-                            allConnections.push({spawn, target: container, path: path.path});
+                            allConnections.push({spawn, target: container as StructureContainer, path: path.path});
                         }
                     }
                 })

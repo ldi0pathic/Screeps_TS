@@ -7,6 +7,7 @@ import {CPUManager} from "./manager/CPUManager";
 import {LayoutManager} from "./manager/LayoutManager";
 import {TowerManager} from "./manager/TowerManager";
 import {RoomManager} from "./manager/RoomManager";
+import {AntFactory} from "./roles/AntFactory";
 
 
 loadExtensions();
@@ -29,6 +30,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
     // CPU History am Tick-Start updaten
     CPUManager.updateHistory();
+
+    AntFactory.clearCache();
 
     SpawnManager.processEmergencySpawns(); //muss immer am anfang stehen, da cacheaufbau!!!
     SpawnManager.processSpawns();

@@ -32,6 +32,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         if (this.creep.room.memory.state >= eRoomState.phase5) {
             if (this.memory.linkId) {
                 link = Game.getObjectById(this.memory.linkId) as StructureLink | undefined;
+                if (!link) this.memory.linkId = undefined;
             } else {
                 link = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
                     filter: {structureType: STRUCTURE_LINK}
@@ -42,9 +43,12 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         if (this.memory.containerId) {
             container = Game.getObjectById(this.memory.containerId) as StructureContainer | undefined;
-        } else if (this.memory.containerConstructionId) {
-            constructionSite = Game.getObjectById(this.memory.containerConstructionId) as ConstructionSite | undefined;
+            if (!container) this.memory.containerId = undefined;
+        }
 
+        if (!this.memory.containerId && this.memory.containerConstructionId) {
+            constructionSite = Game.getObjectById(this.memory.containerConstructionId) as ConstructionSite | undefined;
+            if (!constructionSite) this.memory.containerConstructionId = undefined;
         }
 
         if (!container && !constructionSite && source) {

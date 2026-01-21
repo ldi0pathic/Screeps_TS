@@ -21,9 +21,10 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
 
                     if (this.memory.harvestLinkId) {
                         link = Game.getObjectById(this.memory.harvestLinkId) as StructureLink | undefined;
+                        if (!link) this.memory.harvestLinkId = undefined;
                     } else {
                         let links = LinkStorage.getInstance().getLinksByType(this.creep.room.name, "storage")
-                        if (links.length >= 0) {
+                        if (links.length > 0) {
                             this.memory.harvestLinkId = links[0].linkId;
                         }
                     }
@@ -45,6 +46,7 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
 
                 if (this.memory.harvestStorageId) {
                     storage = Game.getObjectById(this.memory.harvestStorageId) as StructureStorage;
+                    if (!storage) this.memory.harvestStorageId = undefined;
                 } else {
                     storage = this.creep.room.storage;
                 }
@@ -73,6 +75,7 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
             let container: StructureContainer | undefined;
             if (this.memory.harvestContainerId) {
                 container = Game.getObjectById(this.memory.harvestContainerId) as StructureContainer;
+                if (!container) this.memory.harvestContainerId = undefined;
             } else {
                 let containers = this.creep.room.findAllContainersNearSpawns()
                 if (containers.length == 1) {
@@ -126,8 +129,9 @@ export class FillerAnt extends Ant<FillerCreepMemory> {
         if (this.memory.harvestLinkId) {
 
             let link = Game.getObjectById(this.memory.harvestLinkId) as StructureLink | undefined;
-
-            if ((link && link.store[RESOURCE_ENERGY] > 0) && this.creep.room.storage) {
+            if (!link) {
+                this.memory.harvestLinkId = undefined;
+            } else if (link.store[RESOURCE_ENERGY] > 0 && this.creep.room.storage) {
 
                 let state = this.creep.transfer(this.creep.room.storage, RESOURCE_ENERGY);
                 switch (state) {

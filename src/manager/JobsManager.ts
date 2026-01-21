@@ -1,6 +1,8 @@
 ﻿import {Ant} from "../roles/base/Ant";
 import {CleanUpManager} from "./CleanUpManager";
 import {Jobs} from "../records/Jobs";
+import {AntFactory} from "../roles/AntFactory";
+
 
 export class JobsManager {
     private static bucketNorm: Array<Ant<any>> = [];
@@ -122,7 +124,7 @@ export class JobsManager {
                 continue;
             }
 
-            const ant = Jobs.createAnt(creep.memory.job, creep);
+            const ant = AntFactory.createAntForCreep(creep);
             if (!ant) {
                 CleanUpManager.addToCleanupQueue(name);
                 continue;

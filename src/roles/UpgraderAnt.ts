@@ -30,9 +30,10 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
 
             if (this.memory.havestLinkId) {
                 link = Game.getObjectById(this.memory.havestLinkId) as StructureLink | undefined;
+                if (!link) this.memory.havestLinkId = undefined;
             } else {
                 let links = LinkStorage.getInstance().getLinksByType(this.creep.room.name, "upgrader")
-                if (links.length >= 0) {
+                if (links.length > 0) {
                     this.memory.havestLinkId = links[0].linkId;
                 }
             }

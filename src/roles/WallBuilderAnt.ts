@@ -18,13 +18,19 @@ export class WallBuilderAnt extends HarvesterAnt<WallBuilderCreepMemory> {
 
         if (this.memory.repairId) {
             Repair = Game.getObjectById(this.memory.repairId) as Structure;
-        } else {
+            if (!Repair) this.memory.repairId = undefined;
+        }
+
+        if (!Repair) {
             if (this.memory.constructionId) {
                 ConstructionSite = Game.getObjectById(this.memory.constructionId) as ConstructionSite;
-            } else {
-                ConstructionSite = this.findBuildTarget() as ConstructionSite | undefined;
+                if (!ConstructionSite) this.memory.constructionId = undefined;
             }
-            this.memory.constructionId = ConstructionSite?.id;
+
+            if (!ConstructionSite) {
+                ConstructionSite = this.findBuildTarget() as ConstructionSite | undefined;
+                this.memory.constructionId = ConstructionSite?.id;
+            }
 
             if (!ConstructionSite) {
                 Repair = this.findRepairTarget();

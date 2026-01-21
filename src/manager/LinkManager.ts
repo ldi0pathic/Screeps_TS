@@ -62,6 +62,10 @@ export class LinkManager {
 
         for (const sourceLink of categories.sourceLinks) {
             let link = Game.getObjectById(sourceLink.linkId) as StructureLink;
+            if (!link) {
+                this.linkStorage.invalidateRoomCache(roomName);
+                continue;
+            }
             if (link.store[RESOURCE_ENERGY] >= minEnergy &&
                 link.cooldown === 0) {
                 senders.push(link);
@@ -70,6 +74,10 @@ export class LinkManager {
 
         for (const remoteLink of categories.remoteLinks) {
             let link = Game.getObjectById(remoteLink.linkId) as StructureLink;
+            if (!link) {
+                this.linkStorage.invalidateRoomCache(roomName);
+                continue;
+            }
             if (link.store[RESOURCE_ENERGY] >= minEnergy &&
                 link.cooldown === 0) {
                 senders.push(link);
@@ -92,7 +100,9 @@ export class LinkManager {
         // Upgrader Links - dynamische Priorität
         if (categories.upgraderLink) {
             let link = Game.getObjectById(categories.upgraderLink.linkId) as StructureLink | undefined;
-            if (link && link.store[RESOURCE_ENERGY] < 100) {
+            if (!link) {
+                this.linkStorage.invalidateRoomCache(roomName);
+            } else if (link.store[RESOURCE_ENERGY] < 100) {
                 targets.push({prio: room?.controller?.level === 8 ? 3 : 1, link});
             }
         }
@@ -100,7 +110,9 @@ export class LinkManager {
         // Storage Links
         if (categories.storageLink) {
             let link = Game.getObjectById(categories.storageLink.linkId) as StructureLink | undefined;
-            if (link && link.store[RESOURCE_ENERGY] < 100) {
+            if (!link) {
+                this.linkStorage.invalidateRoomCache(roomName);
+            } else if (link.store[RESOURCE_ENERGY] < 100) {
                 targets.push({prio: 2, link: link})
             }
         }

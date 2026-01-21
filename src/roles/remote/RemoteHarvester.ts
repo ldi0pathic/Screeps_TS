@@ -56,7 +56,10 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
 
             if (this.memory.energySourceId) {
                 Source = Game.getObjectById(this.memory.energySourceId) as Source | undefined;
-            } else {
+                if (!Source) this.memory.energySourceId = undefined;
+            }
+
+            if (!this.memory.energySourceId) {
                 let sources = this.creep.room.getOrFindEnergieSource();
 
                 if (sources.length == 1) {
@@ -108,6 +111,7 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
 
             if (this.memory.targetId) {
                 target = Game.getObjectById(this.memory.targetId) as AnyStoreStructure | undefined;
+                if (!target) this.memory.targetId = undefined;
             }
 
             if (!target) {
@@ -227,6 +231,7 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
 
         if (this.memory.harvestDroppedId) {
             drop = Game.getObjectById(this.memory.harvestDroppedId) as Resource;
+            if (!drop) this.memory.harvestDroppedId = undefined;
         } else if (!this.hasHarvestTarget()) {
             drop = this.creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {
                 filter: (resource) => {
@@ -266,6 +271,7 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
 
         if (this.memory.harvestTombstoneId) {
             tombstone = Game.getObjectById(this.memory.harvestTombstoneId) as Tombstone;
+            if (!tombstone) this.memory.harvestTombstoneId = undefined;
         } else if (!this.hasHarvestTarget()) {
             tombstone = this.creep.pos.findClosestByRange(FIND_TOMBSTONES, {
                 filter: (tombstone) => {
