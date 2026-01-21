@@ -9,6 +9,12 @@
             : Game.cpu.getUsed();
 
         const maxCPU = Game.cpu.limit;
+        const bucket = Game.cpu.bucket;
+
+        // Wenn der Bucket voll ist, können wir aggressiver sein
+        if (bucket > 9000) return maxCPU * 0.95;
+        if (bucket > 7000) return maxCPU * 0.8;
+        if (bucket < 2000) return maxCPU * 0.3;
 
         if (avgCPU < maxCPU * 0.3) return maxCPU * 0.8;
         if (avgCPU > maxCPU * 0.7) return maxCPU * 0.4;
