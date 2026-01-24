@@ -1,5 +1,6 @@
 ﻿import {roomConfig} from "../config";
 import {LinkManager} from "./LinkManager";
+import {TowerManager} from "./TowerManager";
 
 export class RoomManager {
 
@@ -11,7 +12,6 @@ export class RoomManager {
             const room = Game.rooms[name];
             if (room && room.controller?.my) {
                 if (Memory.rooms[name] && Memory.rooms[name].state >= eRoomState.phase5 && Memory.rooms[name].state <= eRoomState.phase8) {
-                    console.log("run " + name);
                     new LinkManager(name).run();
                 }
             }
@@ -47,7 +47,7 @@ export class RoomManager {
             return;
 
         // Nutze TowerManager.getHostiles für Caching der Feind-Suche
-        const {TowerManager} = require("./TowerManager");
+
         let hostiles = TowerManager.getHostiles(room);
         let cores = room.find(FIND_HOSTILE_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_INVADER_CORE});
 

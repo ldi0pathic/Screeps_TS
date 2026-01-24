@@ -18,13 +18,12 @@ export class LinkManager {
     }
 
     manageEnergyTransfers(roomName: string) {
-        console.log(`[${roomName}] manageEnergyTransfers`)
+
         const senders = this.getReadySenders(roomName);
         if (senders.length === 0) return 0;
-        console.log(`[${roomName}] ${senders.length} senders ready`)
+
         const targets = this.getPriorityTargets(roomName);
         if (targets.length === 0) return 0;
-        console.log(`[${roomName}] ${targets.length} targets ready`)
 
         let targetIndex = 0;
 
