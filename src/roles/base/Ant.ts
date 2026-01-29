@@ -78,5 +78,10 @@ export abstract class Ant<TMemory extends CreepMemory> {
         return Movement.moveTo(this.creep, target, opts);
     }
 
+    protected moveToRoomMiddle(workroom: string): ScreepsReturnCode {
+        const middlePos = new RoomPosition(25, 25, workroom);
+        return this.creep.moveTo(middlePos);
+    }
+
 
 }

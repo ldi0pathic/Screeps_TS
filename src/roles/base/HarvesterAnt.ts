@@ -144,6 +144,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
                         (structure as StructureContainer).store[resourceType] > 0;
                 }
             }) as StructureContainer | undefined;
+            
             this.memory.harvestContainerId = container?.id;
         }
 

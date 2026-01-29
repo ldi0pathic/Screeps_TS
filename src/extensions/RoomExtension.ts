@@ -223,7 +223,7 @@ export function extendRoom() {
     Room.prototype.setRoomState = function (controller: StructureController): void {
         let state = eRoomState.neutral;
 
-        if (!controller.my && controller.owner != undefined) {
+        if (!controller.my && controller.owner != undefined && controller.owner.username != undefined) {
             state = eRoomState.otherPlayer;
         }
 

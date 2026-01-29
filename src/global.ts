@@ -19,6 +19,7 @@ declare global {
         wallBuilder = 'WallBuilder',
         filler = 'Filler',
         remoteHarvester = 'RemoteHarvester',
+        claimer = 'Claimer',
     }
 
 
@@ -98,7 +99,8 @@ declare global {
         // Terminal
 
         otherPlayer,
-        invader
+        invader,
+        claimed
     }
 
     const enum eJobState {
@@ -129,6 +131,10 @@ declare global {
         path?: string;
         dontMove?: number;
         lastPos?: { x: number; y: number };
+    }
+
+    interface ClaimerCreepMemory extends CreepMemory {
+        targetClaim?: boolean;
     }
 
     interface BuilderCreepMemory extends HarvesterCreepMemory {

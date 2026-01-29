@@ -17,9 +17,7 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
             this.scoutCurrentRoom();
             this.assignNextTarget();
             return true;
-        }
-
-        if (this.creep.room.name !== this.memory.scoutRoom) {
+        } else {
             const result = Movement.moveToRoom(this.creep, this.memory.scoutRoom);
             if (result === OK) {
                 return true;
@@ -129,6 +127,7 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
     }
 
     private getScoutRadius(roomState: eRoomState): number {
+        if (roomState >= eRoomState.phase7) return 3;
         if (roomState >= eRoomState.phase3) return 2; // Ab Phase 3: Radius 2
         if (roomState >= eRoomState.phase1) return 1; // Ab Phase 1: Radius 1 (Nachbarn)
         return 0;

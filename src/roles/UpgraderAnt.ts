@@ -142,6 +142,6 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
         const creepStorage = CreepStorage.getInstance();
         const countOfCreeps = creepStorage.getCreepCountByJobAndRoom(job, workroom);
 
-        return roomConfig[workroom].upgraderCount > countOfCreeps;
+        return this.getMaxCreeps(workroom) > countOfCreeps;
     }
 }

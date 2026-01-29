@@ -8,6 +8,7 @@
     buildRoads: boolean;
     buildBase: boolean;
     sendRemoteMiner: boolean;
+    sendClaimer: boolean;
     spawnRoom?: string;
 }
 
@@ -21,6 +22,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         sendMiner: true,
         buildRoads: true,
         buildBase: true,
+        sendClaimer: false,
         sendRemoteMiner: false,
     },
     "W4N8": {
@@ -32,6 +34,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         sendMiner: false,
         buildRoads: false,
         buildBase: false,
+        sendClaimer: true,
         sendRemoteMiner: true,
         spawnRoom: "W5N8"
     },
@@ -44,6 +47,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         sendMiner: false,
         buildRoads: false,
         buildBase: false,
+        sendClaimer: true,
         sendRemoteMiner: true,
         spawnRoom: "W5N8"
     },
@@ -56,6 +60,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         sendMiner: false,
         buildRoads: false,
         buildBase: false,
+        sendClaimer: true,
         sendRemoteMiner: true,
         spawnRoom: "W5N8"
     },
@@ -68,6 +73,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         sendMiner: false,
         buildRoads: false,
         buildBase: false,
+        sendClaimer: true,
         sendRemoteMiner: true,
         spawnRoom: "W5N8"
     }

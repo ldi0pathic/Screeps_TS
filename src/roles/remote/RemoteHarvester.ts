@@ -89,12 +89,16 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
                         if (this.creep.pos.isNearTo(Source)) {
                             this.creep.say('😴');
                         } else {
-                            this.moveTo(Source);
+                            if (this.moveTo(Source) != OK) {
+                                this.moveToRoomMiddle(this.memory.workRoom)
+                            }
                         }
                         return true;
                     }
                     case ERR_NOT_IN_RANGE:
-                        this.moveTo(Source);
+                        if (this.moveTo(Source) != OK) {
+                            this.moveToRoomMiddle(this.memory.workRoom)
+                        }
                         return true;
                     default: {
                         return true;
@@ -252,7 +256,9 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
             switch (state) {
                 case ERR_NOT_IN_RANGE:
                     if (drop.amount > 100) {
-                        this.moveTo(drop);
+                        if (this.moveTo(drop) != OK) {
+                            this.moveToRoomMiddle(this.memory.workRoom)
+                        }
                         return true;
                     }
                     this.memory.harvestDroppedId = undefined;
@@ -291,7 +297,9 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
         switch (state) {
             case ERR_NOT_IN_RANGE:
                 if (tombstone.store.getUsedCapacity(resourceType) > 100) {
-                    this.moveTo(tombstone);
+                    if (this.moveTo(tombstone) != OK) {
+                        this.moveToRoomMiddle(this.memory.workRoom)
+                    }
                     return true;
                 }
                 this.memory.harvestTombstoneId = undefined;
