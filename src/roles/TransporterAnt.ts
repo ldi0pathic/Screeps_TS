@@ -1,5 +1,6 @@
 ﻿import {HarvesterAnt} from "./base/HarvesterAnt";
 import {roomConfig} from "../config";
+import {LinkStorage} from "../storage/LinkStorage";
 
 
 export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
@@ -193,14 +194,31 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
         if (!room) {
             return 0;
         }
-        return room.getOrFindEnergieSource().length || 0;
+        const countOfSources = room.getOrFindEnergieSource().length || 0;
+        const links = LinkStorage.getInstance();
+        const countOfSourcesLinks = links.getLinksByType(workroom, "source").length || 0
+
+        const result = countOfSources - countOfSourcesLinks;
+        return result > 0 ? result : 0;
     }
 
     protected shouldSpawn(workroom: string): boolean {
         if (roomConfig[workroom].spawnRoom != undefined) {
             return false;
         }
-        return Memory.rooms[workroom].state > eRoomState.phase1;
+        const roomstate = Memory.rooms[workroom].state;
+        if (roomstate > eRoomState.phase1 && roomstate < eRoomState.phase5) {
+            return true;
+        }
+        const room = Game.rooms[workroom];
+        if (!room) {
+            return false;
+        }
+        const countOfSources = room.getOrFindEnergieSource().length || 0;
+        const links = LinkStorage.getInstance();
+        const countOfSourcesLinks = links.getLinksByType(workroom, "source").length || 0
+
+        return countOfSources > countOfSourcesLinks;
 
     }
 

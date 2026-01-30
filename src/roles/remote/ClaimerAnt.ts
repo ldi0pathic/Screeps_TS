@@ -1,6 +1,7 @@
 ﻿import {Ant} from "../base/Ant";
 import {Movement} from "../../utils/Movement";
 import {roomConfig} from "../../config";
+import json = Mocha.reporters.json;
 
 export class ClaimerAnt extends Ant<ClaimerCreepMemory> {
 
@@ -18,11 +19,17 @@ export class ClaimerAnt extends Ant<ClaimerCreepMemory> {
             return true;
         }
 
-        // 2. Jetzt im Raum, Controller sichtbar
-        const controller = creep.room.controller;
-        if (!controller) {
-            this.moveToRoomMiddle(workRoom);
-            return true;
+        let target: StructureController | undefined;
+
+        if (this.memory.controllerId) {
+            target = Game.getObjectById(this.memory.controllerId) as StructureController | undefined;
+            if (!target) this.memory.controllerId = undefined;
+        }
+
+
+        if (!target) {
+            target = creep.room.controller;
+            this.memory.controllerId = target?.id;
         }
 
         // 3. Prüfen, ob Creep noch unterwegs ist
@@ -31,18 +38,12 @@ export class ClaimerAnt extends Ant<ClaimerCreepMemory> {
             return true;
         }
 
-        // 4. Controller als Ziel setzen und hinlaufen
-        Movement.moveTo(creep, controller.pos);
-
-        // 5. Wenn in Reichweite, reservieren
-        if (creep.pos.isNearTo(controller)) {
+        if (target) {
             if (this.memory.targetClaim) {
-                const s = this.creep.claimController(controller);
+                const s = this.creep.claimController(target);
                 switch (s) {
                     case ERR_NOT_IN_RANGE:
-                        if (this.moveTo(controller) !== OK) {
-                            this.moveToRoomMiddle(this.memory.workRoom)
-                        }
+                        this.moveTo(target);
                         return true;
                     case OK:
                         Memory.rooms[this.creep.room.name].state = eRoomState.claimed;
@@ -51,21 +52,23 @@ export class ClaimerAnt extends Ant<ClaimerCreepMemory> {
                         return true;
                 }
             }
-            const s = this.creep.reserveController(controller);
+            const s = this.creep.reserveController(target);
             switch (s) {
                 case ERR_NOT_IN_RANGE:
-                    this.moveTo(controller)
+                    this.moveTo(target)
                     return true;
                 case ERR_INVALID_TARGET:
                     this.creep.say('🪓')
-                    this.creep.attackController(controller);
+                    this.creep.attackController(target);
                     return true;
                 case OK: {
-                    if (controller.sign?.username != this.creep.owner.username) {
-                        this.creep.signController(controller, '⚔');
+                    if (target.sign?.username != this.creep.owner.username) {
+                        this.creep.signController(target, '⚔');
                     }
                 }
             }
+        } else {
+            this.moveToRoomMiddle(workRoom);
         }
         return true;
     }

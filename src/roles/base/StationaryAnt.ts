@@ -13,7 +13,7 @@ export abstract class StationaryAnt<TMemory extends StationaryCreepMemory> exten
                 return true;
             }
 
-            this.moveTo(new RoomPosition(finalPos.x, finalPos.y, this.memory.workRoom))
+            this.moveTo(new RoomPosition(finalPos.x, finalPos.y, this.memory.workRoom), 0)
 
             return true;
         }

@@ -13,44 +13,16 @@ export class Movement {
         );
     }
 
-    static moveTo(creep: Creep, target: RoomPosition | _HasRoomPosition, opts?: MoveToOpts): ScreepsReturnCode {
-        const startCpu = MovementProfiler.startMeasurement('moveTo');
-
-        creep.memory.moving = true;
-
-        if (target instanceof RoomPosition) {
-            creep.memory.targetPos = {
-                x: target.x,
-                y: target.y,
-                roomName: target.roomName
-            };
-        } else {
-            creep.memory.targetPos = {
-                x: target.pos.x,
-                y: target.pos.y,
-                roomName: target.pos.roomName
-            };
-        }
-
-        if (!opts) {
-            opts = {reusePath: 10}
-        }
-
-        const result = creep.moveTo(target, opts);
-        MovementProfiler.endMeasurement('moveTo', startCpu);
-        return result;
-    }
-
     /**
      * Erweiterte Bewegungsfunktion mit Pfad-Caching und Stuck-Detection
      */
-    static moveByMemory(creep: Creep, target: RoomPosition | _HasRoomPosition): boolean {
+    static moveByMemory(creep: Creep, target: RoomPosition | _HasRoomPosition, range: number): boolean {
         const startCpu = MovementProfiler.startMeasurement('moveByMemory');
 
         const targetPos = target instanceof RoomPosition ? target : target.pos;
 
         // Ziel erreicht?
-        if (creep.pos.isEqualTo(targetPos)) {
+        if (creep.pos.inRangeTo(targetPos, range)) {
             this.clearMovementMemory(creep);
             MovementProfiler.endMeasurement('moveByMemory', startCpu);
             return false;
@@ -72,7 +44,7 @@ export class Movement {
             serializedPath = creep.memory.path!;
         } else {
             // Neuen Pfad berechnen
-            this.calculateNewPath(creep, targetPos, true); // ignoreCreeps: true
+            this.calculateNewPath(creep, targetPos, false); // ignoreCreeps: true
             serializedPath = creep.memory.path!;
         }
 
@@ -103,7 +75,7 @@ export class Movement {
     }
 
     private static calculateNewPath(creep: Creep, targetPos: RoomPosition, ignoreCreeps: boolean): void {
-        const path = creep.pos.findPathTo(targetPos, {ignoreCreeps});
+        const path = creep.pos.findPathTo(targetPos);
 
         creep.memory.path = Room.serializePath(path);
         creep.memory.targetPos = {
@@ -150,10 +122,14 @@ export class Movement {
                     creep.memory.dontMove = 0;
                 }
                 break;
-
+            case ERR_NOT_FOUND: {
+                creep.moveTo(new RoomPosition(25, 25, creep.room.name));
+                console.log(`${creep.name}: Move error ${moveResult}, moveToMiddle`);
+                break;
+            }
             case ERR_INVALID_ARGS:
             case ERR_NO_BODYPART:
-            case ERR_NOT_FOUND:
+
                 console.log(`${creep.name}: Move error ${moveResult}, clearing path`);
                 this.clearMovementMemory(creep);
                 break;
@@ -202,7 +178,7 @@ export class Movement {
         }
 
         // Verwende moveByMemory für bessere Performance
-        const isMoving = this.moveByMemory(creep, targetPos);
+        const isMoving = this.moveByMemory(creep, targetPos, 1);
         MovementProfiler.endMeasurement('continueMoving', startCpu);
 
         return isMoving ? OK : ERR_INVALID_TARGET;
@@ -210,60 +186,33 @@ export class Movement {
 
     static moveToRoom(creep: Creep, targetRoomName: string): ScreepsReturnCode {
         const startCpu = MovementProfiler.startMeasurement('moveToRoom');
-
         // Wenn wir schon im Zielraum sind, nichts tun
         if (creep.room.name === targetRoomName) {
             MovementProfiler.endMeasurement('moveToRoom', startCpu);
             return OK;
         }
-
-        // Prüfe, ob wir bereits ein Exit-Ziel gespeichert haben
-        let exitPos: RoomPosition | null = null;
-        const targetMemory = creep.memory.targetPos;
-        if (targetMemory && targetMemory.roomName !== targetRoomName) {
-            // altes Ziel löschen
-            this.clearMovementMemory(creep);
-        }
-
-        // Route nur berechnen, wenn kein Exit-Ziel im Speicher
-        if (!targetMemory || targetMemory.roomName !== targetRoomName) {
+        if (!creep.memory.moving || !creep.memory.targetPos) {
             const route = Game.map.findRoute(creep.room.name, targetRoomName);
-            if (route === ERR_NO_PATH || !route.length) {
-                console.log(`${creep.name}: Kein Pfad von ${creep.room.name} zu ${targetRoomName}`);
-                MovementProfiler.endMeasurement('moveToRoom', startCpu);
-                return ERR_NO_PATH;
-            }
+            if (route === ERR_NO_PATH || !route.length) return ERR_NO_PATH;
 
             const nextRoom = route[0].room;
             const exitDir = creep.room.findExitTo(nextRoom);
-            if (exitDir == -2 || exitDir == -10) {
-                MovementProfiler.endMeasurement('moveToRoom', startCpu);
-                return ERR_NO_PATH;
-            }
 
-            exitPos = creep.pos.findClosestByRange(exitDir);
-            if (!exitPos) {
-                MovementProfiler.endMeasurement('moveToRoom', startCpu);
-                return ERR_NO_PATH;
-            }
+            if (exitDir != ERR_NO_PATH && exitDir != ERR_INVALID_ARGS) {
+                const exitPos = creep.pos.findClosestByPath(exitDir);
 
-            // Speichern für moveByMemory
-            creep.memory.targetPos = {
-                x: exitPos.x,
-                y: exitPos.y,
-                roomName: exitPos.roomName
-            };
-        } else {
-            // bereits gespeichertes Ziel verwenden
-            exitPos = this.getTargetPos(creep);
-            if (!exitPos) {
-                MovementProfiler.endMeasurement('moveToRoom', startCpu);
-                return ERR_NO_PATH;
+                if (!exitPos) return ERR_NO_PATH;
+
+                creep.memory.targetPos = {
+                    x: exitPos.x,
+                    y: exitPos.y,
+                    roomName: exitPos.roomName
+                };
             }
         }
 
         // Bewegung ausführen
-        this.moveByMemory(creep, exitPos);
+        this.moveByMemory(creep, this.getTargetPos(creep)!, 0);
         MovementProfiler.endMeasurement('moveToRoom', startCpu);
         return OK;
     }

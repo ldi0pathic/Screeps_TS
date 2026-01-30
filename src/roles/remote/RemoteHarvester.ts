@@ -81,17 +81,12 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
                         if (this.creep.pos.isNearTo(Source)) {
                             this.creep.say('😴');
                         } else {
-                            if (this.moveTo(Source) != OK) {
-                                this.moveToRoomMiddle(this.memory.workRoom)
-                            }
+                            return this.moveTo(Source);
                         }
                         return true;
                     }
                     case ERR_NOT_IN_RANGE:
-                        if (this.moveTo(Source) != OK) {
-                            this.moveToRoomMiddle(this.memory.workRoom)
-                        }
-                        return true;
+                        return this.moveTo(Source);
                     default: {
                         return true;
                     }
@@ -127,6 +122,10 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
             }
 
             if (target) {
+                if (target.store.getFreeCapacity(RESOURCE_ENERGY) < 100) {
+                    this.memory.targetId = undefined;
+                    return true;
+                }
                 let state = this.creep.transfer(target, RESOURCE_ENERGY);
                 switch (state) {
                     case ERR_NOT_IN_RANGE: {
@@ -248,10 +247,7 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
             switch (state) {
                 case ERR_NOT_IN_RANGE:
                     if (drop.amount > 100) {
-                        if (this.moveTo(drop) != OK) {
-                            this.moveToRoomMiddle(this.memory.workRoom)
-                        }
-                        return true;
+                        return this.moveTo(drop);
                     }
                     this.memory.harvestDroppedId = undefined;
                     break;
@@ -289,10 +285,7 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
         switch (state) {
             case ERR_NOT_IN_RANGE:
                 if (tombstone.store.getUsedCapacity(resourceType) > 100) {
-                    if (this.moveTo(tombstone) != OK) {
-                        this.moveToRoomMiddle(this.memory.workRoom)
-                    }
-                    return true;
+                    return this.moveTo(tombstone)
                 }
                 this.memory.harvestTombstoneId = undefined;
                 break;

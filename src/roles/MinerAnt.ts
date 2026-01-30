@@ -143,11 +143,11 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         const setCost = BODYPART_COST[WORK];
 
-        const moveCost = 2 * BODYPART_COST[MOVE] + BODYPART_COST[CARRY];
+        const moveCost = 3 * BODYPART_COST[MOVE] + BODYPART_COST[CARRY];
         const maxSets = Math.floor((availableEnergy - moveCost) / setCost);
-        const numberOfSets = Math.min(20, maxSets); // Limit auf 8 Sets
+        const numberOfSets = Math.min(25, maxSets); // Limit auf 8 Sets
 
-        const body: BodyPartConstant[] = [MOVE, MOVE, CARRY];
+        const body: BodyPartConstant[] = [MOVE, MOVE, MOVE, CARRY];
         for (let i = 0; i < numberOfSets; i++) {
             body.push(WORK);
         }

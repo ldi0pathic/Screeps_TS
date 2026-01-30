@@ -136,6 +136,7 @@ declare global {
 
     interface ClaimerCreepMemory extends CreepMemory {
         targetClaim?: boolean;
+        controllerId?: Id<StructureController>
     }
 
     interface BuilderCreepMemory extends HarvesterCreepMemory {

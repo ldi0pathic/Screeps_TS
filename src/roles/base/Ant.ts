@@ -74,8 +74,8 @@ export abstract class Ant<TMemory extends CreepMemory> {
 
     protected abstract shouldSpawn(workroom: string): boolean;
 
-    protected moveTo(target: RoomPosition | _HasRoomPosition, opts?: MoveToOpts): ScreepsReturnCode {
-        return Movement.moveTo(this.creep, target, opts);
+    protected moveTo(target: RoomPosition | _HasRoomPosition, range: number = 1): boolean {
+        return Movement.moveByMemory(this.creep, target, range);
     }
 
     protected moveToRoomMiddle(workroom: string): ScreepsReturnCode {
