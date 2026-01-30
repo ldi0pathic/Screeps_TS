@@ -34,7 +34,7 @@ export const roomConfig: { [roomName: string]: RoomConfig } = {
         sendMiner: false,
         buildRoads: false,
         buildBase: false,
-        sendClaimer: false,
+        sendClaimer: true,
         sendRemoteMiner: true,
         spawnRoom: "W5N8"
     },

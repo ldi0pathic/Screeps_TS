@@ -134,7 +134,7 @@ declare global {
         lastPos?: { x: number; y: number };
     }
 
-    interface ClaimerCreepMemory extends CreepMemory {
+    interface ClaimerCreepMemory extends StationaryCreepMemory {
         targetClaim?: boolean;
         controllerId?: Id<StructureController>
     }
@@ -180,6 +180,11 @@ declare global {
     }
 
     interface UpgraderCreepMemory extends HarvesterCreepMemory {
+    }
+
+    interface EndgameUpgraderCreepMemory extends StationaryCreepMemory {
+        containerId: Id<StructureContainer> | undefined;
+        linkId: Id<StructureLink> | undefined;
     }
 
     interface RemoteHarvesterMemory extends CreepMemory {
@@ -260,7 +265,12 @@ declare global {
         invaderCore: boolean;
         needDefence: boolean;
         towers: Id<StructureTower>[];
-        repairTarget: Id<Structure> | undefined
+        repairTarget: Id<Structure> | undefined,
+        controllerData?: {
+            x: number;
+            y: number;
+            id: Id<StructureController>;
+        };
     }
 
     interface Position {

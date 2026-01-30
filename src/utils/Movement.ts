@@ -122,11 +122,8 @@ export class Movement {
                     creep.memory.dontMove = 0;
                 }
                 break;
-            case ERR_NOT_FOUND: {
-                creep.moveTo(new RoomPosition(25, 25, creep.room.name));
-                console.log(`${creep.name}: Move error ${moveResult}, moveToMiddle`);
-                break;
-            }
+
+            case ERR_NOT_FOUND:
             case ERR_INVALID_ARGS:
             case ERR_NO_BODYPART:
 

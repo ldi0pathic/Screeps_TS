@@ -19,11 +19,11 @@ export class Jobs {
         Worker: {antClass: WorkerAnt, jobPrio: 11, spawnPrio: 12},
         Upgrader: {antClass: UpgraderAnt, jobPrio: 11, spawnPrio: 11},
         Builder: {antClass: BuilderAnt, jobPrio: 11, spawnPrio: 10},
+        RemoteHarvester: {antClass: RemoteHarvester, jobPrio: 1, spawnPrio: 4},
+        RemoteMiner: {antClass: RemoteMinerAnt, jobPrio: 1, spawnPrio: 4},
+        WallBuilder: {antClass: WallBuilderAnt, jobPrio: 1, spawnPrio: 3},
+        Claimer: {antClass: ClaimerAnt, jobPrio: 1, spawnPrio: 2},
         Scout: {antClass: ScoutAnt, jobPrio: 1, spawnPrio: 1},
-        WallBuilder: {antClass: WallBuilderAnt, jobPrio: 1, spawnPrio: 1},
-        RemoteHarvester: {antClass: RemoteHarvester, jobPrio: 1, spawnPrio: 1},
-        RemoteMiner: {antClass: RemoteMinerAnt, jobPrio: 1, spawnPrio: 1},
-        Claimer: {antClass: ClaimerAnt, jobPrio: 1, spawnPrio: 1},
     };
 
     public static createAnt(jobType: eJobType, creep: Creep): Ant<any> | null {

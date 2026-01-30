@@ -111,11 +111,14 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
     }
 
     public override getMaxCreeps(workroom: string): number {
-        let max = roomConfig[workroom].upgraderCount || 0;
-
         const room = Game.rooms[workroom];
 
+        let max = roomConfig[workroom].upgraderCount || 0;
+
         if (room && room.storage) {
+            if (room.memory.state == eRoomState.phase8) {
+                return 1;
+            }
             if (room.memory.state < eRoomState.phase8 && room.memory.state > eRoomState.phase4) {
 
                 if (room.storage.store[RESOURCE_ENERGY] > 50_000) {
@@ -131,6 +134,7 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
             }
         }
 
+
         return max;
     }
 
@@ -138,6 +142,14 @@ export class UpgraderAnt extends HarvesterAnt<UpgraderCreepMemory> {
         if (roomConfig[workroom].spawnRoom != undefined) {
             return false;
         }
+
+        const linkStorage = LinkStorage.getInstance();
+        const links = linkStorage.getLinksByType(workroom, "upgrader");
+
+        if (links.length > 0) {
+            return false;
+        }
+
         const job = this.getJob();
         const creepStorage = CreepStorage.getInstance();
         const countOfCreeps = creepStorage.getCreepCountByJobAndRoom(job, workroom);

@@ -106,9 +106,16 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
             }
 
             if (!target) {
-
-                if (!target) {
-
+                if (this.creep.room.memory.spawnPrioBlock) {
+                    this.creep.say('🚩🚩🚩')
+                    target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                        filter: s => (s.structureType === STRUCTURE_SPAWN ||
+                                s.structureType == STRUCTURE_STORAGE ||
+                                s.structureType == STRUCTURE_LINK ||
+                                s.structureType === STRUCTURE_EXTENSION) &&
+                            s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                    }) as AnyStoreStructure | undefined;
+                } else {
                     target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
                         filter: structure => (structure.structureType === STRUCTURE_CONTAINER ||
                                 structure.structureType == STRUCTURE_STORAGE ||
@@ -118,8 +125,8 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
                             structure.store.getFreeCapacity(RESOURCE_ENERGY) >= this.creep.store[RESOURCE_ENERGY] * 0.5
                     }) as AnyStoreStructure | undefined;
                 }
-
             }
+
 
             if (target) {
                 if (target.store.getFreeCapacity(RESOURCE_ENERGY) < 100) {

@@ -104,6 +104,15 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
             repairTarget: undefined,
         };
 
+        if (room.controller) {
+            Memory.rooms[room.name].controllerData = {
+                x: room.controller.pos.x,
+                y: room.controller.pos.y,
+                id: room.controller.id,
+            }
+        }
+
+
         if (room.controller?.owner?.username == "Invader") {
             room.memory.state = eRoomState.invader;
         } else {

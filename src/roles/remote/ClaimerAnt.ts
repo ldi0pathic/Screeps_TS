@@ -2,8 +2,9 @@
 import {Movement} from "../../utils/Movement";
 import {roomConfig} from "../../config";
 import json = Mocha.reporters.json;
+import {StationaryAnt} from "../base/StationaryAnt";
 
-export class ClaimerAnt extends Ant<ClaimerCreepMemory> {
+export class ClaimerAnt extends StationaryAnt<ClaimerCreepMemory> {
 
     public override getJob(): eJobType {
         return eJobType.claimer;
@@ -11,39 +12,33 @@ export class ClaimerAnt extends Ant<ClaimerCreepMemory> {
 
     public override doJob(): boolean {
         const creep = this.creep;
-        const workRoom = creep.memory.workRoom;
+        if (!this.isOnPosition()) {
+            if (!this.goToFinalPos(1)) {
+                return true;
+            }
+            if (creep.room.name == this.memory.workRoom) {
 
-        // 1. Noch nicht im Raum → dorthin bewegen
-        if (creep.room.name !== workRoom) {
-            Movement.moveToRoom(creep, workRoom);
+                if (this.memory.finalLocation?.x == 25 && this.memory.finalLocation?.y == 25) {
+                    if (creep.room.controller?.pos) {
+                        this.memory.finalLocation = creep.room.controller?.pos;
+                        Memory.rooms[creep.room.name].controllerData = {
+                            x: creep.room.controller.pos.x,
+                            y: creep.room.controller.pos.y,
+                            id: creep.room.controller.id
+                        }
+                    }
+                }
+            }
+            creep.say('🚌')
             return true;
         }
 
-        let target: StructureController | undefined;
-
-        if (this.memory.controllerId) {
-            target = Game.getObjectById(this.memory.controllerId) as StructureController | undefined;
-            if (!target) this.memory.controllerId = undefined;
-        }
-
-
-        if (!target) {
-            target = creep.room.controller;
-            this.memory.controllerId = target?.id;
-        }
-
-        // 3. Prüfen, ob Creep noch unterwegs ist
-        if (Movement.shouldContinueMoving(creep)) {
-            Movement.continueMoving(creep);
-            return true;
-        }
-
-        if (target) {
+        if (creep.room.controller) {
             if (this.memory.targetClaim) {
-                const s = this.creep.claimController(target);
+                const s = this.creep.claimController(creep.room.controller);
                 switch (s) {
                     case ERR_NOT_IN_RANGE:
-                        this.moveTo(target);
+                        this.moveTo(creep.room.controller);
                         return true;
                     case OK:
                         Memory.rooms[this.creep.room.name].state = eRoomState.claimed;
@@ -52,24 +47,24 @@ export class ClaimerAnt extends Ant<ClaimerCreepMemory> {
                         return true;
                 }
             }
-            const s = this.creep.reserveController(target);
+            const s = this.creep.reserveController(creep.room.controller);
             switch (s) {
                 case ERR_NOT_IN_RANGE:
-                    this.moveTo(target)
+                    this.moveTo(creep.room.controller)
                     return true;
                 case ERR_INVALID_TARGET:
                     this.creep.say('🪓')
-                    this.creep.attackController(target);
+                    this.creep.attackController(creep.room.controller);
                     return true;
                 case OK: {
-                    if (target.sign?.username != this.creep.owner.username) {
-                        this.creep.signController(target, '⚔');
+                    if (creep.room.controller.sign?.username != this.creep.owner.username) {
+                        this.creep.signController(creep.room.controller, '⚔');
                     }
                 }
             }
-        } else {
-            this.moveToRoomMiddle(workRoom);
         }
+
+
         return true;
     }
 
@@ -79,12 +74,32 @@ export class ClaimerAnt extends Ant<ClaimerCreepMemory> {
 
     public override createSpawnMemory(spawn: StructureSpawn, workroom: string): ClaimerCreepMemory {
 
-        const base = super.createSpawnMemory(spawn, workroom);
+        const job = this.getJob();
+
+        let finalLocation: RoomPosition | undefined = undefined;
+        const roomdata = Memory.rooms[workroom].controllerData;
+        if (roomdata) {
+            finalLocation = new RoomPosition(roomdata.x, roomdata.y, workroom);
+        } else {
+            finalLocation = Game.rooms[workroom]?.controller?.pos;
+        }
+        if (!finalLocation) {
+            finalLocation = new RoomPosition(25, 25, workroom)
+        }
 
         return {
-            ...base,
-            targetClaim: roomConfig[workroom].buildBase,
-        };
+            job: job,
+            ticksToPos: 1,
+            spawn: spawn.name,
+            state: eJobState.work,
+            workRoom: workroom,
+            onPosition: false,
+            finalLocation: finalLocation,
+            roundRobin: 1,
+            roundRobinOffset: undefined,
+            moving: false,
+
+        } as ClaimerCreepMemory;
     }
 
     public override getMaxCreeps(workroom: string): number {
