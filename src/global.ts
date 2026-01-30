@@ -20,6 +20,7 @@ declare global {
         filler = 'Filler',
         remoteHarvester = 'RemoteHarvester',
         claimer = 'Claimer',
+        remoteMiner = 'RemoteMiner',
     }
 
 

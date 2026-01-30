@@ -9,59 +9,64 @@ export class ClaimerAnt extends Ant<ClaimerCreepMemory> {
     }
 
     public override doJob(): boolean {
-        if (this.creep.room.name !== this.memory.workRoom) {
-            const result = Movement.moveToRoom(this.creep, this.memory.workRoom);
-            if (result != OK) {
-                return true;
-            } else {
-                this.memory.moving = false
-            }
-        }
+        const creep = this.creep;
+        const workRoom = creep.memory.workRoom;
 
-        if (Movement.shouldContinueMoving(this.creep)) {
-            Movement.continueMoving(this.creep);
+        // 1. Noch nicht im Raum → dorthin bewegen
+        if (creep.room.name !== workRoom) {
+            Movement.moveToRoom(creep, workRoom);
             return true;
         }
 
-        const controller = this.creep.room.controller;
+        // 2. Jetzt im Raum, Controller sichtbar
+        const controller = creep.room.controller;
         if (!controller) {
-            this.creep.say("🚩🚩🚩🚩")
-            return false;
+            this.moveToRoomMiddle(workRoom);
+            return true;
         }
 
-        if (this.memory.targetClaim) {
-            switch (this.creep.claimController(controller)) {
+        // 3. Prüfen, ob Creep noch unterwegs ist
+        if (Movement.shouldContinueMoving(creep)) {
+            Movement.continueMoving(creep);
+            return true;
+        }
+
+        // 4. Controller als Ziel setzen und hinlaufen
+        Movement.moveTo(creep, controller.pos);
+
+        // 5. Wenn in Reichweite, reservieren
+        if (creep.pos.isNearTo(controller)) {
+            if (this.memory.targetClaim) {
+                const s = this.creep.claimController(controller);
+                switch (s) {
+                    case ERR_NOT_IN_RANGE:
+                        if (this.moveTo(controller) !== OK) {
+                            this.moveToRoomMiddle(this.memory.workRoom)
+                        }
+                        return true;
+                    case OK:
+                        Memory.rooms[this.creep.room.name].state = eRoomState.claimed;
+                        return true;
+                    default:
+                        return true;
+                }
+            }
+            const s = this.creep.reserveController(controller);
+            switch (s) {
                 case ERR_NOT_IN_RANGE:
-                    if (this.moveTo(controller) !== OK) {
-                        this.moveToRoomMiddle(this.memory.workRoom)
+                    this.moveTo(controller)
+                    return true;
+                case ERR_INVALID_TARGET:
+                    this.creep.say('🪓')
+                    this.creep.attackController(controller);
+                    return true;
+                case OK: {
+                    if (controller.sign?.username != this.creep.owner.username) {
+                        this.creep.signController(controller, '⚔');
                     }
-                    return true;
-                case OK:
-                    Memory.rooms[this.creep.room.name].state = eRoomState.claimed;
-                    this.creep.suicide();
-                    return true;
-                default:
-                    return true;
-            }
-        }
-
-        switch (this.creep.reserveController(controller)) {
-            case ERR_NOT_IN_RANGE:
-                if (this.moveTo(controller) !== OK) {
-                    this.moveToRoomMiddle(this.memory.workRoom)
-                }
-                return true;
-            case ERR_INVALID_TARGET:
-                this.creep.say('🪓')
-                this.creep.attackController(controller);
-                return true;
-            case OK: {
-                if (controller.sign?.username != this.creep.owner.username) {
-                    this.creep.signController(controller, '⚔');
                 }
             }
         }
-
         return true;
     }
 

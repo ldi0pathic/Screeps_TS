@@ -13,21 +13,13 @@ export class RemoteHarvester extends Ant<RemoteHarvesterMemory> {
 
         if (this.memory.state == eJobState.harvest) {
             if (this.creep.room.name !== this.memory.workRoom) {
-                const result = Movement.moveToRoom(this.creep, this.memory.workRoom);
-                if (result != OK) {
-                    return true;
-                } else {
-                    this.memory.moving = false
-                }
+                Movement.moveToRoom(this.creep, this.memory.workRoom);
+                return true;
             }
         } else {
             if (this.creep.room.name !== this.memory.spawnRoom) {
-                const result = Movement.moveToRoom(this.creep, this.memory.spawnRoom);
-                if (result != OK) {
-                    return true;
-                } else {
-                    this.memory.moving = false
-                }
+                Movement.moveToRoom(this.creep, this.memory.spawnRoom);
+                return true;
             }
         }
 

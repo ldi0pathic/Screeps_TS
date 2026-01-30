@@ -18,13 +18,9 @@ export class ScoutAnt extends Ant<ScoutCreepMemory> {
             this.assignNextTarget();
             return true;
         } else {
-            const result = Movement.moveToRoom(this.creep, this.memory.scoutRoom);
-            if (result === OK) {
-                return true;
-            }
+            Movement.moveToRoom(this.creep, this.memory.scoutRoom);
+            return true;
         }
-
-        return true;
     }
 
     public override getProfil(workroom: Room): BodyPartConstant[] {

@@ -1,9 +1,9 @@
-﻿import {roomConfig} from "../config";
+﻿import {roomConfig} from "../../config";
 import _ from "lodash";
-import {StationaryAnt} from "./base/StationaryAnt";
-import {CreepStorage} from "../storage/CreepStorage";
+import {StationaryAnt} from "../base/StationaryAnt";
+import {CreepStorage} from "../../storage/CreepStorage";
 
-export class MinerAnt extends StationaryAnt<MinerMemory> {
+export class RemoteMinerAnt extends StationaryAnt<MinerMemory> {
 
     doJob(): boolean {
         if (!this.isOnPosition()) {
@@ -16,7 +16,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         let container: StructureContainer | undefined;
         let constructionSite: ConstructionSite | undefined;
-        let link: StructureLink | undefined;
         let source: Source | undefined;
 
         if (this.memory.energySourceId) {
@@ -27,18 +26,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
         } else {
             this.creep.say('🚩')
             return false;
-        }
-
-        if (this.creep.room.memory.state >= eRoomState.phase5) {
-            if (this.memory.linkId) {
-                link = Game.getObjectById(this.memory.linkId) as StructureLink | undefined;
-                if (!link) this.memory.linkId = undefined;
-            } else {
-                link = this.creep.pos.findInRange(FIND_STRUCTURES, 1, {
-                    filter: {structureType: STRUCTURE_LINK}
-                })[0] as StructureLink | undefined;
-                this.memory.linkId = link?.id;
-            }
         }
 
         if (this.memory.containerId) {
@@ -86,18 +73,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             }
 
             if (energyStore >= this.creep.store.getCapacity(RESOURCE_ENERGY)) {
-
-                if (link) {
-                    let state = this.creep.transfer(link, RESOURCE_ENERGY)
-                    switch (state) {
-                        case ERR_NOT_IN_RANGE: {
-                            this.memory.linkId = undefined;
-                            break;
-                        }
-                    }
-                    return true;
-                }
-
                 if (container) {
                     if (container.store.getFreeCapacity() == 0) {
                         if (container.hits < container.hitsMax) {
@@ -136,21 +111,34 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
     public override getProfil(workroom: Room): BodyPartConstant[] {
 
         if (workroom.memory.state < eRoomState.phase3) {
-            return [WORK, CARRY, MOVE]
+            return [WORK, CARRY, MOVE];
         }
 
         const availableEnergy = workroom.getMaxAvailableEnergy();
 
-        const setCost = BODYPART_COST[WORK];
+        const workCost = BODYPART_COST[WORK];
+        const carryCost = BODYPART_COST[CARRY];
+        const moveCost = BODYPART_COST[MOVE];
 
-        const moveCost = 2 * BODYPART_COST[MOVE] + BODYPART_COST[CARRY];
-        const maxSets = Math.floor((availableEnergy - moveCost) / setCost);
-        const numberOfSets = Math.min(20, maxSets); // Limit auf 8 Sets
+        // Berechne maximale Anzahl WORK unter Berücksichtigung von 1 CARRY und benötigten MOVE
+        let maxWork = Math.floor((availableEnergy - carryCost) / (workCost + moveCost / 2));
+        maxWork = Math.min(maxWork, 20); // Optional: Limit auf 20 WORK
 
-        const body: BodyPartConstant[] = [MOVE, MOVE, CARRY];
-        for (let i = 0; i < numberOfSets; i++) {
+        const body: BodyPartConstant[] = [];
+
+        // WORK-Teile hinzufügen
+        for (let i = 0; i < maxWork; i++) {
             body.push(WORK);
         }
+
+        // MOVE: 1 MOVE pro 2 WORK, aufrunden
+        const moveCount = Math.ceil(maxWork / 2);
+        for (let i = 0; i < moveCount; i++) {
+            body.push(MOVE);
+        }
+
+        // Ein einziges CARRY
+        body.push(CARRY);
 
         return body;
     }
@@ -167,7 +155,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
         let sourceId: Id<Source> | undefined = undefined;
         let containerId: Id<StructureContainer> | undefined = undefined;
-        let linkId: Id<StructureLink> | undefined = undefined;
         let finalLocation: RoomPosition | undefined = undefined;
         let buildId: Id<ConstructionSite> | undefined = undefined;
 
@@ -197,19 +184,6 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                         }
                     }
 
-                }
-
-                if (s.linkId) {
-                    let check = Game.getObjectById(s.linkId);
-                    if (check) {
-                        linkId = s.linkId;
-                    } else {
-                        for (let id in workroom.memory.energySources) {
-                            if (workroom.memory.energySources[id].sourceId == s.sourceId) {
-                                workroom.memory.energySources[id].linkId = undefined;
-                            }
-                        }
-                    }
                 }
                 break;
             }
@@ -301,19 +275,17 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
             workRoom: workroom.name,
             energySourceId: sourceId,
             containerId: containerId,
-            linkId: linkId,
             containerConstructionId: buildId,
             onPosition: false,
             finalLocation: finalLocation,
             roundRobin: 1,
             roundRobinOffset: undefined,
             moving: false,
-
         } as MinerMemory;
     }
 
     public override getJob(): eJobType {
-        return eJobType.miner;
+        return eJobType.remoteMiner;
     }
 
     public override getMaxCreeps(workroom: string): number {
@@ -326,7 +298,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
 
     protected shouldSpawn(workroom: string): boolean {
 
-        if (!roomConfig[workroom].sendMiner || roomConfig[workroom].spawnRoom != undefined) {
+        if (!roomConfig[workroom].sendMiner || roomConfig[workroom].spawnRoom == undefined) {
             return false;
         }
 
