@@ -8,6 +8,7 @@ import {LayoutManager} from "./manager/LayoutManager";
 import {TowerManager} from "./manager/TowerManager";
 import {RoomManager} from "./manager/RoomManager";
 import {RoomPhaseManager} from "./manager/RoomPhaseManager";
+import {IntelManager} from "./manager/IntelManager";
 import {AntFactory} from "./roles/AntFactory";
 
 
@@ -65,6 +66,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
         Memory.lastTickCpu = Game.cpu.getUsed();
         return;
     }
+
+    IntelManager.scanStaggered(ownedRooms);
 
     // Skip LayoutManager when bucket is critically low
     if (Game.cpu.bucket >= 3000) {
