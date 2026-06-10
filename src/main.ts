@@ -13,6 +13,7 @@ import {DefenseManager} from "./manager/DefenseManager";
 import {SpawnDemandManager} from "./manager/SpawnDemandManager";
 import {RemotePlanner} from "./manager/RemotePlanner";
 import {ScoutPlanner} from "./manager/ScoutPlanner";
+import {NukeMitigationManager} from "./manager/NukeMitigationManager";
 import {AntFactory} from "./roles/AntFactory";
 
 
@@ -79,6 +80,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     ScoutPlanner.refreshShortlisted();
     if (Game.cpu.bucket >= 3000) {
         DefenseManager.scanNukesStaggered(ownedRooms);
+        NukeMitigationManager.runStaggered(ownedRooms);
     }
 
     // Skip LayoutManager when bucket is critically low
