@@ -12,6 +12,7 @@ import {IntelManager} from "./manager/IntelManager";
 import {DefenseManager} from "./manager/DefenseManager";
 import {SpawnDemandManager} from "./manager/SpawnDemandManager";
 import {RemotePlanner} from "./manager/RemotePlanner";
+import {ScoutPlanner} from "./manager/ScoutPlanner";
 import {AntFactory} from "./roles/AntFactory";
 
 
@@ -74,6 +75,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
     IntelManager.scanStaggered(ownedRooms);
     RemotePlanner.runStaggered(ownedRooms);
+    ScoutPlanner.discoverFrontier(ownedRooms);
+    ScoutPlanner.refreshShortlisted();
     if (Game.cpu.bucket >= 3000) {
         DefenseManager.scanNukesStaggered(ownedRooms);
     }
