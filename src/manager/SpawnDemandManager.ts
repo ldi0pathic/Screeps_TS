@@ -29,43 +29,51 @@ export class SpawnDemandManager {
         }
     }
 
+    /** Returns true when a creep should be pre-spawned (replacement timing) */
+    static needsReplacement(creep: Creep, bodyLength: number, travelTicks: number = 0): boolean {
+        const ticks = creep.ticksToLive ?? 1500;
+        return ticks < bodyLength * 3 + travelTicks + 10;
+    }
+
     private static computeDemands(room: Room): void {
         const phase = room.memory.state;
         const spawnRoom = room;
         const maxEnergy = room.getMaxAvailableEnergy();
         const storageEnergy = room.storage?.store.energy ?? 0;
         const rcl8 = room.controller?.level === 8;
+        const rcl = room.controller?.level ?? 0;
 
-        // Phase 8: skip bootstrap/phase checks
+        // Phase 8: skip bootstrap/phase checks (endgame skip list per plan 11)
         if (phase === eRoomState.phase8) {
             this.demandEndgame(room, spawnRoom, maxEnergy, storageEnergy);
             return;
         }
 
-        // Phase 1: cold-boot only
-        if (phase <= eRoomState.phase1) {
+        // Phase 1 (RCL1): 2 workers only — no construction, only harvest+upgrade
+        if (phase <= eRoomState.phase1 || rcl < 2) {
             this.demandBootstrap(room, spawnRoom, maxEnergy);
             return;
         }
 
-        // Phase 2+: miners, haulers, filler, upgrader
+        // Phase 2 (RCL2-3): add containers and static miners
         this.demandMiners(room, spawnRoom, maxEnergy);
 
         if (phase >= eRoomState.phase2) {
+            // Only add haulers if no link network
             this.demandHaulers(room, spawnRoom, maxEnergy);
             this.demandFiller(room, spawnRoom, maxEnergy);
         }
 
-        if (phase >= eRoomState.phase2) {
-            this.demandUpgrader(room, spawnRoom, maxEnergy, storageEnergy, rcl8);
-        }
+        // Upgrader: scale by storage energy surplus
+        this.demandUpgrader(room, spawnRoom, maxEnergy, storageEnergy, rcl8);
 
+        // Builder: only when useful construction sites exist (plan 12: not during RCL1)
         if (phase >= eRoomState.phase2) {
             this.demandBuilder(room, spawnRoom, maxEnergy);
         }
 
-        // Phase 5+: remotes
-        if (phase >= eRoomState.phase5) {
+        // Phase 5+: remotes (only after phase4 exit criteria met: storage > 50k)
+        if (phase >= eRoomState.phase5 && storageEnergy >= 50000) {
             this.demandRemotes(room, spawnRoom, maxEnergy);
         }
     }
@@ -82,18 +90,20 @@ export class SpawnDemandManager {
 
     private static demandMiners(room: Room, spawnRoom: Room, maxEnergy: number): void {
         const sources = room.getOrFindEnergieSource();
+        const minerBody = BodyBuilder.miner(true);
+        const minerCost = BodyBuilder.bodyCost(minerBody);
+        if (minerCost > maxEnergy) return;
+
         for (const src of sources) {
             if (!src.sourceId) continue;
-            const hasMiner = Object.values(Game.creeps).some(c =>
+            const existingMiner = Object.values(Game.creeps).find(c =>
                 c.memory.workRoom === room.name &&
                 c.memory.job === eJobType.miner &&
                 (c.memory as MinerMemory).energySourceId === src.sourceId
             );
-            if (!hasMiner) {
-                const body = BodyBuilder.miner(true);
-                if (BodyBuilder.bodyCost(body) <= maxEnergy) {
-                    SpawnManager.queueCreep(eJobType.miner, spawnRoom, room.name, body, 998);
-                }
+
+            if (!existingMiner || this.needsReplacement(existingMiner, minerBody.length)) {
+                SpawnManager.queueCreep(eJobType.miner, spawnRoom, room.name, minerBody, 998);
             }
         }
     }
