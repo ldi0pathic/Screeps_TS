@@ -1,6 +1,7 @@
 ﻿import {roomConfig} from "../config";
 import {LinkManager} from "./LinkManager";
 import {TowerManager} from "./TowerManager";
+import {DefenseManager} from "./DefenseManager";
 
 export class RoomManager {
 
@@ -46,36 +47,7 @@ export class RoomManager {
         if (!room)
             return;
 
-        // Nutze TowerManager.getHostiles für Caching der Feind-Suche
-
-        let hostiles = TowerManager.getHostiles(room);
-        let cores = room.find(FIND_HOSTILE_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_INVADER_CORE});
-
-        Memory.rooms[name].needDefence = hostiles.length > 0;
-        Memory.rooms[name].invaderCore = cores.length > 0;
-        if (cores.length > 0) {
-
-            let timeRemaining = 0;
-            for (let core of cores) {
-                for (const effect of core.effects) {
-                    let remainingTicks = effect.ticksRemaining;
-                    if (remainingTicks > timeRemaining) {
-                        timeRemaining = remainingTicks;
-                    }
-                }
-            }
-            Memory.rooms[name].invaderCoreEndTick = time + timeRemaining;
-        }
-
-        if (hostiles.length > 0) {
-            let timeRemaining = 0;
-            for (let hostile of hostiles) {
-                let remainingTicks = hostile.ticksToLive || 0;
-                if (remainingTicks > timeRemaining) {
-                    timeRemaining = remainingTicks;
-                }
-            }
-            Memory.rooms[name].needDefenceEndTick = time + timeRemaining;
-        }
+        // Threat data is maintained by DefenseManager.runCritical; just refresh towers here
+        const info = DefenseManager.getHostileInfo(room);
     }
 }

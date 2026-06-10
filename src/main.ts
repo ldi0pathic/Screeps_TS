@@ -9,6 +9,7 @@ import {TowerManager} from "./manager/TowerManager";
 import {RoomManager} from "./manager/RoomManager";
 import {RoomPhaseManager} from "./manager/RoomPhaseManager";
 import {IntelManager} from "./manager/IntelManager";
+import {DefenseManager} from "./manager/DefenseManager";
 import {AntFactory} from "./roles/AntFactory";
 
 
@@ -32,6 +33,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
         }
     }
 
+    DefenseManager.runCritical(ownedRooms);
     SpawnManager.processEmergencySpawns();
     SpawnManager.processSpawns();
     SpawnManager.findNeededCreeps();
@@ -68,6 +70,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     IntelManager.scanStaggered(ownedRooms);
+    if (Game.cpu.bucket >= 3000) {
+        DefenseManager.scanNukesStaggered(ownedRooms);
+    }
 
     // Skip LayoutManager when bucket is critically low
     if (Game.cpu.bucket >= 3000) {
