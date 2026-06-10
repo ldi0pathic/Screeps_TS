@@ -57,7 +57,7 @@ export class LayoutManager {
             );
             if (maxNewSites <= 0) continue;
 
-            const count = builder.buildAll();
+            const count = builder.buildAll(maxNewSites);
             if (count > 0) {
                 console.log(`[Layout] ${name}: placed ${count} sites`);
             }

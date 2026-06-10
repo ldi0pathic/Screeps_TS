@@ -344,6 +344,15 @@ declare global {
             total: number;
             manager: Record<string, number>;
         };
+        scoutPlanner?: {
+            queue: string[];
+            candidates: Array<{
+                roomName: string;
+                score: number;
+                lastScored: number;
+                state: 'queued' | 'scouted' | 'scored' | 'shortlisted' | 'reserved';
+            }>;
+        };
     }
 
     interface RoomMemory {

@@ -17,8 +17,28 @@ interface SettlementCandidate {
 
 export class ScoutPlanner {
 
-    static scoutQueue: string[] = [];
-    static candidates: SettlementCandidate[] = [];
+    private static get memory(): { queue: string[]; candidates: SettlementCandidate[] } {
+        if (!Memory.scoutPlanner) {
+            Memory.scoutPlanner = { queue: [], candidates: [] };
+        }
+        return Memory.scoutPlanner;
+    }
+
+    static get scoutQueue(): string[] {
+        return this.memory.queue;
+    }
+
+    static set scoutQueue(value: string[]) {
+        this.memory.queue = value;
+    }
+
+    static get candidates(): SettlementCandidate[] {
+        return this.memory.candidates;
+    }
+
+    static set candidates(value: SettlementCandidate[]) {
+        this.memory.candidates = value;
+    }
 
     /** Discover new rooms via BFS from owned rooms */
     static discoverFrontier(ownedRooms: string[]): void {

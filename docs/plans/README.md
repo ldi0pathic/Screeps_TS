@@ -16,23 +16,24 @@ Goal: CPU-efficient solo Screeps bot for a 20 CPU-limited server. Passive play â
 
 | # | Plan | Purpose |
 |---|---|---|
-| 01 | [Passive player policy](01-passive-player-policy.md) | Non-aggression rules, room avoidance, flee policy |
-| 02 | [Throughput reference](02-throughput-reference.md) | Core formulas: miner, hauler, link, upgrade, repair |
-| 03 | [Minimal room footprint](03-minimal-room-footprint.md) | Minimize CPU/room so more rooms fit in 20 CPU |
-| 04 | [Phase execution model](04-phase-execution-model.md) | Phase profiles, fast-growth signal, player-safety flag |
-| 05 | [CPU scheduler](05-cpu-scheduler.md) | Per-manager budgets, stagger intervals, pixel disable |
-| 06 | [Phase-specific managers](06-phase-specific-managers.md) | Proposed loop order, stagger table, phase8 skip |
-| 07 | [Movement and intel cache](07-movement-and-intel-cache.md) | PathFinder.search, shared CostMatrix, IntelManager |
-| 08 | [Defense baseline](08-defense-baseline.md) | Single hostile scan, tower scoring, flee policy |
-| 09 | [Role catalog and bodies](09-role-catalog-and-bodies.md) | Phase-gated roles, body templates, missing role proposals |
-| 10 | [Spawn demand and bodies](10-spawn-demand-and-bodies.md) | Dynamic demand, exact body formulas, replacement timing |
-| 11 | [Bootstrap fast path](11-bootstrap-fast-path.md) | RCL1â†’4 fastest sequence, body sizing per stage |
-| 12 | [Construction site budget](12-construction-site-budget.md) | Global 100-slot management, per-room limits, priority queue |
-| 13 | [Remotes and expansion](13-remotes-and-expansion.md) | ROI formula with maintenance, SK/player avoidance |
-| 14 | [Automatic scouting and settlement](14-automatic-scouting-and-settlement.md) | Scout nearby rooms and rank best next claim target |
-| 15 | [Nuke mitigation rebuild](15-nuke-mitigation-rebuild.md) | Evacuate, dismantle, and rebuild threatened structures |
-| 16 | [Endgame efficiency](16-endgame-efficiency.md) | Pull mechanic, fewer large creeps, link logistics, skip list |
-| 17 | [Old codebase takeaways](17-old-codebase-takeaways.md) | Useful old patterns to adopt, old anti-patterns to avoid |
+| 01 | [Passive player policy](done/01-passive-player-policy.md) | Non-aggression rules, room avoidance, flee policy |
+| 02 | [Throughput reference](done/02-throughput-reference.md) | Core formulas: miner, hauler, link, upgrade, repair |
+| 03 | [Minimal room footprint](done/03-minimal-room-footprint.md) | Minimize CPU/room so more rooms fit in 20 CPU |
+| 04 | [Phase execution model](done/04-phase-execution-model.md) | Phase profiles, fast-growth signal, player-safety flag |
+| 05 | [CPU scheduler](done/05-cpu-scheduler.md) | Per-manager budgets, stagger intervals, pixel disable |
+| 06 | [Phase-specific managers](done/06-phase-specific-managers.md) | Proposed loop order, stagger table, phase8 skip |
+| 07 | [Movement and intel cache](done/07-movement-and-intel-cache.md) | PathFinder.search, shared CostMatrix, IntelManager |
+| 08 | [Defense baseline](done/08-defense-baseline.md) | Single hostile scan, tower scoring, flee policy |
+| 09 | [Role catalog and bodies](done/09-role-catalog-and-bodies.md) | Phase-gated roles, body templates, missing role proposals |
+| 10 | [Spawn demand and bodies](done/10-spawn-demand-and-bodies.md) | Dynamic demand, exact body formulas, replacement timing |
+| 11 | [Bootstrap fast path](done/11-bootstrap-fast-path.md) | RCL1->4 fastest sequence, body sizing per stage |
+| 12 | [Construction site budget](done/12-construction-site-budget.md) | Global 100-slot management, per-room limits, priority queue |
+| 13 | [Remotes and expansion](done/13-remotes-and-expansion.md) | ROI formula with maintenance, SK/player avoidance |
+| 14 | [Automatic scouting and settlement](done/14-automatic-scouting-and-settlement.md) | Scout nearby rooms and rank best next claim target |
+| 15 | [Nuke mitigation rebuild](done/15-nuke-mitigation-rebuild.md) | Evacuate, dismantle, and rebuild threatened structures |
+| 16 | [Endgame efficiency](done/16-endgame-efficiency.md) | Pull mechanic, fewer large creeps, link logistics, skip list |
+| 17 | [Old codebase takeaways](done/17-old-codebase-takeaways.md) | Useful old patterns to adopt, old anti-patterns to avoid |
+| 18 | [Gap closure plan](18-gap-closure-plan.md) | Remaining gaps after implementation review |
 
 ## Key Design Rules
 
