@@ -10,6 +10,7 @@ import {RoomManager} from "./manager/RoomManager";
 import {RoomPhaseManager} from "./manager/RoomPhaseManager";
 import {IntelManager} from "./manager/IntelManager";
 import {DefenseManager} from "./manager/DefenseManager";
+import {SpawnDemandManager} from "./manager/SpawnDemandManager";
 import {AntFactory} from "./roles/AntFactory";
 
 
@@ -49,6 +50,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     RoomPhaseManager.updateStaggered(ownedRooms);
+    SpawnDemandManager.run(ownedRooms);
 
     CPUManager.measure('roomManager', () => RoomManager.run());
     JobsManager.doJobs();

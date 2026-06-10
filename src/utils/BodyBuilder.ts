@@ -123,7 +123,7 @@ export class BodyBuilder {
         return body.reduce((sum, part) => sum + BODYPART_COST[part], 0);
     }
 
-    private static cap50(body: BodyPartConstant[]): BodyPartConstant[] {
+    static cap50(body: BodyPartConstant[]): BodyPartConstant[] {
         return body.slice(0, 50);
     }
 }
