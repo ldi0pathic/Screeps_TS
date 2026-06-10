@@ -48,7 +48,10 @@ export class NukeMitigationManager {
                 break;
             case 'recover':
                 this.clearInvalidIds(room, plan);
+                plan.phase = 'done';
                 plan.active = false;
+                break;
+            case 'done':
                 break;
         }
     }

@@ -113,17 +113,14 @@ export class SpawnDemandManager {
         if (room.memory.state >= eRoomState.phase5 && (room.memory.targetLinkIds?.length ?? 0) > 0) return;
 
         const sources = room.getOrFindEnergieSource();
-        for (const src of sources) {
-            if (!src.sourceId) continue;
-            const hasHauler = Object.values(Game.creeps).some(c =>
-                c.memory.workRoom === room.name &&
-                c.memory.job === eJobType.transporter
-            );
-            if (!hasHauler) {
-                const body = BodyBuilder.hauler(10, 20, true);
-                if (BodyBuilder.bodyCost(body) <= maxEnergy) {
-                    SpawnManager.queueCreep(eJobType.transporter, spawnRoom, room.name, body, 997);
-                }
+        const haulerCount = Object.values(Game.creeps).filter(c =>
+            c.memory.workRoom === room.name && c.memory.job === eJobType.transporter
+        ).length;
+
+        if (haulerCount < sources.length) {
+            const body = BodyBuilder.hauler(10, 20, true);
+            if (BodyBuilder.bodyCost(body) <= maxEnergy) {
+                SpawnManager.queueCreep(eJobType.transporter, spawnRoom, room.name, body, 997);
             }
         }
     }
@@ -197,7 +194,7 @@ export class SpawnDemandManager {
 
         for (const [remoteName, remote] of Object.entries(Memory.remoteIntel)) {
             if (remote.homeRoom !== room.name) continue;
-            if (remote.state !== 'mining' && remote.state !== 'reserved' && remote.state !== 'candidate') continue;
+            if (remote.state !== 'mining' && remote.state !== 'candidate') continue;
             if (remote.netIncome < 3) continue;
 
             const hasRemoteMiner = Object.values(Game.creeps).some(

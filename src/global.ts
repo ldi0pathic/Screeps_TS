@@ -78,7 +78,7 @@ declare global {
         detectedAt: number;
         landAt: number;
         nukes: Array<{ x: number; y: number; roomName: string; landAt: number }>;
-        phase: 'scan' | 'evacuate' | 'rebuild' | 'dismantle' | 'survive' | 'recover' | 'done';
+        phase: 'scan' | 'evacuate' | 'rebuild' | 'survive' | 'recover' | 'done';
         affectedStructureIds: Id<Structure>[];
         safePlan: Array<{ type: StructureConstant; x: number; y: number; priority: number }>;
         resourceEvacuationDone: boolean;

@@ -46,7 +46,7 @@ export class RemotePlanner {
                 Game.time < (existing.dangerCooldownUntil ?? 0)) continue;
 
             // Skip if recent fresh candidate
-            if (existing?.state === 'mining' || existing?.state === 'reserved') continue;
+            if (existing?.state === 'mining' || existing?.state === 'candidate') continue;
 
             if (!intel) {
                 // Mark as unknown — needs scouting

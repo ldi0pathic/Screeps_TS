@@ -98,8 +98,7 @@ export class RoomPhaseManager {
                 break;
             }
             case eRoomState.phase3: {
-                if (storage && storageEnergy >= 0) {
-                    // storage placed and actively filling
+                if (storage) {
                     if (rcl >= 4) return eRoomState.phase4;
                 }
                 break;
@@ -107,9 +106,9 @@ export class RoomPhaseManager {
             case eRoomState.phase4: {
                 if (storageEnergy >= 50000) {
                     const spawns = room.find(FIND_MY_SPAWNS);
-                    const spawnUtil = spawns.some(s => s.spawning !== null) ? 1 : 0;
+                    const spawningNow = spawns.some(s => s.spawning !== null);
                     const noThreat = !room.memory.needDefence;
-                    if (noThreat && spawnUtil < 0.7) return eRoomState.phase5;
+                    if (noThreat && !spawningNow) return eRoomState.phase5;
                 }
                 break;
             }

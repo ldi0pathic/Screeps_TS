@@ -69,7 +69,7 @@ export class RemoteHaulerAnt extends HarvesterAnt<RemoteHarvesterMemory> {
         if (!PassivePolicy.isRoomSafeToMine(workroom)) return false;
         const remote = Memory.remoteIntel?.[workroom];
         if (!remote) return false;
-        if (remote.state !== 'mining' && remote.state !== 'reserved') return false;
+        if (remote.state !== 'mining' && remote.state !== 'candidate') return false;
         return true;
     }
 }
