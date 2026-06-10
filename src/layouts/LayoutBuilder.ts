@@ -1,9 +1,12 @@
 ﻿import {conditionalLog} from "../extensions/GlobalExtensions";
 
+export const MAX_SITES_PER_ROOM = 5;
+export const MAX_GLOBAL_SITES = 80;
+
 export class LayoutBuilder {
     private layout: MinRoomLayout;
     private readonly roomName: string;
-    private readonly maxConstructionSites = 25;
+    private readonly maxConstructionSites = MAX_SITES_PER_ROOM;
 
     constructor(roomName: string, layout: MinRoomLayout) {
         this.roomName = roomName;
