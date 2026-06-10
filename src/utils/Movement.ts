@@ -49,7 +49,7 @@ export class Movement {
         }
 
         // Pfad visualisieren (optional)
-        if (Game.cpu.bucket > 500) { // Nur wenn genug CPU verfügbar
+        if (Memory.debug?.visuals) {
             this.visualizePath(creep, serializedPath);
         }
 
