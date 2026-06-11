@@ -9,6 +9,81 @@ export {};
 declare global {
     function conditionalLog(condition: boolean | (() => boolean), message: string): void;
 
+    type ThreatLevel = 'none' | 'npc' | 'player';
+
+    type RoomIntelStatus = 'normal' | 'novice' | 'respawn' | 'highway' | 'sk' | 'closed';
+
+    type RemoteState = 'unknown' | 'scouting' | 'blocked' | 'candidate' | 'reserved' | 'mining' | 'danger' | 'disabled';
+
+    interface RoomIntel {
+        scannedAt: number;
+        owner: string | null;
+        reservation: string | null;
+        sourceIds: string[];
+        sourceCount: number;
+        sourceSlots: number[];
+        controllerPos?: { x: number; y: number };
+        storageId: string | null;
+        linkIds: string[];
+        invaderCore: boolean;
+        coreExpires: number;
+        threat: ThreatLevel;
+        threatExpires: number;
+        status: RoomIntelStatus;
+        routeDistance: number;
+        lastPlayerActivity: number;
+    }
+
+    interface RemoteRoomIntel {
+        roomName: string;
+        state: RemoteState;
+        homeRoom: string;
+        scannedAt: number;
+        sourceCount: number;
+        reserved: boolean;
+        reservationExpires: number;
+        netIncome: number;
+        routeDistance: number;
+        dangerCooldownUntil: number;
+        invaderCoreExpires: number;
+    }
+
+    interface RoomPhaseProfile {
+        phase: eRoomState;
+        canUseStaticMining: boolean;
+        canUseStorageLogistics: boolean;
+        canUseLinks: boolean;
+        canUseRemoteMining: boolean;
+        canUseIndustry: boolean;
+        canUseEndgame: boolean;
+        cpuTier: 'critical' | 'normal' | 'low';
+        fastGrowthActive: boolean;
+        passiveSafe: boolean;
+    }
+
+    interface SpawnDemand {
+        role: eJobType;
+        room: string;
+        spawnRoom: string;
+        priority: number;
+        bodyParts: BodyPartConstant[];
+        maxEnergy: number;
+        reason: string;
+        sourceId?: string;
+        replacesCreep?: string;
+    }
+
+    interface NukeMitigationPlan {
+        active: boolean;
+        detectedAt: number;
+        landAt: number;
+        nukes: Array<{ x: number; y: number; roomName: string; landAt: number }>;
+        phase: 'scan' | 'evacuate' | 'rebuild' | 'survive' | 'recover' | 'done';
+        affectedStructureIds: Id<Structure>[];
+        safePlan: Array<{ type: StructureConstant; x: number; y: number; priority: number }>;
+        resourceEvacuationDone: boolean;
+    }
+
     const enum eJobType {
         miner = 'Miner',
         worker = 'Worker',
@@ -21,6 +96,11 @@ declare global {
         remoteHarvester = 'RemoteHarvester',
         claimer = 'Claimer',
         remoteMiner = 'RemoteMiner',
+        reserver = 'Reserver',
+        remoteHauler = 'RemoteHauler',
+        towerFiller = 'TowerFiller',
+        repairer = 'Repairer',
+        endgameUpgrader = 'EndgameUpgrader',
     }
 
 
@@ -249,6 +329,30 @@ declare global {
         cpuHistory: number[];
         lastTickCpu: number;
         jobOffsets?: Record<string, number>;
+        debug?: {
+            policyViolations?: string[];
+            visuals?: boolean;
+        };
+        config?: {
+            enablePixels?: boolean;
+        };
+        intel?: Record<string, RoomIntel>;
+        remoteIntel?: Record<string, RemoteRoomIntel>;
+        cpuStats?: {
+            perRoom: Record<string, number>;
+            baseOverhead: number;
+            total: number;
+            manager: Record<string, number>;
+        };
+        scoutPlanner?: {
+            queue: string[];
+            candidates: Array<{
+                roomName: string;
+                score: number;
+                lastScored: number;
+                state: 'queued' | 'scouted' | 'scored' | 'shortlisted' | 'reserved';
+            }>;
+        };
     }
 
     interface RoomMemory {
@@ -271,6 +375,13 @@ declare global {
             y: number;
             id: Id<StructureController>;
         };
+        threat?: ThreatLevel;
+        threatExpires?: number;
+        phaseTransitionTick?: number;
+        nukePlan?: NukeMitigationPlan;
+        lastSpawnDemandTick?: number;
+        phaseProfile?: RoomPhaseProfile;
+        roomIndex?: number;
     }
 
     interface Position {

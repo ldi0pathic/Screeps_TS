@@ -1,7 +1,6 @@
-﻿export class TowerManager {
+﻿import {DefenseManager} from "./DefenseManager";
 
-    private static hostilesCache: Map<string, { ids: Id<Creep>[], lastUpdate: number }> = new Map();
-    private static readonly CACHE_TTL = 5;
+export class TowerManager {
 
     public static runTowers(): void {
         for (const roomName in Game.rooms) {
@@ -9,28 +8,25 @@
 
             if (!room.controller?.my) continue;
 
-            const roomMemory = room.memory
+            const roomMemory = room.memory;
 
             if (!roomMemory.towers || roomMemory.towers.length === 0) {
                 roomMemory.towers = room.find(FIND_MY_STRUCTURES, {
                     filter: (s) => s.structureType === STRUCTURE_TOWER
-                }).map(t => t.id) as Id<StructureTower>[]
+                }).map(t => t.id) as Id<StructureTower>[];
 
                 if (roomMemory.towers.length === 0) continue;
             }
 
-            // Schneller Check ob wir überhaupt Hostiles haben könnten
-            if (!roomMemory.needDefence && Game.time % 5 !== 0) {
-                // Wenn wir nicht im Verteidigungsmodus sind, prüfen wir nur alle 5 Ticks auf neue Feinde
-                // es sei denn, needDefence wird von außen gesetzt (z.B. durch Events)
-            } else {
-                const hostiles = this.getHostiles(room);
+            {
+                // Use DefenseManager as single hostile scan source
+                const hostiles = DefenseManager.getHostiles(room);
                 if (hostiles.length > 0) {
-                    roomMemory.needDefence = true;
-                    const target = hostiles.reduce((closest, current) =>
-                        room.controller!.pos.getRangeTo(current) < room.controller!.pos.getRangeTo(closest)
-                            ? current : closest
-                    );
+                    const target = DefenseManager.chooseTowerTarget(room, hostiles) ??
+                        hostiles.reduce((closest, current) =>
+                            room.controller!.pos.getRangeTo(current) < room.controller!.pos.getRangeTo(closest)
+                                ? current : closest
+                        );
 
                     for (let i = roomMemory.towers.length - 1; i >= 0; i--) {
                         const towerId = roomMemory.towers[i];
@@ -42,8 +38,6 @@
                         if (tower.store.energy > 0) tower.attack(target);
                     }
                     continue;
-                } else {
-                    roomMemory.needDefence = false;
                 }
             }
 
@@ -81,18 +75,9 @@
         }
     }
 
+    /** @deprecated Use DefenseManager.getHostiles instead */
     public static getHostiles(room: Room): Creep[] {
-        const cached = this.hostilesCache.get(room.name);
-        if (cached && (Game.time - cached.lastUpdate) < this.CACHE_TTL) {
-            return cached.ids.map(id => Game.getObjectById(id)).filter(h => h !== null) as Creep[];
-        }
-
-        const hostiles = room.find(FIND_HOSTILE_CREEPS);
-        this.hostilesCache.set(room.name, {
-            ids: hostiles.map(h => h.id),
-            lastUpdate: Game.time
-        });
-        return hostiles;
+        return DefenseManager.getHostiles(room);
     }
 
     private static findBestRepairTarget(room: Room): Id<Structure> | undefined {

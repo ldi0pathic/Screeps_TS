@@ -7,49 +7,59 @@ import {CPUManager} from "./manager/CPUManager";
 import {LayoutManager} from "./manager/LayoutManager";
 import {TowerManager} from "./manager/TowerManager";
 import {RoomManager} from "./manager/RoomManager";
+import {RoomPhaseManager} from "./manager/RoomPhaseManager";
+import {IntelManager} from "./manager/IntelManager";
+import {DefenseManager} from "./manager/DefenseManager";
+import {SpawnDemandManager} from "./manager/SpawnDemandManager";
+import {RemotePlanner} from "./manager/RemotePlanner";
+import {ScoutPlanner} from "./manager/ScoutPlanner";
+import {NukeMitigationManager} from "./manager/NukeMitigationManager";
 import {AntFactory} from "./roles/AntFactory";
 
 
 loadExtensions();
 
-let exportDone = false;
 export const loop = ErrorMapper.wrapLoop(() => {
-    //console.log("---Loop---");
 
-    /*
-        for (let creep in Game.creeps) {
-            Game.creeps[creep].suicide();
-        }*/
-    //console.log("--Loop--");
-
-    /*if (!exportDone) {
-        LayoutExporter.exportRoomToConsole("W5N8")
-        exportDone = true;
-    }*/
-
-
-    // CPU History am Tick-Start updaten
+    // --- CRITICAL (always runs) ---
     CPUManager.updateHistory();
-
     AntFactory.clearCache();
 
-    SpawnManager.processEmergencySpawns(); //muss immer am anfang stehen, da cacheaufbau!!!
+    // Collect owned rooms once per tick for stagger indexing
+    const ownedRooms: string[] = [];
+    for (const name in Game.rooms) {
+        const room = Game.rooms[name];
+        if (room.controller?.my) {
+            ownedRooms.push(name);
+            if (room.memory.roomIndex === undefined) {
+                room.memory.roomIndex = ownedRooms.length - 1;
+            }
+        }
+    }
+
+    DefenseManager.runCritical(ownedRooms);
+    SpawnManager.processEmergencySpawns();
     SpawnManager.processSpawns();
     SpawnManager.findNeededCreeps();
     JobsManager.doPrioJobs();
     JobsManager.doCriticalJobs();
     TowerManager.runTowers();
 
-    if (!CPUManager.shouldContinue('normal')) {
+    // --- NORMAL (skip when CPU is low) ---
+    if (!CPUManager.canRunTier('normal')) {
         CPUManager.getStatus();
         Memory.lastTickCpu = Game.cpu.getUsed();
         return;
     }
 
-    RoomManager.run();
+    RoomPhaseManager.updateStaggered(ownedRooms);
+    SpawnDemandManager.run(ownedRooms);
+
+    CPUManager.measure('roomManager', () => RoomManager.run());
     JobsManager.doJobs();
 
-    if (!CPUManager.shouldContinue('low')) {
+    // --- LOW (first to be dropped under pressure) ---
+    if (!CPUManager.canRunTier('low')) {
         CPUManager.getStatus();
         Memory.lastTickCpu = Game.cpu.getUsed();
         return;
@@ -58,16 +68,25 @@ export const loop = ErrorMapper.wrapLoop(() => {
     CleanUpManager.runAllCleanup();
     JobsManager.doLowJobs();
 
-
-    if (!CPUManager.shouldContinue('low')) {
+    if (!CPUManager.canRunTier('low')) {
         CPUManager.getStatus();
         Memory.lastTickCpu = Game.cpu.getUsed();
         return;
     }
 
-    LayoutManager.run();
+    IntelManager.scanStaggered(ownedRooms);
+    RemotePlanner.runStaggered(ownedRooms);
+    ScoutPlanner.discoverFrontier(ownedRooms);
+    ScoutPlanner.refreshShortlisted();
+    if (Game.cpu.bucket >= 3000) {
+        DefenseManager.scanNukesStaggered(ownedRooms);
+        NukeMitigationManager.runStaggered(ownedRooms);
+    }
 
+    // Skip LayoutManager when bucket is critically low
+    if (Game.cpu.bucket >= 3000) {
+        CPUManager.measure('layout', () => LayoutManager.run());
+    }
 
-    // CPU für nächsten Tick speichern
     Memory.lastTickCpu = Game.cpu.getUsed();
 });

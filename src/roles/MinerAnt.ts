@@ -79,7 +79,7 @@ export class MinerAnt extends StationaryAnt<MinerMemory> {
                 return true;
             }
 
-            if (container && container.hits < (container.hitsMax * 0.25)) {
+            if (container && container.hits < (container.hitsMax * 0.8)) {
                 this.creep.repair(container);
                 this.creep.say('🛠️');
                 return true;

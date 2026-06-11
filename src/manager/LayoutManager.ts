@@ -1,59 +1,69 @@
-﻿import {roomConfig} from "../config";
-import {LayoutBuilder} from "../layouts/LayoutBuilder";
+import {roomConfig} from "../config";
+import {LayoutBuilder, MAX_GLOBAL_SITES, MAX_SITES_PER_ROOM} from "../layouts/LayoutBuilder";
 import {W5N8} from "../layouts/W5N8Layout";
+import {CPUManager} from "./CPUManager";
 
+const LAYOUT_INTERVAL = 50;
 
 export class LayoutManager {
 
     private static getLayout(name: string): MinRoomLayout | undefined {
-
         switch (name) {
-            case  "W5N8":
-                return W5N8
+            case "W5N8":
+                return W5N8;
         }
-
         return undefined;
-
     }
 
     static run() {
-        // Layout-Planung ist teuer, nur alle 20 Ticks ausführen (oder 50 in Phase 8)
-        const checkInterval = Game.cpu.limit <= 20 ? 40 : 20;
-        if (Game.time % checkInterval !== 0) return;
+        const globalUsed = Object.keys(Game.constructionSites).length;
+        if (globalUsed >= MAX_GLOBAL_SITES) return; // global budget exhausted
 
-        for (const name in roomConfig) {
-            if (roomConfig[name].buildBase) {
-                const room = Game.rooms[name];
-                if (room.memory.state < eRoomState.phase2 || room.memory.state > eRoomState.phase8) {
-                    continue;
-                }
+        const ownedRooms = Object.keys(roomConfig).filter(name => {
+            const room = Game.rooms[name];
+            return room?.controller?.my && roomConfig[name].buildBase;
+        });
 
-                if (room.memory.state == eRoomState.phase8) {
-                    if (Game.time % 50 !== 0) {
-                        return;
-                    }
-                }
+        for (let i = 0; i < ownedRooms.length; i++) {
+            const name = ownedRooms[i];
+            if (!CPUManager.shouldRunEvery(`layout_${name}`, LAYOUT_INTERVAL, i)) continue;
 
-                const layout = this.getLayout(name);
-                if (!layout) continue;
+            const room = Game.rooms[name];
+            if (!room) continue;
 
-                let builder = new LayoutBuilder(name, layout);
+            // Skip phase 1 and phase 8 rooms entirely
+            if (room.memory.state < eRoomState.phase2 || room.memory.state === eRoomState.phase8) continue;
 
+            // Per-room site count check
+            const roomSites = room.find(FIND_CONSTRUCTION_SITES).length;
+            if (roomSites >= MAX_SITES_PER_ROOM) continue;
+
+            const layout = this.getLayout(name);
+            if (!layout) continue;
+
+            const builder = new LayoutBuilder(name, layout);
+
+            if (Memory.debug?.visuals) {
                 builder.visualizeUnbuiltLayout();
-
-                let info = builder.getLayoutInfo();
-                if (info.buildableAtCurrentRCL == 0 || info.totalBuilding > 25) {
-                    return;
-                }
-
-                let count = builder.buildAll();
-                if (count > 0) {
-                    console.log("Es wurden " + count + " neue Baustellen eingeplant")
-                }
-
             }
+
+            const info = builder.getLayoutInfo();
+            if (info.buildableAtCurrentRCL === 0) continue;
+
+            // Respect per-room limit and global limit
+            const maxNewSites = Math.min(
+                MAX_SITES_PER_ROOM - roomSites,
+                MAX_GLOBAL_SITES - globalUsed
+            );
+            if (maxNewSites <= 0) continue;
+
+            const count = builder.buildAll(maxNewSites);
+            if (count > 0) {
+                console.log(`[Layout] ${name}: placed ${count} sites`);
+            }
+
+            // Only process one room per call to spread CPU
+            break;
         }
-
     }
-
 }

@@ -1,9 +1,12 @@
 ﻿import {conditionalLog} from "../extensions/GlobalExtensions";
 
+export const MAX_SITES_PER_ROOM = 5;
+export const MAX_GLOBAL_SITES = 80;
+
 export class LayoutBuilder {
     private layout: MinRoomLayout;
     private readonly roomName: string;
-    private readonly maxConstructionSites = 25;
+    private readonly maxConstructionSites = MAX_SITES_PER_ROOM;
 
     constructor(roomName: string, layout: MinRoomLayout) {
         this.roomName = roomName;
@@ -251,7 +254,7 @@ export class LayoutBuilder {
     /**
      * Baut alle Strukturen eines bestimmten Typs
      */
-    private buildStructureType(structureType: BuildableStructureConstant, positions: Position[]): number {
+    private buildStructureType(structureType: BuildableStructureConstant, positions: Position[], maxNewSites: number = this.maxConstructionSites): number {
         let success = 0;
 
         const room = Game.rooms[this.roomName];
@@ -269,7 +272,7 @@ export class LayoutBuilder {
 
         for (const pos of sortedPositions) {
 
-            if ((cSides + success) >= this.maxConstructionSites) {
+            if ((cSides + success) >= this.maxConstructionSites || success >= maxNewSites) {
                 break;
             }
 
@@ -371,7 +374,7 @@ export class LayoutBuilder {
     /**
      * Baut alle Strukturen aus dem Layout (mit RCL-Filterung)
      */
-    public buildAll(): number {
+    public buildAll(maxNewSites: number = this.maxConstructionSites): number {
 
         let success = 0;
 
@@ -398,9 +401,9 @@ export class LayoutBuilder {
         for (const structureType of buildOrder) {
             const positions = this.layout.buildings[structureType];
             if (positions && positions.length > 0) {
-                const result = this.buildStructureType(structureType, positions);
+                const result = this.buildStructureType(structureType, positions, maxNewSites - success);
                 success += result;
-                if ((constSides + success) >= this.maxConstructionSites) {
+                if ((constSides + success) >= this.maxConstructionSites || success >= maxNewSites) {
                     break;
                 }
             }

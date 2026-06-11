@@ -1,4 +1,5 @@
 ﻿import {MovementProfiler} from "./MovementProfiler";
+import {PathingManager} from "./PathingManager";
 
 export class Movement {
     private static getTargetPos(creep: Creep): RoomPosition | null {
@@ -49,7 +50,7 @@ export class Movement {
         }
 
         // Pfad visualisieren (optional)
-        if (Game.cpu.bucket > 500) { // Nur wenn genug CPU verfügbar
+        if (Memory.debug?.visuals) {
             this.visualizePath(creep, serializedPath);
         }
 
@@ -75,9 +76,16 @@ export class Movement {
     }
 
     private static calculateNewPath(creep: Creep, targetPos: RoomPosition, ignoreCreeps: boolean): void {
-        const path = creep.pos.findPathTo(targetPos);
+        const result = PathingManager.findPath(creep.pos, targetPos, 1, ignoreCreeps);
+        const serialized = result.path.length > 0
+            ? Room.serializePath(result.path.map(p => ({
+                x: p.x, y: p.y,
+                dx: 0, dy: 0,
+                direction: TOP as DirectionConstant
+            })))
+            : '';
 
-        creep.memory.path = Room.serializePath(path);
+        creep.memory.path = serialized;
         creep.memory.targetPos = {
             x: targetPos.x,
             y: targetPos.y,
