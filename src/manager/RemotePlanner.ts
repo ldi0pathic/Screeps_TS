@@ -18,8 +18,9 @@ export class RemotePlanner {
             this.evaluateRemotesForRoom(ownedRooms[i]);
         }
 
-        // Expire danger cooldowns
+        // Expire danger cooldowns and advance safe candidates
         this.expireDangerCooldowns();
+        this.activateReadyCandidates();
     }
 
     private static evaluateRemotesForRoom(homeRoom: string): void {
@@ -45,8 +46,9 @@ export class RemotePlanner {
             if (existing?.state === 'danger' &&
                 Game.time < (existing.dangerCooldownUntil ?? 0)) continue;
 
-            // Skip if recent fresh candidate
-            if (existing?.state === 'mining' || existing?.state === 'candidate') continue;
+            // Skip if recent fresh candidate/mining entry; stale candidates are re-evaluated.
+            if ((existing?.state === 'mining' || existing?.state === 'candidate') &&
+                Game.time - (existing.scannedAt ?? 0) < CANDIDATE_TTL) continue;
 
             if (!intel) {
                 // Mark as unknown — needs scouting
@@ -123,6 +125,30 @@ export class RemotePlanner {
             if (remote.state === 'danger' && Game.time >= remote.dangerCooldownUntil) {
                 remote.state = 'candidate';
             }
+        }
+    }
+
+    private static activateReadyCandidates(): void {
+        if (!Memory.remoteIntel) return;
+
+        for (const [roomName, remote] of Object.entries(Memory.remoteIntel)) {
+            if (remote.state !== 'candidate') continue;
+            if (remote.netIncome < 3) continue;
+            if (remote.dangerCooldownUntil > Game.time) continue;
+
+            const home = Game.rooms[remote.homeRoom];
+            if (!home?.controller?.my) continue;
+            if ((home.storage?.store.energy ?? 0) < 50000) continue;
+
+            const intel = Memory.intel?.[roomName];
+            if (!intel) continue;
+            if (Game.time - intel.scannedAt > CANDIDATE_TTL) continue;
+            if (intel.owner !== null) continue;
+            if (intel.threat === 'player' && intel.threatExpires > Game.time) continue;
+            if (intel.invaderCore && intel.coreExpires > Game.time) continue;
+
+            remote.state = 'mining';
+            remote.scannedAt = Game.time;
         }
     }
 

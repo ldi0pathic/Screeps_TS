@@ -1,7 +1,6 @@
 import {CPUManager} from "./CPUManager";
 import {BodyBuilder} from "../utils/BodyBuilder";
 import {SpawnManager} from "./SpawnManager";
-import {PassivePolicy} from "../policy/PassivePolicy";
 
 const SCAN_INTERVAL_NORMAL = 3;
 const SCAN_INTERVAL_LOW = 5;
@@ -84,7 +83,7 @@ export class SpawnDemandManager {
         );
         if (workers.length < 2) {
             SpawnManager.queueCreep(eJobType.worker, spawnRoom, room.name,
-                BodyBuilder.bootstrapWorker(maxEnergy), 999);
+                BodyBuilder.bootstrapWorker(maxEnergy), 999, "bootstrap workers below minimum");
         }
     }
 
@@ -103,7 +102,7 @@ export class SpawnDemandManager {
             );
 
             if (!existingMiner || this.needsReplacement(existingMiner, minerBody.length)) {
-                SpawnManager.queueCreep(eJobType.miner, spawnRoom, room.name, minerBody, 998);
+                SpawnManager.queueCreep(eJobType.miner, spawnRoom, room.name, minerBody, 998, "missing source miner", src.sourceId);
             }
         }
     }
@@ -120,7 +119,7 @@ export class SpawnDemandManager {
         if (haulerCount < sources.length) {
             const body = BodyBuilder.hauler(10, 20, true);
             if (BodyBuilder.bodyCost(body) <= maxEnergy) {
-                SpawnManager.queueCreep(eJobType.transporter, spawnRoom, room.name, body, 997);
+                SpawnManager.queueCreep(eJobType.transporter, spawnRoom, room.name, body, 997, "source hauling capacity below target");
             }
         }
     }
@@ -131,7 +130,7 @@ export class SpawnDemandManager {
         );
         if (fillers.length < 1) {
             const body = BodyBuilder.filler(2);
-            SpawnManager.queueCreep(eJobType.filler, spawnRoom, room.name, body, 996);
+            SpawnManager.queueCreep(eJobType.filler, spawnRoom, room.name, body, 996, "missing filler");
         }
     }
 
@@ -143,7 +142,7 @@ export class SpawnDemandManager {
             const linkFed = (room.memory.targetLinkIds?.length ?? 0) > 0;
             const body = BodyBuilder.upgrader(storageEnergy, rcl8, linkFed);
             if (BodyBuilder.bodyCost(body) <= maxEnergy) {
-                SpawnManager.queueCreep(eJobType.upgrader, spawnRoom, room.name, body, 11);
+                SpawnManager.queueCreep(eJobType.upgrader, spawnRoom, room.name, body, 11, "missing controller upgrader");
             }
         }
     }
@@ -157,7 +156,7 @@ export class SpawnDemandManager {
         );
         if (builders.length < 1) {
             const body = BodyBuilder.builder(maxEnergy);
-            SpawnManager.queueCreep(eJobType.builder, spawnRoom, room.name, body, 10);
+            SpawnManager.queueCreep(eJobType.builder, spawnRoom, room.name, body, 10, "construction sites pending");
         }
     }
 
@@ -168,14 +167,14 @@ export class SpawnDemandManager {
         );
         const sources = room.getOrFindEnergieSource();
         if (miners.length < sources.length) {
-            SpawnManager.queueCreep(eJobType.miner, spawnRoom, room.name, BodyBuilder.miner(true), 998);
+            SpawnManager.queueCreep(eJobType.miner, spawnRoom, room.name, BodyBuilder.miner(true), 998, "endgame miner coverage");
         }
 
         const fillers = Object.values(Game.creeps).filter(
             c => c.memory.workRoom === room.name && c.memory.job === eJobType.filler
         );
         if (fillers.length < 1) {
-            SpawnManager.queueCreep(eJobType.filler, spawnRoom, room.name, BodyBuilder.filler(3), 996);
+            SpawnManager.queueCreep(eJobType.filler, spawnRoom, room.name, BodyBuilder.filler(3), 996, "endgame filler coverage");
         }
 
         const endgameUpgraders = Object.values(Game.creeps).filter(
@@ -183,36 +182,112 @@ export class SpawnDemandManager {
         );
         if (endgameUpgraders.length < 1 && storageEnergy > 20000) {
             const body = BodyBuilder.endgameUpgrader(maxEnergy);
-            SpawnManager.queueCreep(eJobType.endgameUpgrader, spawnRoom, room.name, body, 9);
+            SpawnManager.queueCreep(eJobType.endgameUpgrader, spawnRoom, room.name, body, 9, "storage surplus endgame upgrade");
         }
     }
 
-    private static demandRemotes(room: Room, spawnRoom: Room, maxEnergy: number): void {
-        if (!Memory.remoteIntel) return;
-        const passiveSafe = PassivePolicy.isExpansionTargetSafe(room.name);
-        if (!passiveSafe) return;
+    static collectRemoteDemands(room: Room, spawnRoom: Room, maxEnergy: number): SpawnDemand[] {
+        if (!Memory.remoteIntel) return [];
 
+        const demands: SpawnDemand[] = [];
         for (const [remoteName, remote] of Object.entries(Memory.remoteIntel)) {
             if (remote.homeRoom !== room.name) continue;
             if (remote.state !== 'mining' && remote.state !== 'candidate') continue;
             if (remote.netIncome < 3) continue;
+            if (!this.isRemoteSafe(remoteName, remote)) continue;
 
             const hasRemoteMiner = Object.values(Game.creeps).some(
                 c => c.memory.workRoom === remoteName && c.memory.job === eJobType.remoteMiner
             );
             if (!hasRemoteMiner) {
-                SpawnManager.queueCreep(eJobType.remoteMiner, spawnRoom, remoteName,
-                    BodyBuilder.remoteMiner(remote.reserved), 4);
+                const body = BodyBuilder.remoteMiner(remote.reserved);
+                if (BodyBuilder.bodyCost(body) <= maxEnergy) {
+                    demands.push({
+                        role: eJobType.remoteMiner,
+                        room: remoteName,
+                        spawnRoom: spawnRoom.name,
+                        priority: 4,
+                        bodyParts: body,
+                        maxEnergy,
+                        reason: remote.reserved ? 'reserved remote miner missing' : 'candidate remote miner missing',
+                    });
+                }
             }
 
             const hasHauler = Object.values(Game.creeps).some(
                 c => c.memory.workRoom === remoteName && c.memory.job === eJobType.remoteHauler
             );
             if (!hasHauler) {
-                const body = BodyBuilder.hauler(remote.reserved ? 10 : 5, remote.routeDistance * 3, true);
-                SpawnManager.queueCreep(eJobType.remoteHauler, spawnRoom, remoteName,
-                    BodyBuilder.cap50(body), 4);
+                const body = BodyBuilder.cap50(BodyBuilder.hauler(remote.reserved ? 10 : 5, remote.routeDistance * 3, true));
+                if (BodyBuilder.bodyCost(body) <= maxEnergy) {
+                    demands.push({
+                        role: eJobType.remoteHauler,
+                        room: remoteName,
+                        spawnRoom: spawnRoom.name,
+                        priority: 4,
+                        bodyParts: body,
+                        maxEnergy,
+                        reason: 'remote hauling capacity missing',
+                    });
+                }
+            }
+
+            const hasReserver = Object.values(Game.creeps).some(
+                c => c.memory.workRoom === remoteName && c.memory.job === eJobType.reserver
+            );
+            if (!remote.reserved && !hasReserver) {
+                const body = BodyBuilder.reserver(remote.netIncome >= 6);
+                if (BodyBuilder.bodyCost(body) <= maxEnergy) {
+                    demands.push({
+                        role: eJobType.reserver,
+                        room: remoteName,
+                        spawnRoom: spawnRoom.name,
+                        priority: 3,
+                        bodyParts: body,
+                        maxEnergy,
+                        reason: 'profitable remote should be reserved',
+                    });
+                }
             }
         }
+
+        return demands;
+    }
+
+    private static demandRemotes(room: Room, spawnRoom: Room, maxEnergy: number): void {
+        for (const demand of this.collectRemoteDemands(room, spawnRoom, maxEnergy)) {
+            SpawnManager.queueCreep(
+                demand.role,
+                spawnRoom,
+                demand.room,
+                demand.bodyParts,
+                demand.priority,
+                demand.reason,
+                demand.sourceId,
+                demand.targetId
+            );
+        }
+    }
+
+    private static isRemoteSafe(remoteName: string, remote: RemoteRoomIntel): boolean {
+        if (remote.state === 'danger' || remote.state === 'blocked' || remote.state === 'disabled') return false;
+        if (remote.dangerCooldownUntil > Game.time) return false;
+
+        const intel = Memory.intel?.[remoteName];
+        if (!intel) return false;
+        if (intel.owner !== null) return false;
+        if (intel.reservation !== null && intel.reservation !== this.getOwnUsername()) return false;
+        if (intel.status === 'highway' || intel.status === 'sk' || intel.status === 'closed') return false;
+        if (intel.invaderCore && intel.coreExpires > Game.time) return false;
+        if (intel.threat === 'player' && intel.threatExpires > Game.time) return false;
+
+        return true;
+    }
+
+    private static getOwnUsername(): string {
+        for (const name in Game.spawns) {
+            return Game.spawns[name].owner.username;
+        }
+        return '';
     }
 }

@@ -1,6 +1,7 @@
 ﻿import {HarvesterAnt} from "./base/HarvesterAnt";
 import {roomConfig} from "../config";
 import {LinkStorage} from "../storage/LinkStorage";
+import {RoomLogistics} from "../storage/RoomLogistics";
 
 
 export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
@@ -18,55 +19,13 @@ export class TransporterAnt extends HarvesterAnt<TransporterCreepMemory> {
         }
 
         if (!target) {
-
-            if (this.creep.room.memory.spawnPrioBlock || //Wenn Prioblock
-                (this.creep.room.storage && this.creep.room.storage.store[RESOURCE_ENERGY] < 3000)) { //oder wenn Storage keine Energie hat, Filler unterstützen
-                target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
-                    filter: s => (s.structureType === STRUCTURE_SPAWN ||
-                            s.structureType === STRUCTURE_EXTENSION) &&
-                        s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                }) as AnyStoreStructure | undefined;
-            }
-
-            if (!target) {
-                //Wenn kein Storage existiert tower befüllen & Filler unterstützen
-                if (this.creep.room.storage == null) {
-                    target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
-                        filter: s => (s.structureType === STRUCTURE_SPAWN ||
-                                s.structureType === STRUCTURE_EXTENSION ||
-                                (s.structureType === STRUCTURE_TOWER && s.store[RESOURCE_ENERGY] < 900)) &&
-                            s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                    }) as AnyStoreStructure | undefined;
-                } else { //ansonsten nur Tower befüllen
-                    target = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
-                        filter: s =>
-                            s.structureType === STRUCTURE_TOWER &&
-                            s.store[RESOURCE_ENERGY] < 900
-                    }) as AnyStoreStructure | undefined;
-                }
-            }
-
-            if (!target) { //ansonsten Energie einlagern
-                const roomStorage = this.creep.room.getOrFindRoomStorage();
-                if (roomStorage) {
-                    const allStructures = [
-                        ...(roomStorage.storageId ? [Game.getObjectById(roomStorage.storageId) as AnyStoreStructure] : []),
-                        ...(roomStorage.storageContainerId?.map(id => Game.getObjectById(id) as AnyStoreStructure) || [])
-                    ].filter(structure => structure && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
-
-                    // Erst nach halb leeren Containern suchen
-                    const halfEmptyContainers = allStructures.filter(structure =>
-                        structure.structureType === STRUCTURE_CONTAINER &&
-                        (structure.store.getFreeCapacity(RESOURCE_ENERGY) > this.creep.store[RESOURCE_ENERGY])
-                    );
-
-                    if (halfEmptyContainers.length > 0) {
-                        target = this.creep.pos.findClosestByRange(halfEmptyContainers) as AnyStoreStructure;
-                    } else {
-                        target = this.creep.pos.findClosestByRange(allStructures) as AnyStoreStructure;
-                    }
-                }
-            }
+            const purpose = this.creep.room.memory.spawnPrioBlock ? 'spawn' : 'hauler';
+            target = RoomLogistics.getBestEnergyDepositTarget(
+                this.creep.room,
+                this.creep.pos,
+                purpose,
+                this.creep.store[RESOURCE_ENERGY]
+            );
         }
 
         if (target) {

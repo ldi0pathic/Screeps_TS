@@ -70,6 +70,7 @@ declare global {
         maxEnergy: number;
         reason: string;
         sourceId?: string;
+        targetId?: string;
         replacesCreep?: string;
     }
 
@@ -242,6 +243,7 @@ declare global {
         havestLinkId?: Id<StructureLink>;
         harvestDroppedId?: Id<Resource>;
         harvestTombstoneId?: Id<Tombstone>;
+        harvestRuinId?: Id<Ruin>;
     }
 
     interface WorkerCreepMemory extends HarvesterCreepMemory {
@@ -271,6 +273,7 @@ declare global {
         energySourceId: Id<Source> | undefined;
         harvestDroppedId?: Id<Resource>;
         harvestTombstoneId?: Id<Tombstone>;
+        harvestRuinId?: Id<Ruin>;
         targetId?: Id<AnyStoreStructure>;
     }
 
@@ -321,6 +324,9 @@ declare global {
         bodyParts: BodyPartConstant[];
         priority: number;
         timestamp: number;
+        reason?: string;
+        sourceId?: string;
+        targetId?: string;
     }
 
     interface Memory {
@@ -335,6 +341,7 @@ declare global {
         };
         config?: {
             enablePixels?: boolean;
+            enableLegacySpawnSweep?: boolean;
         };
         intel?: Record<string, RoomIntel>;
         remoteIntel?: Record<string, RemoteRoomIntel>;

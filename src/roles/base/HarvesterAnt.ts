@@ -66,6 +66,7 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
             this.memory.havestSourceId ||
             this.memory.havestLinkId ||
             this.memory.harvestTombstoneId ||
+            this.memory.harvestRuinId ||
             this.memory.harvestDroppedId
         );
     }
@@ -76,6 +77,10 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
         }
 
         if (this.harvestRoomTombstone(resource)) {
+            return;
+        }
+
+        if (this.harvestRoomRuin(resource)) {
             return;
         }
 
@@ -254,6 +259,50 @@ export abstract class HarvesterAnt<TMemory extends HarvesterCreepMemory> extends
 
             default: {
                 console.warn("🚩 harvestRoomTombstone unhandled state: " + state + " for creep: " + this.creep.name + " in room: " + this.creep.room.name + "")
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    protected harvestRoomRuin(resourceType: ResourceConstant): boolean {
+        let ruin: Ruin | undefined;
+
+        if (this.memory.harvestRuinId) {
+            ruin = Game.getObjectById(this.memory.harvestRuinId) as Ruin;
+            if (!ruin) this.memory.harvestRuinId = undefined;
+        } else if (!this.hasHarvestTarget()) {
+            ruin = this.creep.pos.findClosestByRange(FIND_RUINS, {
+                filter: (ruin) => {
+                    return ruin.store.getUsedCapacity(resourceType) > 50;
+                }
+            }) as Ruin | undefined;
+
+            this.memory.harvestRuinId = ruin?.id;
+        }
+
+        if (!ruin) {
+            this.memory.harvestRuinId = undefined;
+            return false;
+        }
+
+        let state = this.creep.withdraw(ruin, resourceType);
+        switch (state) {
+            case ERR_NOT_IN_RANGE:
+                if (ruin.store.getUsedCapacity(resourceType) > 50) {
+                    return this.moveTo(ruin);
+                }
+                this.memory.harvestRuinId = undefined;
+                break;
+
+            case OK:
+            case ERR_NOT_ENOUGH_ENERGY:
+                this.memory.harvestRuinId = undefined;
+                return true;
+
+            default: {
+                console.warn("🚩 harvestRoomRuin unhandled state: " + state + " for creep: " + this.creep.name + " in room: " + this.creep.room.name + "")
                 return false;
             }
         }

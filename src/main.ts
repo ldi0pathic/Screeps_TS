@@ -40,7 +40,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
     DefenseManager.runCritical(ownedRooms);
     SpawnManager.processEmergencySpawns();
     SpawnManager.processSpawns();
-    SpawnManager.findNeededCreeps();
+    if (Memory.config?.enableLegacySpawnSweep) {
+        SpawnManager.findNeededCreeps();
+    }
     JobsManager.doPrioJobs();
     JobsManager.doCriticalJobs();
     TowerManager.runTowers();
