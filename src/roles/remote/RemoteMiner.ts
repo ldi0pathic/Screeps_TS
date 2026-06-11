@@ -1,4 +1,3 @@
-﻿import {roomConfig} from "../../config";
 import _ from "lodash";
 import {StationaryAnt} from "../base/StationaryAnt";
 import {CreepStorage} from "../../storage/CreepStorage";
@@ -99,6 +98,10 @@ export class RemoteMinerAnt extends StationaryAnt<MinerMemory> {
 
                     break;
                 }
+                case ERR_NOT_IN_RANGE: {
+                    this.moveTo(source);
+                    return true;
+                }
                 case OK: {
                     return true;
                 }
@@ -146,136 +149,87 @@ export class RemoteMinerAnt extends StationaryAnt<MinerMemory> {
 
     public override createSpawnMemory(spawn: StructureSpawn, roomname: string): MinerMemory {
         const workroom = Game.rooms[roomname];
-
         const job = this.getJob();
-        const sources = workroom.getOrFindEnergieSource();
-
         const creepStorage = CreepStorage.getInstance();
         const creeps = creepStorage.getCreepsByJobAndRoom(job, roomname);
 
-        let sourceId: Id<Source> | undefined = undefined;
+        const assignedSourceIds = new Set(
+            creeps
+                .map(creep => (creep.memory as MinerMemory).energySourceId)
+                .filter((id): id is Id<Source> => !!id)
+        );
+
+        const sourceIds = workroom
+            ? workroom.getOrFindEnergieSource().map(source => source.sourceId).filter((id): id is Id<Source> => !!id)
+            : (Memory.intel?.[roomname]?.sourceIds ?? []) as Id<Source>[];
+
+        let sourceId = sourceIds.find(id => !assignedSourceIds.has(id));
+        if (!sourceId) sourceId = sourceIds[0];
+
         let containerId: Id<StructureContainer> | undefined = undefined;
-        let finalLocation: RoomPosition | undefined = undefined;
+        let finalLocation: RoomPosition = new RoomPosition(25, 25, roomname);
         let buildId: Id<ConstructionSite> | undefined = undefined;
 
-        for (let s of sources) {
-
-            let found = false;
-
-            for (let creep of creeps) {
-                const minerMemory = creep.memory as MinerMemory;
-                if (minerMemory.energySourceId === s.sourceId) {
-                    found = true;
-                    break;
+        if (workroom && sourceId) {
+            const sourceMemory = workroom.getOrFindEnergieSource().find(source => source.sourceId === sourceId);
+            if (sourceMemory?.containerId) {
+                const check = Game.getObjectById(sourceMemory.containerId);
+                if (check) {
+                    containerId = sourceMemory.containerId;
+                    finalLocation = check.pos;
+                } else {
+                    sourceMemory.containerId = undefined;
                 }
             }
 
-            if (!found) {
-                sourceId = s.sourceId;
-                if (s.containerId) {
-                    let check = Game.getObjectById(s.containerId);
-                    if (check) {
-                        containerId = s.containerId;
-                    } else {
-                        for (let id in workroom.memory.energySources) {
-                            if (workroom.memory.energySources[id].sourceId == s.sourceId) {
-                                workroom.memory.energySources[id].containerId = undefined;
-                            }
-                        }
-                    }
-
-                }
-                break;
-            }
-        }
-
-        if (containerId) {
-            let container = Game.getObjectById(containerId);
-            finalLocation = container?.pos;
-        }
-        if (!finalLocation && sourceId) {
-            let sourceObj = Game.getObjectById(sourceId);
-
-            finalLocation = sourceObj?.pos;
-
-            if (sourceObj) {
-                let container = sourceObj.pos.findInRange(FIND_STRUCTURES, 1, {
+            const sourceObj = Game.getObjectById(sourceId);
+            if (!containerId && sourceObj) {
+                finalLocation = sourceObj.pos;
+                const container = sourceObj.pos.findInRange(FIND_STRUCTURES, 1, {
                     filter: {structureType: STRUCTURE_CONTAINER}
-                })[0];
+                })[0] as StructureContainer | undefined;
 
                 if (container) {
+                    containerId = container.id;
                     finalLocation = container.pos;
-                    if (container.structureType == STRUCTURE_CONTAINER) {
-                        containerId = container.id;
-                        for (let id in workroom.memory.energySources) {
-                            if (workroom.memory.energySources[id].sourceId == sourceId) {
-                                workroom.memory.energySources[id].containerId = containerId;
-                            }
-                        }
-                    }
+                    if (sourceMemory) sourceMemory.containerId = containerId;
                 } else {
-                    containerId = undefined;
-
-                    let build = sourceObj.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
+                    const build = sourceObj.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
                         filter: {structureType: STRUCTURE_CONTAINER}
                     })[0];
 
                     if (build) {
+                        buildId = build.id;
                         finalLocation = build.pos;
-                        if (build.id) {
-                            buildId = build.id;
-                        }
-
                     } else {
                         const sourcePos = sourceObj.pos;
-                        let adjacentSpots = [];
-
                         for (let xOffset = -1; xOffset <= 1; xOffset++) {
                             for (let yOffset = -1; yOffset <= 1; yOffset++) {
-                                if (xOffset === 0 && yOffset === 0) {
-                                    continue;
+                                if (xOffset === 0 && yOffset === 0) continue;
+                                const spot = new RoomPosition(sourcePos.x + xOffset, sourcePos.y + yOffset, workroom.name);
+                                if (spot.createConstructionSite(STRUCTURE_CONTAINER) === OK) {
+                                    finalLocation = spot;
+                                    break;
                                 }
-
-                                let x = sourcePos.x + xOffset;
-                                let y = sourcePos.y + yOffset;
-
-                                adjacentSpots.push(new RoomPosition(x, y, workroom.name));
                             }
+                            if (finalLocation.roomName === workroom.name && finalLocation.x !== sourcePos.x && finalLocation.y !== sourcePos.y) break;
                         }
-
-                        for (let spot of adjacentSpots) {
-                            if (spot.createConstructionSite(STRUCTURE_CONTAINER) === OK) {
-                                finalLocation = spot;
-                                break
-                            }
-                        }
-
-                        let build = sourceObj.pos.findInRange(FIND_CONSTRUCTION_SITES, 1, {
-                            filter: {structureType: STRUCTURE_CONTAINER}
-                        })[0];
-
-                        if (build) {
-                            finalLocation = build.pos;
-                            if (build.id) {
-                                buildId = build.id;
-                            }
-                        }
-
                     }
                 }
             }
         }
-
 
         return {
             job: job,
             ticksToPos: 1,
             spawn: spawn.name,
             state: eJobState.harvest,
-            workRoom: workroom.name,
+            workRoom: roomname,
+            spawnRoom: spawn.room.name,
             energySourceId: sourceId,
             containerId: containerId,
             containerConstructionId: buildId,
+            linkId: undefined,
             onPosition: false,
             finalLocation: finalLocation,
             roundRobin: 1,
@@ -290,15 +244,16 @@ export class RemoteMinerAnt extends StationaryAnt<MinerMemory> {
 
     public override getMaxCreeps(workroom: string): number {
         const room = Game.rooms[workroom];
-        if (!room) {
-            return 0;
+        if (room) {
+            return room.getOrFindEnergieSource().length || 0;
         }
-        return room.getOrFindEnergieSource().length || 0;
+        return Memory.intel?.[workroom]?.sourceCount ?? 0;
     }
 
     protected shouldSpawn(workroom: string): boolean {
 
-        if (!roomConfig[workroom].sendMiner || roomConfig[workroom].spawnRoom == undefined) {
+        const remote = Memory.remoteIntel?.[workroom];
+        if (!remote || (remote.state !== 'candidate' && remote.state !== 'mining')) {
             return false;
         }
 
@@ -307,7 +262,7 @@ export class RemoteMinerAnt extends StationaryAnt<MinerMemory> {
         if (room) {
             max = room.getOrFindEnergieSource().length
         } else {
-            max = Memory.rooms[workroom].energySources.length
+            max = remote.sourceCount || Memory.intel?.[workroom]?.sourceCount || 0
         }
         const job = this.getJob();
         const creepStorage = CreepStorage.getInstance();

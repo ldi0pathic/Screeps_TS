@@ -34,6 +34,7 @@ Goal: CPU-efficient solo Screeps bot for a 20 CPU-limited server. Passive play â
 | 16 | [Endgame efficiency](done/16-endgame-efficiency.md) | Pull mechanic, fewer large creeps, link logistics, skip list |
 | 17 | [Old codebase takeaways](done/17-old-codebase-takeaways.md) | Useful old patterns to adopt, old anti-patterns to avoid |
 | 18 | [Gap closure plan](18-gap-closure-plan.md) | Remaining gaps after implementation review |
+| 19 | [Code review follow-up plan](19-code-review-follow-up.md) | Role/storage review and follow-up implementation plan |
 
 ## Key Design Rules
 

@@ -60,6 +60,7 @@ g.FIND_STRUCTURES = 107;
 g.FIND_MY_STRUCTURES = 108;
 g.FIND_HOSTILE_STRUCTURES = 109;
 g.FIND_SOURCES = 105;
+g.FIND_SOURCES_ACTIVE = 104;
 g.FIND_DROPPED_RESOURCES = 111;
 g.FIND_TOMBSTONES = 117;
 g.FIND_RUINS = 118;
@@ -87,6 +88,7 @@ g.ERR_NOT_OWNER = -1;
 g.ERR_NO_PATH = -2;
 g.ERR_BUSY = -4;
 g.ERR_NOT_ENOUGH_ENERGY = -6;
+g.ERR_NOT_ENOUGH_RESOURCES = -6;
 g.ERR_NOT_IN_RANGE = -9;
 g.ERR_TIRED = -8;
 g.ERR_INVALID_TARGET = -7;
@@ -120,6 +122,7 @@ g.Game = {
 g.Memory = {
     creeps: {},
     rooms: {},
+    spawnQueue: [],
 };
 
 g.PathFinder = {

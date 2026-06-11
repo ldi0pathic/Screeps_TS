@@ -16,7 +16,7 @@ export class SpawnManager {
         Memory.spawnQueue = value;
     }
 
-    public static queueCreep(jobKey: eJobType, spawnRoom: Room, workRoom: string, bodyParts: BodyPartConstant[], priority?: number): number {
+    public static queueCreep(jobKey: eJobType, spawnRoom: Room, workRoom: string, bodyParts: BodyPartConstant[], priority?: number, reason?: string, sourceId?: string, targetId?: string): number {
         const def = Jobs.jobs[jobKey];
         if (!def) return -1;
 
@@ -43,7 +43,10 @@ export class SpawnManager {
             spawnRoom: spawnRoom.name,
             bodyParts: bodyParts,
             priority: actualPriority,
-            timestamp: Game.time
+            timestamp: Game.time,
+            reason,
+            sourceId,
+            targetId
         };
 
         this.queue.push(request);
@@ -53,8 +56,8 @@ export class SpawnManager {
         return this.queue.length - 1;
     }
 
-    public static addToJobQueue(jobType: eJobType, spawnRoom: Room, workRoom: string, bodyParts: BodyPartConstant[], priority?: number) {
-        this.queueCreep(jobType, spawnRoom, workRoom, bodyParts, priority);
+    public static addToJobQueue(jobType: eJobType, spawnRoom: Room, workRoom: string, bodyParts: BodyPartConstant[], priority?: number, reason?: string) {
+        this.queueCreep(jobType, spawnRoom, workRoom, bodyParts, priority, reason);
     }
 
     public static updatePriority(index: number, priority: number): boolean {
@@ -296,7 +299,7 @@ export class SpawnManager {
 
         if (spawn.spawnCreep(request.bodyParts, name, {dryRun: true}) === OK) {
             if (spawn.spawnCreep(request.bodyParts, name, {memory: memory}) === OK) {
-                console.log(`✅ Gespawned ${name} in ${spawn.room.name} → ${request.workroom} (Priorität: ${request.priority})`);
+                console.log(`✅ Gespawned ${name} in ${spawn.room.name} → ${request.workroom} (Priorität: ${request.priority}${request.reason ? ", Grund: " + request.reason : ""})`);
                 const creepStorage = CreepStorage.getInstance();
                 creepStorage.onCreepSpawning(
                     memory.job,
